@@ -455,3 +455,4 @@ class VisionPolicy(nn.Module):
         
         model.load_state_dict(checkpoint['model_state_dict'])
         return model
+

@@ -355,3 +355,4 @@ class VisualizationUtils:
                        (x, y + h + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, thickness)
         
         return image
+
