@@ -41,8 +41,7 @@ jobs:
   # This job builds a CPU image for testing & distribution
   build-docker-cpu-nightly:
     name: Build CPU Docker for Nightly
-    runs-on:
-      group: aws-general-8-plus
+    runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ env.DOCKER_IMAGE_NAME_CPU }}
     steps:
@@ -75,8 +74,7 @@ jobs:
   # This job builds a GPU image for testing & distribution
   build-docker-gpu-nightly:
     name: Build GPU Docker for Nightly
-    runs-on:
-      group: aws-general-8-plus
+    runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ env.DOCKER_IMAGE_NAME_GPU }}
     steps:
@@ -110,8 +108,7 @@ jobs:
   nightly-cpu-tests:
     name: Nightly CPU Tests
     needs: [build-docker-cpu-nightly]
-    runs-on:
-      group: aws-g6-4xlarge-plus
+    runs-on: ubuntu-latest
     env:
       HF_HOME: /home/user_lerobot/.cache/huggingface
       HF_LEROBOT_HOME: /home/user_lerobot/.cache/huggingface/lerobot
@@ -137,8 +134,7 @@ jobs:
   nightly-gpu-tests:
     name: Nightly GPU Tests
     needs: [build-docker-gpu-nightly]
-    runs-on:
-      group: aws-g6-4xlarge-plus
+    runs-on: ubuntu-latest
     env:
       HF_HOME: /home/user_lerobot/.cache/huggingface
       HF_LEROBOT_HOME: /home/user_lerobot/.cache/huggingface/lerobot
@@ -164,8 +160,7 @@ jobs:
   nightly-multi-gpu-tests:
     name: Nightly Multi-GPU Tests
     needs: [build-docker-gpu-nightly]
-    runs-on:
-      group: aws-g4dn-12xlarge  # Instance with 4 GPUs
+    runs-on: ubuntu-latest  # Standard runner
     env:
       HF_HOME: /home/user_lerobot/.cache/huggingface
       HF_LEROBOT_HOME: /home/user_lerobot/.cache/huggingface/lerobot

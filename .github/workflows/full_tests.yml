@@ -91,8 +91,7 @@ jobs:
   # TODO(Steven): For now we skip this job for community PRs
   build-and-push-docker:
     name: Build and Push Docker
-    runs-on:
-      group: aws-general-8-plus
+    runs-on: ubuntu-latest
     if: |
       (github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.repo.fork == false) ||
       github.event_name == 'push' ||
@@ -146,8 +145,7 @@ jobs:
   gpu-tests:
     name: GPU Tests
     needs: [build-and-push-docker]
-    runs-on:
-      group: aws-g6-4xlarge-plus
+    runs-on: ubuntu-latest
     env:
       HF_HOME: /home/user_lerobot/.cache/huggingface
       HF_LEROBOT_HOME: /home/user_lerobot/.cache/huggingface/lerobot
