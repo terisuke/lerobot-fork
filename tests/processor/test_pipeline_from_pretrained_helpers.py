@@ -170,9 +170,7 @@ def test_resolve_step_class_registry_name_not_found():
     """Test resolution with non-existent registry name."""
     step_entry = {"registry_name": "nonexistent_step"}
 
-    with pytest.raises(
-        ImportError, match="Failed to load processor step from registry"
-    ):
+    with pytest.raises(ImportError, match="Failed to load processor step from registry"):
         DataProcessorPipeline._resolve_step_class(step_entry)
 
 

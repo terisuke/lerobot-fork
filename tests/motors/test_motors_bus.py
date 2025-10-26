@@ -64,9 +64,7 @@ def test_get_address():
 def test_get_address_error():
     model = "model_1"
     data_name = "Lock"
-    with pytest.raises(
-        KeyError, match=f"Address for '{data_name}' not found in {model} control table."
-    ):
+    with pytest.raises(KeyError, match=f"Address for '{data_name}' not found in {model} control table."):
         get_address(DUMMY_MODEL_CTRL_TABLE, "model_1", data_name)
 
 
@@ -77,21 +75,13 @@ def test_assert_same_address():
 
 def test_assert_same_length_different_addresses():
     models = ["model_1", "model_2"]
-    with pytest.raises(
-        NotImplementedError,
-        match=re.escape("At least two motor models use a different address"),
-    ):
+    with pytest.raises(NotImplementedError, match=re.escape("At least two motor models use a different address")):
         assert_same_address(DUMMY_MODEL_CTRL_TABLE, models, "Model_Number")
 
 
 def test_assert_same_address_different_length():
     models = ["model_1", "model_2"]
-    with pytest.raises(
-        NotImplementedError,
-        match=re.escape(
-            "At least two motor models use a different bytes representation"
-        ),
-    ):
+    with pytest.raises(NotImplementedError, match=re.escape("At least two motor models use a different bytes representation")):
         assert_same_address(DUMMY_MODEL_CTRL_TABLE, models, "Goal_Position")
 
 

@@ -134,9 +134,7 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
 
     if from_pretrained:
         try:
-            print(
-                "Loading converted PyTorch weights from HuggingFace Hub (lerobot/pi0_base)..."
-            )
+            print("Loading converted PyTorch weights from HuggingFace Hub (lerobot/pi0_base)...")
 
             # Download the model from HuggingFace Hub
             import safetensors.torch
@@ -188,9 +186,7 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
             if not missing_keys and not unexpected_keys:
                 print("All pretrained weights loaded successfully!")
             else:
-                print(
-                    "Pretrained weights loaded with some missing/unexpected keys (this may be normal)"
-                )
+                print("Pretrained weights loaded with some missing/unexpected keys (this may be normal)")
 
         except Exception as e:
             print(f"Failed to load pretrained weights: {e}")

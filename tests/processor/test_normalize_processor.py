@@ -340,9 +340,7 @@ def test_quantile_partial_stats():
     }
     transition = create_transition(observation=observation)
 
-    with pytest.raises(
-        ValueError, match="QUANTILES normalization mode requires q01 and q99 stats"
-    ):
+    with pytest.raises(ValueError, match="QUANTILES normalization mode requires q01 and q99 stats"):
         _ = normalizer(transition)
 
 
@@ -831,9 +829,7 @@ def test_partial_stats():
     observation = {OBS_IMAGE: torch.tensor([0.7])}
     transition = create_transition(observation=observation)
 
-    with pytest.raises(
-        ValueError, match="MEAN_STD normalization mode requires mean and std stats"
-    ):
+    with pytest.raises(ValueError, match="MEAN_STD normalization mode requires mean and std stats"):
         _ = normalizer(transition)[TransitionKey.OBSERVATION]
 
 

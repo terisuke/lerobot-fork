@@ -260,9 +260,7 @@ def test_none_task_value(mock_auto_tokenizer):
 
     transition = create_transition(observation={}, complementary_data={"task": None})
 
-    with pytest.raises(
-        ValueError, match="Task extracted from Complementary data is None"
-    ):
+    with pytest.raises(ValueError, match="Task extracted from Complementary data is None"):
         processor(transition)
 
 
@@ -293,9 +291,7 @@ def test_unsupported_task_type(mock_auto_tokenizer):
 @require_package("transformers")
 def test_no_tokenizer_error():
     """Test that ValueError is raised when neither tokenizer nor tokenizer_name is provided."""
-    with pytest.raises(
-        ValueError, match="Either 'tokenizer' or 'tokenizer_name' must be provided"
-    ):
+    with pytest.raises(ValueError, match="Either 'tokenizer' or 'tokenizer_name' must be provided"):
         TokenizerProcessorStep()
 
 

@@ -80,9 +80,7 @@ def test_mlp_with_custom_final_activation():
 
 
 def test_sac_policy_with_default_args():
-    with pytest.raises(
-        ValueError, match="should be an instance of class `PreTrainedConfig`"
-    ):
+    with pytest.raises(ValueError, match="should be an instance of class `PreTrainedConfig`"):
         SACPolicy()
 
 

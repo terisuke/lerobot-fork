@@ -133,30 +133,21 @@ def test_dataset_feature_with_forward_slash_raises_error():
 def test_add_frame_missing_task(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match="Feature mismatch in `frame` dictionary:\nMissing features: {'task'}\n",
-    ):
+    with pytest.raises(ValueError, match="Feature mismatch in `frame` dictionary:\nMissing features: {'task'}\n"):
         dataset.add_frame({"state": torch.randn(1)})
 
 
 def test_add_frame_missing_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n",
-    ):
+    with pytest.raises(ValueError, match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n"):
         dataset.add_frame({"task": "Dummy task"})
 
 
 def test_add_frame_extra_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n",
-    ):
+    with pytest.raises(ValueError, match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n"):
         dataset.add_frame(
             {"state": torch.randn(1), "task": "Dummy task", "extra": "dummy_extra"}
         )
@@ -165,10 +156,7 @@ def test_add_frame_extra_feature(tmp_path, empty_lerobot_dataset_factory):
 def test_add_frame_wrong_type(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match="The feature 'state' of dtype 'float16' is not of the expected dtype 'float32'.\n",
-    ):
+    with pytest.raises(ValueError, match="The feature 'state' of dtype 'float16' is not of the expected dtype 'float32'.\n"):
         dataset.add_frame(
             {"state": torch.randn(1, dtype=torch.float16), "task": "Dummy task"}
         )
@@ -177,48 +165,28 @@ def test_add_frame_wrong_type(tmp_path, empty_lerobot_dataset_factory):
 def test_add_frame_wrong_shape(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (2,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            "The feature 'state' of shape '(1,)' does not have the expected shape '(2,)'.\n"
-        ),
-    ):
+    with pytest.raises(ValueError, match=re.escape("The feature 'state' of shape '(1,)' does not have the expected shape '(2,)'.\n")):
         dataset.add_frame({"state": torch.randn(1), "task": "Dummy task"})
 
 
 def test_add_frame_wrong_shape_python_float(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            "The feature 'state' is not a 'np.ndarray'. Expected type is 'float32', but type '<class 'float'>' provided instead.\n"
-        ),
-    ):
+    with pytest.raises(ValueError, match=re.escape("The feature 'state' is not a 'np.ndarray'. Expected type is 'float32', but type '<class 'float'>' provided instead.\n")):
         dataset.add_frame({"state": 1.0, "task": "Dummy task"})
 
 
 def test_add_frame_wrong_shape_torch_ndim_0(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            "The feature 'state' of shape '()' does not have the expected shape '(1,)'.\n"
-        ),
-    ):
+    with pytest.raises(ValueError, match=re.escape("The feature 'state' of shape '()' does not have the expected shape '(1,)'.\n")):
         dataset.add_frame({"state": torch.tensor(1.0), "task": "Dummy task"})
 
 
 def test_add_frame_wrong_shape_numpy_ndim_0(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            "The feature 'state' is not a 'np.ndarray'. Expected type is 'float32', but type '<class 'numpy.float32'>' provided instead.\n"
-        ),
-    ):
+    with pytest.raises(ValueError, match=re.escape("The feature 'state' is not a 'np.ndarray'. Expected type is 'float32', but type '<class 'numpy.float32'>' provided instead.\n")):
         dataset.add_frame({"state": np.float32(1.0), "task": "Dummy task"})
 
 
@@ -299,12 +267,7 @@ def test_add_frame_string(tmp_path, empty_lerobot_dataset_factory):
 
 def test_add_frame_image_wrong_shape(image_dataset):
     dataset = image_dataset
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            "The feature 'image' of shape '(3, 128, 96)' does not have the expected shape '(3, 96, 128)' or '(96, 128, 3)'.\n"
-        ),
-    ):
+    with pytest.raises(ValueError, match=re.escape("The feature 'image' of shape '(3, 128, 96)' does not have the expected shape '(3, 96, 128)' or '(96, 128, 3)'.\n")):
         c, h, w = DUMMY_CHW
         dataset.add_frame({"image": torch.randn(c, w, h), "task": "Dummy task"})
 

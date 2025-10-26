@@ -374,9 +374,7 @@ def test_sample_batch(replay_buffer):
 
 
 def test_to_lerobot_dataset_with_empty_buffer(replay_buffer):
-    with pytest.raises(
-        ValueError, match="The replay buffer is empty. Cannot convert to a dataset."
-    ):
+    with pytest.raises(ValueError, match="The replay buffer is empty. Cannot convert to a dataset."):
         replay_buffer.to_lerobot_dataset("dummy_repo")
 
 
@@ -651,14 +649,10 @@ def test_random_crop_vectorized_invalid_size():
     images = torch.zeros((2, 3, 10, 8))
 
     # Test crop size larger than image
-    with pytest.raises(
-        ValueError, match="Requested crop size .* is bigger than the image size"
-    ):
+    with pytest.raises(ValueError, match="Requested crop size .* is bigger than the image size"):
         random_crop_vectorized(images, (12, 8))
 
-    with pytest.raises(
-        ValueError, match="Requested crop size .* is bigger than the image size"
-    ):
+    with pytest.raises(ValueError, match="Requested crop size .* is bigger than the image size"):
         random_crop_vectorized(images, (10, 10))
 
 

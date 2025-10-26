@@ -204,10 +204,7 @@ def test_validate_features_missing_observation():
         },
         output_features={ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(3,))},
     )
-    with pytest.raises(
-        ValueError,
-        match="You must provide either 'observation.state' or an image observation",
-    ):
+    with pytest.raises(ValueError, match="You must provide either 'observation.state' or an image observation"):
         config.validate_features()
 
 
@@ -218,7 +215,5 @@ def test_validate_features_missing_action():
             "wrong_key": PolicyFeature(type=FeatureType.ACTION, shape=(3,))
         },
     )
-    with pytest.raises(
-        ValueError, match="You must provide 'action' in the output features"
-    ):
+    with pytest.raises(ValueError, match="You must provide 'action' in the output features"):
         config.validate_features()

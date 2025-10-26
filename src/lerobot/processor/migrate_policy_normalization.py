@@ -379,9 +379,7 @@ def load_state_dict_with_missing_key_handling(
             print(f"   - {key}")
 
     if not missing_keys and not unexpected_keys:
-        print(
-            "Successfully loaded cleaned state dict into policy model (all keys matched)"
-        )
+        print("Successfully loaded cleaned state dict into policy model (all keys matched)")
     else:
         print("State dict loaded with some missing/unexpected keys (see details above)")
 
@@ -566,9 +564,7 @@ def main():
             with open(train_config_path) as f:
                 train_config = json.load(f)
         else:
-            print(
-                "train_config.json not found - continuing without training configuration"
-            )
+            print("train_config.json not found - continuing without training configuration")
     else:
         # Hub repository
         state_dict, config, train_config = load_model_from_hub(

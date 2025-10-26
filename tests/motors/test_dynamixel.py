@@ -164,10 +164,7 @@ def test__read_error(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(
-            RuntimeError,
-            match=re.escape("[RxPacketError] The data value exceeds the limit value!"),
-        ):
+        with pytest.raises(RuntimeError, match=re.escape("[RxPacketError] The data value exceeds the limit value!")):
             bus._read(addr, length, id_, raise_on_error=raise_on_error)
     else:
         _, _, read_error = bus._read(addr, length, id_, raise_on_error=raise_on_error)
@@ -184,9 +181,7 @@ def test__read_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(
-            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
-        ):
+        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
             bus._read(addr, length, id_, raise_on_error=raise_on_error)
     else:
         _, read_comm, _ = bus._read(addr, length, id_, raise_on_error=raise_on_error)
@@ -223,10 +218,7 @@ def test__write_error(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(
-            RuntimeError,
-            match=re.escape("[RxPacketError] The data value exceeds the limit value!"),
-        ):
+        with pytest.raises(RuntimeError, match=re.escape("[RxPacketError] The data value exceeds the limit value!")):
             bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
     else:
         _, write_error = bus._write(
@@ -245,9 +237,7 @@ def test__write_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(
-            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
-        ):
+        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
             bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
     else:
         write_comm, _ = bus._write(
@@ -286,9 +276,7 @@ def test__sync_read_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(
-            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
-        ):
+        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
             bus._sync_read(
                 addr, length, list(ids_values), raise_on_error=raise_on_error
             )
