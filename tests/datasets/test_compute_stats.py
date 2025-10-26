@@ -496,12 +496,16 @@ def test_running_quantile_stats_insufficient_data_error():
     """Test error when trying to get stats with insufficient data."""
     running_stats = RunningQuantileStats()
 
-    with pytest.raises(ValueError, match="Cannot compute statistics for less than 2 vectors"):
+    with pytest.raises(
+        ValueError, match="Cannot compute statistics for less than 2 vectors"
+    ):
         running_stats.get_statistics()
 
     # Single vector should also fail
     running_stats.update(np.array([[1.0]]))
-    with pytest.raises(ValueError, match="Cannot compute statistics for less than 2 vectors"):
+    with pytest.raises(
+        ValueError, match="Cannot compute statistics for less than 2 vectors"
+    ):
         running_stats.get_statistics()
 
 
