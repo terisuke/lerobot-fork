@@ -79,7 +79,10 @@ from lerobot.datasets.utils import (
     write_stats,
     write_tasks,
 )
-from lerobot.datasets.video_utils import concatenate_video_files, get_video_duration_in_s
+from lerobot.datasets.video_utils import (
+    concatenate_video_files,
+    get_video_duration_in_s,
+)
 from lerobot.utils.constants import HF_LEROBOT_HOME
 from lerobot.utils.utils import init_logging
 
@@ -136,7 +139,10 @@ def load_jsonlines(fpath: Path) -> list[Any]:
 
 def legacy_load_episodes(local_dir: Path) -> dict:
     episodes = load_jsonlines(local_dir / LEGACY_EPISODES_PATH)
-    return {item["episode_index"]: item for item in sorted(episodes, key=lambda x: x["episode_index"])}
+    return {
+        item["episode_index"]: item
+        for item in sorted(episodes, key=lambda x: x["episode_index"])
+    }
 
 
 def legacy_load_episodes_stats(local_dir: Path) -> dict:
@@ -149,7 +155,10 @@ def legacy_load_episodes_stats(local_dir: Path) -> dict:
 
 def legacy_load_tasks(local_dir: Path) -> tuple[dict, dict]:
     tasks = load_jsonlines(local_dir / LEGACY_TASKS_PATH)
-    tasks = {item["task_index"]: item["task"] for item in sorted(tasks, key=lambda x: x["task_index"])}
+    tasks = {
+        item["task_index"]: item["task"]
+        for item in sorted(tasks, key=lambda x: x["task_index"])
+    }
     task_to_task_index = {task: task_index for task_index, task in tasks.items()}
     return tasks, task_to_task_index
 
@@ -180,7 +189,9 @@ def concat_data_files(paths_to_cat, new_root, chunk_idx, file_idx, image_keys):
     # Concatenate all DataFrames along rows
     concatenated_df = pd.concat(dataframes, ignore_index=True)
 
-    path = new_root / DEFAULT_DATA_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+    path = new_root / DEFAULT_DATA_PATH.format(
+        chunk_index=chunk_idx, file_index=file_idx
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
 
     if len(image_keys) > 0:
@@ -237,7 +248,9 @@ def convert_data(root: Path, new_root: Path, data_file_size_in_mb: int):
         size_in_mb = ep_size_in_mb
         paths_to_cat = [ep_path]
 
-        chunk_idx, file_idx = update_chunk_file_indices(chunk_idx, file_idx, DEFAULT_CHUNK_SIZE)
+        chunk_idx, file_idx = update_chunk_file_indices(
+            chunk_idx, file_idx, DEFAULT_CHUNK_SIZE
+        )
 
     # Write remaining data if any
     if paths_to_cat:
@@ -271,19 +284,26 @@ def convert_videos(root: Path, new_root: Path, video_file_size_in_mb: int):
 
     eps_metadata_per_cam = []
     for camera in video_keys:
-        eps_metadata = convert_videos_of_camera(root, new_root, camera, video_file_size_in_mb)
+        eps_metadata = convert_videos_of_camera(
+            root, new_root, camera, video_file_size_in_mb
+        )
         eps_metadata_per_cam.append(eps_metadata)
 
     num_eps_per_cam = [len(eps_cam_map) for eps_cam_map in eps_metadata_per_cam]
     if len(set(num_eps_per_cam)) != 1:
-        raise ValueError(f"All cams dont have same number of episodes ({num_eps_per_cam}).")
+        raise ValueError(
+            f"All cams dont have same number of episodes ({num_eps_per_cam})."
+        )
 
     episods_metadata = []
     num_cameras = len(video_keys)
     num_episodes = num_eps_per_cam[0]
     for ep_idx in tqdm.tqdm(range(num_episodes), desc="convert videos"):
         # Sanity check
-        ep_ids = [eps_metadata_per_cam[cam_idx][ep_idx]["episode_index"] for cam_idx in range(num_cameras)]
+        ep_ids = [
+            eps_metadata_per_cam[cam_idx][ep_idx]["episode_index"]
+            for cam_idx in range(num_cameras)
+        ]
         ep_ids += [ep_idx]
         if len(set(ep_ids)) != 1:
             raise ValueError(f"All episode indices need to match ({ep_ids}).")
@@ -296,7 +316,9 @@ def convert_videos(root: Path, new_root: Path, video_file_size_in_mb: int):
     return episods_metadata
 
 
-def convert_videos_of_camera(root: Path, new_root: Path, video_key: str, video_file_size_in_mb: int):
+def convert_videos_of_camera(
+    root: Path, new_root: Path, video_key: str, video_file_size_in_mb: int
+):
     # Access old paths to mp4
     videos_dir = root / "videos"
     ep_paths = sorted(videos_dir.glob(f"*/{video_key}/*.mp4"))
@@ -314,22 +336,33 @@ def convert_videos_of_camera(root: Path, new_root: Path, video_key: str, video_f
         ep_duration_in_s = get_video_duration_in_s(ep_path)
 
         # Check if adding this episode would exceed the limit
-        if size_in_mb + ep_size_in_mb >= video_file_size_in_mb and len(paths_to_cat) > 0:
+        if (
+            size_in_mb + ep_size_in_mb >= video_file_size_in_mb
+            and len(paths_to_cat) > 0
+        ):
             # Size limit would be exceeded, save current accumulation WITHOUT this episode
             concatenate_video_files(
                 paths_to_cat,
                 new_root
-                / DEFAULT_VIDEO_PATH.format(video_key=video_key, chunk_index=chunk_idx, file_index=file_idx),
+                / DEFAULT_VIDEO_PATH.format(
+                    video_key=video_key, chunk_index=chunk_idx, file_index=file_idx
+                ),
             )
 
             # Update episodes metadata for the file we just saved
             for i, _ in enumerate(paths_to_cat):
                 past_ep_idx = ep_idx - len(paths_to_cat) + i
-                episodes_metadata[past_ep_idx][f"videos/{video_key}/chunk_index"] = chunk_idx
-                episodes_metadata[past_ep_idx][f"videos/{video_key}/file_index"] = file_idx
+                episodes_metadata[past_ep_idx][
+                    f"videos/{video_key}/chunk_index"
+                ] = chunk_idx
+                episodes_metadata[past_ep_idx][
+                    f"videos/{video_key}/file_index"
+                ] = file_idx
 
             # Move to next file and start fresh with current episode
-            chunk_idx, file_idx = update_chunk_file_indices(chunk_idx, file_idx, DEFAULT_CHUNK_SIZE)
+            chunk_idx, file_idx = update_chunk_file_indices(
+                chunk_idx, file_idx, DEFAULT_CHUNK_SIZE
+            )
             size_in_mb = 0
             duration_in_s = 0.0
             paths_to_cat = []
@@ -355,13 +388,17 @@ def convert_videos_of_camera(root: Path, new_root: Path, video_key: str, video_f
         concatenate_video_files(
             paths_to_cat,
             new_root
-            / DEFAULT_VIDEO_PATH.format(video_key=video_key, chunk_index=chunk_idx, file_index=file_idx),
+            / DEFAULT_VIDEO_PATH.format(
+                video_key=video_key, chunk_index=chunk_idx, file_index=file_idx
+            ),
         )
 
         # Update episodes metadata for the final file
         for i, _ in enumerate(paths_to_cat):
             past_ep_idx = ep_idx - len(paths_to_cat) + i
-            episodes_metadata[past_ep_idx][f"videos/{video_key}/chunk_index"] = chunk_idx
+            episodes_metadata[past_ep_idx][
+                f"videos/{video_key}/chunk_index"
+            ] = chunk_idx
             episodes_metadata[past_ep_idx][f"videos/{video_key}/file_index"] = file_idx
 
     return episodes_metadata
@@ -395,13 +432,20 @@ def generate_episode_metadata_dict(
         if len(ep_ids_set) != 1:
             raise ValueError(f"Number of episodes is not the same ({ep_ids_set}).")
 
-        ep_dict = {**ep_metadata, **ep_video, **ep_legacy_metadata, **flatten_dict({"stats": ep_stats})}
+        ep_dict = {
+            **ep_metadata,
+            **ep_video,
+            **ep_legacy_metadata,
+            **flatten_dict({"stats": ep_stats}),
+        }
         ep_dict["meta/episodes/chunk_index"] = 0
         ep_dict["meta/episodes/file_index"] = 0
         yield ep_dict
 
 
-def convert_episodes_metadata(root, new_root, episodes_metadata, episodes_video_metadata=None):
+def convert_episodes_metadata(
+    root, new_root, episodes_metadata, episodes_video_metadata=None
+):
     logging.info(f"Converting episodes metadata from {root} to {new_root}")
 
     episodes_legacy_metadata = legacy_load_episodes(root)
@@ -416,7 +460,10 @@ def convert_episodes_metadata(root, new_root, episodes_metadata, episodes_video_
 
     ds_episodes = Dataset.from_generator(
         lambda: generate_episode_metadata_dict(
-            episodes_legacy_metadata, episodes_metadata, episodes_stats, episodes_video_metadata
+            episodes_legacy_metadata,
+            episodes_metadata,
+            episodes_stats,
+            episodes_video_metadata,
         )
     )
     write_episodes(ds_episodes, new_root)
@@ -462,10 +509,17 @@ def convert_dataset(
     if root is None and not force_conversion:
         try:
             print("Trying to download v3.0 version of the dataset from the hub...")
-            snapshot_download(repo_id, repo_type="dataset", revision=V30, local_dir=HF_LEROBOT_HOME / repo_id)
+            snapshot_download(
+                repo_id,
+                repo_type="dataset",
+                revision=V30,
+                local_dir=HF_LEROBOT_HOME / repo_id,
+            )
             return
         except Exception:
-            print("Dataset does not have an uploaded v3.0 version. Continuing with conversion.")
+            print(
+                "Dataset does not have an uploaded v3.0 version. Continuing with conversion."
+            )
 
     # Set root based on whether local dataset path is provided
     use_local_dataset = False
@@ -498,7 +552,9 @@ def convert_dataset(
     convert_tasks(root, new_root)
     episodes_metadata = convert_data(root, new_root, data_file_size_in_mb)
     episodes_videos_metadata = convert_videos(root, new_root, video_file_size_in_mb)
-    convert_episodes_metadata(root, new_root, episodes_metadata, episodes_videos_metadata)
+    convert_episodes_metadata(
+        root, new_root, episodes_metadata, episodes_videos_metadata
+    )
 
     shutil.move(str(root), str(old_root))
     shutil.move(str(new_root), str(root))
@@ -508,7 +564,9 @@ def convert_dataset(
         try:
             hub_api.delete_tag(repo_id, tag=CODEBASE_VERSION, repo_type="dataset")
         except HTTPError as e:
-            print(f"tag={CODEBASE_VERSION} probably doesn't exist. Skipping exception ({e})")
+            print(
+                f"tag={CODEBASE_VERSION} probably doesn't exist. Skipping exception ({e})"
+            )
             pass
         hub_api.delete_files(
             delete_patterns=["data/chunk*/episode_*", "meta/*.jsonl", "videos/chunk*"],
@@ -516,7 +574,9 @@ def convert_dataset(
             revision=branch,
             repo_type="dataset",
         )
-        hub_api.create_tag(repo_id, tag=CODEBASE_VERSION, revision=branch, repo_type="dataset")
+        hub_api.create_tag(
+            repo_id, tag=CODEBASE_VERSION, revision=branch, repo_type="dataset"
+        )
 
         LeRobotDataset(repo_id).push_to_hub()
 

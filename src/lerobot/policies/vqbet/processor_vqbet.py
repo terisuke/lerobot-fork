@@ -29,8 +29,14 @@ from lerobot.processor import (
     RenameObservationsProcessorStep,
     UnnormalizerProcessorStep,
 )
-from lerobot.processor.converters import policy_action_to_transition, transition_to_policy_action
-from lerobot.utils.constants import POLICY_POSTPROCESSOR_DEFAULT_NAME, POLICY_PREPROCESSOR_DEFAULT_NAME
+from lerobot.processor.converters import (
+    policy_action_to_transition,
+    transition_to_policy_action,
+)
+from lerobot.utils.constants import (
+    POLICY_POSTPROCESSOR_DEFAULT_NAME,
+    POLICY_PREPROCESSOR_DEFAULT_NAME,
+)
 
 
 def make_vqbet_pre_post_processors(
@@ -62,7 +68,9 @@ def make_vqbet_pre_post_processors(
     """
 
     input_steps = [
-        RenameObservationsProcessorStep(rename_map={}),  # Let the possibility to the user to rename the keys
+        RenameObservationsProcessorStep(
+            rename_map={}
+        ),  # Let the possibility to the user to rename the keys
         AddBatchDimensionProcessorStep(),
         DeviceProcessorStep(device=config.device),
         NormalizerProcessorStep(
@@ -73,7 +81,9 @@ def make_vqbet_pre_post_processors(
     ]
     output_steps = [
         UnnormalizerProcessorStep(
-            features=config.output_features, norm_map=config.normalization_mapping, stats=dataset_stats
+            features=config.output_features,
+            norm_map=config.normalization_mapping,
+            stats=dataset_stats,
         ),
         DeviceProcessorStep(device="cpu"),
     ]

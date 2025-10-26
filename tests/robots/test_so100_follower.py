@@ -56,7 +56,9 @@ def follower():
         bus_mock.motors = kwargs["motors"]
         motors_order: list[str] = list(bus_mock.motors)
 
-        bus_mock.sync_read.return_value = {motor: idx for idx, motor in enumerate(motors_order, 1)}
+        bus_mock.sync_read.return_value = {
+            motor: idx for idx, motor in enumerate(motors_order, 1)
+        }
         bus_mock.sync_write.return_value = None
         bus_mock.write.return_value = None
         bus_mock.disable_torque.return_value = None

@@ -139,7 +139,9 @@ def _make_reachy2_camera_mock(*args, **kwargs):
     cam.height = height
     cam.connect = MagicMock()
     cam.disconnect = MagicMock()
-    cam.async_read = MagicMock(side_effect=lambda: np.zeros((height, width, 3), dtype=np.uint8))
+    cam.async_read = MagicMock(
+        side_effect=lambda: np.zeros((height, width, 3), dtype=np.uint8)
+    )
     return cam
 
 
@@ -250,7 +252,9 @@ def test_get_observation(reachy2):
     assert set(obs.keys()) == expected_keys
 
     for motor in reachy2.joints_dict:
-        assert obs[motor] == reachy2.reachy.joints[REACHY2_JOINTS[motor]].present_position
+        assert (
+            obs[motor] == reachy2.reachy.joints[REACHY2_JOINTS[motor]].present_position
+        )
     if reachy2.config.with_mobile_base:
         for vel in REACHY2_VEL:
             assert obs[vel] == reachy2.reachy.mobile_base.odometry[REACHY2_VEL[vel]]
@@ -282,7 +286,8 @@ def test_send_action(reachy2):
         action.update({k: i * 0.1 for i, k in enumerate(REACHY2_VEL.keys(), start=1)})
 
     previous_present_position = {
-        k: reachy2.reachy.joints[REACHY2_JOINTS[k]].present_position for k in reachy2.joints_dict
+        k: reachy2.reachy.joints[REACHY2_JOINTS[k]].present_position
+        for k in reachy2.joints_dict
     }
     returned = reachy2.send_action(action)
 
@@ -296,9 +301,9 @@ def test_send_action(reachy2):
         if reachy2.config.max_relative_target is None:
             assert real_pos == expected_pos
         else:
-            assert real_pos == previous_present_position[motor] + np.sign(expected_pos) * min(
-                abs(expected_pos - real_pos), reachy2.config.max_relative_target
-            )
+            assert real_pos == previous_present_position[motor] + np.sign(
+                expected_pos
+            ) * min(abs(expected_pos - real_pos), reachy2.config.max_relative_target)
 
     if reachy2.config.with_mobile_base:
         goal_speed = [i * 0.1 for i, _ in enumerate(REACHY2_VEL.keys(), start=1)]

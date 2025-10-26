@@ -59,7 +59,9 @@ class LearnerService(services_pb2_grpc.LearnerServiceServicer):
         while not self.shutdown_event.is_set():
             time_since_last_push = time.time() - last_push_time
             if time_since_last_push < self.seconds_between_pushes:
-                self.shutdown_event.wait(self.seconds_between_pushes - time_since_last_push)
+                self.shutdown_event.wait(
+                    self.seconds_between_pushes - time_since_last_push
+                )
                 # Continue, because we could receive a shutdown event,
                 # and it's checked in the while loop
                 continue
@@ -101,7 +103,9 @@ class LearnerService(services_pb2_grpc.LearnerServiceServicer):
 
     def SendInteractions(self, request_iterator, _context):  # noqa: N802
         # TODO: authorize the request
-        logging.info("[LEARNER] Received request to receive interactions from the Actor")
+        logging.info(
+            "[LEARNER] Received request to receive interactions from the Actor"
+        )
 
         receive_bytes_in_chunks(
             request_iterator,

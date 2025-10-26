@@ -35,7 +35,15 @@ from lerobot.processor import (
     TransitionKey,
 )
 from lerobot.processor.converters import create_transition, identity_transition
-from lerobot.utils.constants import ACTION, DONE, OBS_IMAGE, OBS_IMAGES, OBS_STATE, REWARD, TRUNCATED
+from lerobot.utils.constants import (
+    ACTION,
+    DONE,
+    OBS_IMAGE,
+    OBS_IMAGES,
+    OBS_STATE,
+    REWARD,
+    TRUNCATED,
+)
 from tests.conftest import assert_contract_is_typed
 
 
@@ -122,7 +130,12 @@ class MockStepWithTensorState(ProcessorStep):
     learning_rate: float = 0.01
     window_size: int = 10
 
-    def __init__(self, name: str = "tensor_step", learning_rate: float = 0.01, window_size: int = 10):
+    def __init__(
+        self,
+        name: str = "tensor_step",
+        learning_rate: float = 0.01,
+        window_size: int = 10,
+    ):
         self.name = name
         self.learning_rate = learning_rate
         self.window_size = window_size
@@ -174,7 +187,9 @@ class MockStepWithTensorState(ProcessorStep):
 
 def test_empty_pipeline():
     """Test pipeline with no steps."""
-    pipeline = DataProcessorPipeline([], to_transition=identity_transition, to_output=identity_transition)
+    pipeline = DataProcessorPipeline(
+        [], to_transition=identity_transition, to_output=identity_transition
+    )
 
     transition = create_transition()
     result = pipeline(transition)
@@ -186,7 +201,9 @@ def test_empty_pipeline():
 def test_single_step_pipeline():
     """Test pipeline with a single step."""
     step = MockStep("test_step")
-    pipeline = DataProcessorPipeline([step], to_transition=identity_transition, to_output=identity_transition)
+    pipeline = DataProcessorPipeline(
+        [step], to_transition=identity_transition, to_output=identity_transition
+    )
 
     transition = create_transition()
     result = pipeline(transition)
@@ -240,8 +257,12 @@ def test_step_through():
 
     assert len(results) == 3  # Original + 2 steps
     assert results[0] == transition  # Original
-    assert "step1_counter" in results[1][TransitionKey.COMPLEMENTARY_DATA]  # After step1
-    assert "step2_counter" in results[2][TransitionKey.COMPLEMENTARY_DATA]  # After step2
+    assert (
+        "step1_counter" in results[1][TransitionKey.COMPLEMENTARY_DATA]
+    )  # After step1
+    assert (
+        "step2_counter" in results[2][TransitionKey.COMPLEMENTARY_DATA]
+    )  # After step2
 
     # Ensure all results are dicts (same format as input)
     for result in results:
@@ -284,9 +305,15 @@ def test_step_through_with_dict():
             ]
 
     # Check that the processing worked - verify step counters in complementary_data
-    assert results[1].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step1_counter") == 0
-    assert results[2].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step1_counter") == 0
-    assert results[2].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step2_counter") == 0
+    assert (
+        results[1].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step1_counter") == 0
+    )
+    assert (
+        results[2].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step1_counter") == 0
+    )
+    assert (
+        results[2].get(TransitionKey.COMPLEMENTARY_DATA, {}).get("step2_counter") == 0
+    )
 
 
 def test_step_through_no_hooks():
@@ -529,7 +556,9 @@ def test_save_and_load_pretrained():
         pipeline.save_pretrained(tmp_dir)
 
         # Check files were created
-        config_path = Path(tmp_dir) / "testpipeline.json"  # Based on name="TestPipeline"
+        config_path = (
+            Path(tmp_dir) / "testpipeline.json"
+        )  # Based on name="TestPipeline"
         assert config_path.exists()
 
         # Check config content
@@ -544,7 +573,9 @@ def test_save_and_load_pretrained():
         assert config["steps"][1]["config"]["counter"] == 10
 
         # Load pipeline
-        loaded_pipeline = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="testpipeline.json")
+        loaded_pipeline = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="testpipeline.json"
+        )
 
         assert loaded_pipeline.name == "TestPipeline"
         assert len(loaded_pipeline) == 2
@@ -597,7 +628,9 @@ def test_mixed_json_and_tensor_state():
         pipeline.save_pretrained(tmp_dir)
 
         # Check that both config and state files were created
-        config_path = Path(tmp_dir) / "dataprocessorpipeline.json"  # Default name is "RobotProcessor"
+        config_path = (
+            Path(tmp_dir) / "dataprocessorpipeline.json"
+        )  # Default name is "RobotProcessor"
         state_path = Path(tmp_dir) / "dataprocessorpipeline_step_0.safetensors"
         assert config_path.exists()
         assert state_path.exists()
@@ -701,7 +734,11 @@ class MockNonModuleStepWithState(ProcessorStep):
         obs = transition.get(TransitionKey.OBSERVATION)
         comp_data = transition.get(TransitionKey.COMPLEMENTARY_DATA, {})
 
-        if obs is not None and isinstance(obs, torch.Tensor) and obs.numel() >= self.feature_dim:
+        if (
+            obs is not None
+            and isinstance(obs, torch.Tensor)
+            and obs.numel() >= self.feature_dim
+        ):
             # Perform some tensor operations
             flat_obs = obs.flatten()[: self.feature_dim]
 
@@ -765,13 +802,17 @@ class MockNonModuleStepWithState(ProcessorStep):
 class MockStepWithNonSerializableParam(ProcessorStep):
     """Mock step that requires a non-serializable parameter."""
 
-    def __init__(self, name: str = "mock_env_step", multiplier: float = 1.0, env: Any = None):
+    def __init__(
+        self, name: str = "mock_env_step", multiplier: float = 1.0, env: Any = None
+    ):
         self.name = name
         # Add type validation for multiplier
         if isinstance(multiplier, str):
             raise ValueError(f"multiplier must be a number, got string '{multiplier}'")
         if not isinstance(multiplier, (int | float)):
-            raise TypeError(f"multiplier must be a number, got {type(multiplier).__name__}")
+            raise TypeError(
+                f"multiplier must be a number, got {type(multiplier).__name__}"
+            )
         self.multiplier = float(multiplier)
         self.env = env  # Non-serializable parameter (like gym.Env)
 
@@ -964,7 +1005,9 @@ def test_from_pretrained_invalid_override_key():
 
         with pytest.raises(KeyError, match="Override keys.*do not match any step"):
             DataProcessorPipeline.from_pretrained(
-                tmp_dir, config_filename="dataprocessorpipeline.json", overrides=overrides
+                tmp_dir,
+                config_filename="dataprocessorpipeline.json",
+                overrides=overrides,
             )
 
 
@@ -977,11 +1020,16 @@ def test_from_pretrained_multiple_invalid_override_keys():
         pipeline.save_pretrained(tmp_dir)
 
         # Try to override multiple non-existent steps
-        overrides = {"NonExistentStep1": {"param": "value1"}, "NonExistentStep2": {"param": "value2"}}
+        overrides = {
+            "NonExistentStep1": {"param": "value1"},
+            "NonExistentStep2": {"param": "value2"},
+        }
 
         with pytest.raises(KeyError) as exc_info:
             DataProcessorPipeline.from_pretrained(
-                tmp_dir, config_filename="dataprocessorpipeline.json", overrides=overrides
+                tmp_dir,
+                config_filename="dataprocessorpipeline.json",
+                overrides=overrides,
             )
 
         error_msg = str(exc_info.value)
@@ -1020,7 +1068,9 @@ def test_from_pretrained_registered_step_override():
 
 def test_from_pretrained_mixed_registered_and_unregistered():
     """Test overriding both registered and unregistered steps."""
-    unregistered_step = MockStepWithNonSerializableParam(name="unregistered", multiplier=1.0)
+    unregistered_step = MockStepWithNonSerializableParam(
+        name="unregistered", multiplier=1.0
+    )
     registered_step = RegisteredMockStep(value=10, device="cpu")
 
     pipeline = DataProcessorPipeline([unregistered_step, registered_step])
@@ -1121,13 +1171,17 @@ def test_from_pretrained_override_instantiation_error():
 
         with pytest.raises(ValueError, match="Failed to instantiate processor step"):
             DataProcessorPipeline.from_pretrained(
-                tmp_dir, config_filename="dataprocessorpipeline.json", overrides=overrides
+                tmp_dir,
+                config_filename="dataprocessorpipeline.json",
+                overrides=overrides,
             )
 
 
 def test_from_pretrained_with_state_and_overrides():
     """Test that overrides work correctly with steps that have tensor state."""
-    step = MockStepWithTensorState(name="tensor_step", learning_rate=0.01, window_size=5)
+    step = MockStepWithTensorState(
+        name="tensor_step", learning_rate=0.01, window_size=5
+    )
     pipeline = DataProcessorPipeline([step])
 
     # Process some data to create state
@@ -1177,7 +1231,9 @@ def test_from_pretrained_override_error_messages():
 
         with pytest.raises(KeyError) as exc_info:
             DataProcessorPipeline.from_pretrained(
-                tmp_dir, config_filename="dataprocessorpipeline.json", overrides=overrides
+                tmp_dir,
+                config_filename="dataprocessorpipeline.json",
+                overrides=overrides,
             )
 
         error_msg = str(exc_info.value)
@@ -1202,7 +1258,9 @@ def test_repr_single_step():
     pipeline = DataProcessorPipeline([step])
     repr_str = repr(pipeline)
 
-    expected = "DataProcessorPipeline(name='DataProcessorPipeline', steps=1: [MockStep])"
+    expected = (
+        "DataProcessorPipeline(name='DataProcessorPipeline', steps=1: [MockStep])"
+    )
     assert repr_str == expected
 
 
@@ -1256,7 +1314,9 @@ def test_repr_with_seed():
     pipeline = DataProcessorPipeline([step])
     repr_str = repr(pipeline)
 
-    expected = "DataProcessorPipeline(name='DataProcessorPipeline', steps=1: [MockStep])"
+    expected = (
+        "DataProcessorPipeline(name='DataProcessorPipeline', steps=1: [MockStep])"
+    )
     assert repr_str == expected
 
 
@@ -1267,9 +1327,7 @@ def test_repr_with_custom_name_and_seed():
     pipeline = DataProcessorPipeline([step1, step2], name="MyProcessor")
     repr_str = repr(pipeline)
 
-    expected = (
-        "DataProcessorPipeline(name='MyProcessor', steps=2: [MockStep, MockStepWithoutOptionalMethods])"
-    )
+    expected = "DataProcessorPipeline(name='MyProcessor', steps=2: [MockStep, MockStepWithoutOptionalMethods])"
     assert repr_str == expected
 
 
@@ -1331,14 +1389,18 @@ def test_save_with_custom_config_filename():
         assert config["name"] == "TestProcessor"
 
         # Load with specific filename
-        loaded = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="my_custom_config.json")
+        loaded = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="my_custom_config.json"
+        )
         assert loaded.name == "TestProcessor"
 
 
 def test_multiple_processors_same_directory():
     """Test saving multiple processors to the same directory with different config files."""
     # Create different processors
-    preprocessor = DataProcessorPipeline([MockStep("pre1"), MockStep("pre2")], name="preprocessor")
+    preprocessor = DataProcessorPipeline(
+        [MockStep("pre1"), MockStep("pre2")], name="preprocessor"
+    )
 
     postprocessor = DataProcessorPipeline(
         [MockStepWithoutOptionalMethods(multiplier=0.5)], name="postprocessor"
@@ -1354,8 +1416,12 @@ def test_multiple_processors_same_directory():
         assert (Path(tmp_dir) / "postprocessor.json").exists()
 
         # Load them back
-        loaded_pre = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="preprocessor.json")
-        loaded_post = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="postprocessor.json")
+        loaded_pre = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="preprocessor.json"
+        )
+        loaded_post = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="postprocessor.json"
+        )
 
         assert loaded_pre.name == "preprocessor"
         assert loaded_post.name == "postprocessor"
@@ -1372,7 +1438,9 @@ def test_explicit_config_filename_loading():
         pipeline.save_pretrained(tmp_dir)
 
         # Load with explicit config_filename (now required)
-        loaded = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="singleconfig.json")
+        loaded = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="singleconfig.json"
+        )
         assert loaded.name == "SingleConfig"
 
 
@@ -1386,8 +1454,12 @@ def test_explicit_config_selection_with_multiple_configs():
         proc2.save_pretrained(tmp_dir)
 
         # Can load specific configs explicitly
-        loaded1 = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="processor1.json")
-        loaded2 = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="processor2.json")
+        loaded1 = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="processor1.json"
+        )
+        loaded2 = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="processor2.json"
+        )
 
         assert loaded1.name == "processor1"
         assert loaded2.name == "processor2"
@@ -1499,14 +1571,20 @@ def test_override_with_nested_config():
         def __call__(self, transition: EnvTransition) -> EnvTransition:
             comp_data = transition.get(TransitionKey.COMPLEMENTARY_DATA, {})
             comp_data = dict(comp_data)
-            comp_data["config_value"] = self.nested_config.get("level1", {}).get("level2", "missing")
+            comp_data["config_value"] = self.nested_config.get("level1", {}).get(
+                "level2", "missing"
+            )
 
             new_transition = transition.copy()
             new_transition[TransitionKey.COMPLEMENTARY_DATA] = comp_data
             return new_transition
 
         def get_config(self):
-            return {"name": self.name, "simple_param": self.simple_param, "nested_config": self.nested_config}
+            return {
+                "name": self.name,
+                "simple_param": self.simple_param,
+                "nested_config": self.nested_config,
+            }
 
         def transform_features(
             self, features: dict[PipelineFeatureType, dict[str, PolicyFeature]]
@@ -1525,7 +1603,11 @@ def test_override_with_nested_config():
             loaded = DataProcessorPipeline.from_pretrained(
                 tmp_dir,
                 config_filename="dataprocessorpipeline.json",
-                overrides={"complex_config_step": {"nested_config": {"level1": {"level2": "overridden"}}}},
+                overrides={
+                    "complex_config_step": {
+                        "nested_config": {"level1": {"level2": "overridden"}}
+                    }
+                },
                 to_transition=identity_transition,
                 to_output=identity_transition,
             )
@@ -1533,7 +1615,9 @@ def test_override_with_nested_config():
             # Test that override worked
             transition = create_transition()
             result = loaded(transition)
-            assert result[TransitionKey.COMPLEMENTARY_DATA]["config_value"] == "overridden"
+            assert (
+                result[TransitionKey.COMPLEMENTARY_DATA]["config_value"] == "overridden"
+            )
     finally:
         ProcessorStepRegistry.unregister("complex_config_step")
 
@@ -1573,14 +1657,14 @@ def test_override_type_validation():
 
         # Try to override with wrong type
         overrides = {
-            "MockStepWithTensorState": {
-                "window_size": "not_an_int"  # Should be int
-            }
+            "MockStepWithTensorState": {"window_size": "not_an_int"}  # Should be int
         }
 
         with pytest.raises(ValueError, match="Failed to instantiate"):
             DataProcessorPipeline.from_pretrained(
-                tmp_dir, config_filename="dataprocessorpipeline.json", overrides=overrides
+                tmp_dir,
+                config_filename="dataprocessorpipeline.json",
+                overrides=overrides,
             )
 
 
@@ -1672,7 +1756,9 @@ def test_override_multiple_same_class_warning():
 def test_config_filename_special_characters():
     """Test config filenames with special characters are sanitized."""
     # Processor name with special characters
-    pipeline = DataProcessorPipeline([MockStep()], name="My/Processor\\With:Special*Chars")
+    pipeline = DataProcessorPipeline(
+        [MockStep()], name="My/Processor\\With:Special*Chars"
+    )
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         pipeline.save_pretrained(tmp_dir)
@@ -1713,8 +1799,12 @@ def test_state_file_naming_with_multiple_processors():
         assert (Path(tmp_dir) / "postprocessor_step_0.safetensors").exists()
 
         # Load both back and verify they work correctly
-        loaded_pre = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="preprocessor.json")
-        loaded_post = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="postprocessor.json")
+        loaded_pre = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="preprocessor.json"
+        )
+        loaded_post = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="postprocessor.json"
+        )
 
         assert loaded_pre.name == "PreProcessor"
         assert loaded_post.name == "PostProcessor"
@@ -1782,11 +1872,15 @@ def test_from_pretrained_nonexistent_path():
 
     # Test with an invalid local path - should raise FileNotFoundError
     with pytest.raises(FileNotFoundError):
-        DataProcessorPipeline.from_pretrained("/path/that/does/not/exist", config_filename="processor.json")
+        DataProcessorPipeline.from_pretrained(
+            "/path/that/does/not/exist", config_filename="processor.json"
+        )
 
     # Test with a path that doesn't exist as a directory
     with pytest.raises(FileNotFoundError):
-        DataProcessorPipeline.from_pretrained("user/repo/extra/path", config_filename="processor.json")
+        DataProcessorPipeline.from_pretrained(
+            "user/repo/extra/path", config_filename="processor.json"
+        )
 
     # Test with a non-existent Hub repo
     with pytest.raises((FileNotFoundError, HfHubHTTPError)):
@@ -1834,7 +1928,9 @@ def test_save_load_with_custom_converter_functions():
         pipeline.save_pretrained(tmp_dir)
 
         # Load - should use default converters
-        loaded = DataProcessorPipeline.from_pretrained(tmp_dir, config_filename="dataprocessorpipeline.json")
+        loaded = DataProcessorPipeline.from_pretrained(
+            tmp_dir, config_filename="dataprocessorpipeline.json"
+        )
 
         # Verify it uses default converters by checking with standard batch format
         batch = {
@@ -1871,7 +1967,8 @@ class NonCallableStep(ProcessorStep):
 def test_construction_rejects_step_without_call():
     """Test that DataProcessorPipeline rejects steps that don't inherit from ProcessorStep."""
     with pytest.raises(
-        TypeError, match=r"Can't instantiate abstract class NonCallableStep with abstract method __call_"
+        TypeError,
+        match=r"Can't instantiate abstract class NonCallableStep with abstract method __call_",
     ):
         DataProcessorPipeline([NonCallableStep()])
 
@@ -1901,7 +1998,9 @@ class FeatureContractMutateStep(ProcessorStep):
     """Mutates a PolicyFeature"""
 
     key: str = "a"
-    fn: Callable[[PolicyFeature | None], PolicyFeature] = identity_transition  # noqa: E731
+    fn: Callable[[PolicyFeature | None], PolicyFeature] = (
+        identity_transition  # noqa: E731
+    )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:
         return transition
@@ -1947,8 +2046,12 @@ class FeatureContractRemoveStep(ProcessorStep):
 def test_features_orders_and_merges(policy_feature_factory):
     p = DataProcessorPipeline(
         [
-            FeatureContractAddStep("a", policy_feature_factory(FeatureType.STATE, (1,))),
-            FeatureContractMutateStep("a", lambda v: PolicyFeature(type=v.type, shape=(3,))),
+            FeatureContractAddStep(
+                "a", policy_feature_factory(FeatureType.STATE, (1,))
+            ),
+            FeatureContractMutateStep(
+                "a", lambda v: PolicyFeature(type=v.type, shape=(3,))
+            ),
             FeatureContractAddStep("b", policy_feature_factory(FeatureType.ENV, (2,))),
         ]
     )
@@ -1971,7 +2074,9 @@ def test_features_respects_initial_without_mutation(policy_feature_factory):
     }
     p = DataProcessorPipeline(
         [
-            FeatureContractMutateStep("seed", lambda v: PolicyFeature(type=v.type, shape=(v.shape[0] + 1,))),
+            FeatureContractMutateStep(
+                "seed", lambda v: PolicyFeature(type=v.type, shape=(v.shape[0] + 1,))
+            ),
             FeatureContractMutateStep(
                 "nested", lambda v: PolicyFeature(type=v.type, shape=(v.shape[0] + 5,))
             ),
@@ -2008,16 +2113,18 @@ def test_features_execution_order_tracking():
             )
             return features
 
-    out = DataProcessorPipeline([Track("A"), Track("B"), Track("C")]).transform_features(
-        initial_features={PipelineFeatureType.OBSERVATION: {}}
-    )
+    out = DataProcessorPipeline(
+        [Track("A"), Track("B"), Track("C")]
+    ).transform_features(initial_features={PipelineFeatureType.OBSERVATION: {}})
     assert out[PipelineFeatureType.OBSERVATION]["order"].shape == (1, 2, 3)
 
 
 def test_features_remove_key(policy_feature_factory):
     p = DataProcessorPipeline(
         [
-            FeatureContractAddStep("a", policy_feature_factory(FeatureType.STATE, (1,))),
+            FeatureContractAddStep(
+                "a", policy_feature_factory(FeatureType.STATE, (1,))
+            ),
             FeatureContractRemoveStep("a"),
         ]
     )
@@ -2036,7 +2143,8 @@ def test_features_remove_from_initial(policy_feature_factory):
     out = p.transform_features(initial_features=initial)
     assert (
         "drop" not in out[PipelineFeatureType.OBSERVATION]
-        and out[PipelineFeatureType.OBSERVATION]["keep"] == initial[PipelineFeatureType.OBSERVATION]["keep"]
+        and out[PipelineFeatureType.OBSERVATION]["keep"]
+        == initial[PipelineFeatureType.OBSERVATION]["keep"]
     )
 
 
@@ -2076,13 +2184,18 @@ class AddObservationStateFeatures(ProcessorStep):
         features[PipelineFeatureType.OBSERVATION][f"{OBS_STATE}.ee.x"] = float
         features[PipelineFeatureType.OBSERVATION][f"{OBS_STATE}.j1.pos"] = float
         if self.add_front_image:
-            features[PipelineFeatureType.OBSERVATION][f"{OBS_IMAGES}.front"] = self.front_image_shape
+            features[PipelineFeatureType.OBSERVATION][
+                f"{OBS_IMAGES}.front"
+            ] = self.front_image_shape
         return features
 
 
 def test_aggregate_joint_action_only():
     rp = DataProcessorPipeline([AddActionEEAndJointFeatures()])
-    initial = {PipelineFeatureType.OBSERVATION: {"front": (480, 640, 3)}, PipelineFeatureType.ACTION: {}}
+    initial = {
+        PipelineFeatureType.OBSERVATION: {"front": (480, 640, 3)},
+        PipelineFeatureType.ACTION: {},
+    }
 
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
@@ -2099,12 +2212,17 @@ def test_aggregate_joint_action_only():
 
 
 def test_aggregate_ee_action_and_observation_with_videos():
-    rp = DataProcessorPipeline([AddActionEEAndJointFeatures(), AddObservationStateFeatures()])
+    rp = DataProcessorPipeline(
+        [AddActionEEAndJointFeatures(), AddObservationStateFeatures()]
+    )
     initial = {"front": (480, 640, 3), "side": (720, 1280, 3)}
 
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
-        initial_features={PipelineFeatureType.OBSERVATION: initial, PipelineFeatureType.ACTION: {}},
+        initial_features={
+            PipelineFeatureType.OBSERVATION: initial,
+            PipelineFeatureType.ACTION: {},
+        },
         use_videos=True,
         patterns=["action.ee", OBS_STATE],
     )
@@ -2132,7 +2250,10 @@ def test_aggregate_both_action_types():
     rp = DataProcessorPipeline([AddActionEEAndJointFeatures()])
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
-        initial_features={PipelineFeatureType.ACTION: {}, PipelineFeatureType.OBSERVATION: {}},
+        initial_features={
+            PipelineFeatureType.ACTION: {},
+            PipelineFeatureType.OBSERVATION: {},
+        },
         use_videos=True,
         patterns=["action.ee", "action.j1", "action.j2.pos"],
     )
@@ -2149,7 +2270,10 @@ def test_aggregate_images_when_use_videos_false():
 
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
-        initial_features={PipelineFeatureType.ACTION: {}, PipelineFeatureType.OBSERVATION: initial},
+        initial_features={
+            PipelineFeatureType.ACTION: {},
+            PipelineFeatureType.OBSERVATION: initial,
+        },
         use_videos=False,  # expect "image" dtype
         patterns=None,
     )
@@ -2166,7 +2290,10 @@ def test_aggregate_images_when_use_videos_true():
 
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
-        initial_features={PipelineFeatureType.OBSERVATION: initial, PipelineFeatureType.ACTION: {}},
+        initial_features={
+            PipelineFeatureType.OBSERVATION: initial,
+            PipelineFeatureType.ACTION: {},
+        },
         use_videos=True,
         patterns=None,
     )
@@ -2184,13 +2311,22 @@ def test_initial_camera_not_overridden_by_step_image():
     # Step explicitly sets a different front image shape; initial has another shape.
     # aggregate_pipeline_dataset_features should keep the step's value (setdefault behavior on initial cams).
     rp = DataProcessorPipeline(
-        [AddObservationStateFeatures(add_front_image=True, front_image_shape=(240, 320, 3))]
+        [
+            AddObservationStateFeatures(
+                add_front_image=True, front_image_shape=(240, 320, 3)
+            )
+        ]
     )
-    initial = {"front": (480, 640, 3)}  # should NOT override the step-provided (240, 320, 3)
+    initial = {
+        "front": (480, 640, 3)
+    }  # should NOT override the step-provided (240, 320, 3)
 
     out = aggregate_pipeline_dataset_features(
         pipeline=rp,
-        initial_features={PipelineFeatureType.ACTION: {}, PipelineFeatureType.OBSERVATION: initial},
+        initial_features={
+            PipelineFeatureType.ACTION: {},
+            PipelineFeatureType.OBSERVATION: initial,
+        },
         use_videos=True,
         patterns=[f"{OBS_IMAGES}.front"],
     )

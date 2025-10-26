@@ -43,7 +43,9 @@ class MockPolicy:
             """Empty image features since this test doesn't use images."""
             return {}
 
-    def predict_action_chunk(self, observation: dict[str, torch.Tensor]) -> torch.Tensor:
+    def predict_action_chunk(
+        self, observation: dict[str, torch.Tensor]
+    ) -> torch.Tensor:
         """Return a chunk of 20 dummy actions."""
         batch_size = len(observation[OBS_STATE])
         return torch.zeros(batch_size, 20, 6)
@@ -206,13 +208,17 @@ def test_predict_action_chunk(monkeypatch, policy_server):
     def _fake_get_action_chunk(_self, _obs, _type="act"):
         return torch.zeros(batch_size, actions_per_chunk, action_dim)
 
-    monkeypatch.setattr(PolicyServer, "_get_action_chunk", _fake_get_action_chunk, raising=True)
+    monkeypatch.setattr(
+        PolicyServer, "_get_action_chunk", _fake_get_action_chunk, raising=True
+    )
 
     obs = _make_obs(torch.zeros(6), timestep=5)
     timed_actions = policy_server._predict_action_chunk(obs)
 
     assert len(timed_actions) == actions_per_chunk
-    assert [ta.get_timestep() for ta in timed_actions] == list(range(5, 5 + actions_per_chunk))
+    assert [ta.get_timestep() for ta in timed_actions] == list(
+        range(5, 5 + actions_per_chunk)
+    )
 
     for i, ta in enumerate(timed_actions):
         expected_ts = obs.get_timestamp() + i * policy_server.config.environment_dt

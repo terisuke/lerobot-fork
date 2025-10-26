@@ -21,8 +21,12 @@ import pytest
 import torch
 
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
-from lerobot.policies.sac.reward_model.processor_classifier import make_classifier_processor
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
+from lerobot.policies.sac.reward_model.processor_classifier import (
+    make_classifier_processor,
+)
 from lerobot.processor import (
     DataProcessorPipeline,
     DeviceProcessorStep,
@@ -42,7 +46,9 @@ def create_default_config():
         OBS_IMAGE: PolicyFeature(type=FeatureType.VISUAL, shape=(3, 224, 224)),
     }
     config.output_features = {
-        "reward": PolicyFeature(type=FeatureType.ACTION, shape=(1,)),  # Classifier output
+        "reward": PolicyFeature(
+            type=FeatureType.ACTION, shape=(1,)
+        ),  # Classifier output
     }
     config.normalization_mapping = {
         FeatureType.STATE: NormalizationMode.MEAN_STD,
@@ -75,8 +81,12 @@ def test_make_classifier_processor_basic():
 
     # Check steps in preprocessor
     assert len(preprocessor.steps) == 3
-    assert isinstance(preprocessor.steps[0], NormalizerProcessorStep)  # For input features
-    assert isinstance(preprocessor.steps[1], NormalizerProcessorStep)  # For output features
+    assert isinstance(
+        preprocessor.steps[0], NormalizerProcessorStep
+    )  # For input features
+    assert isinstance(
+        preprocessor.steps[1], NormalizerProcessorStep
+    )  # For output features
     assert isinstance(preprocessor.steps[2], DeviceProcessorStep)
 
     # Check steps in postprocessor
@@ -282,7 +292,9 @@ def test_classifier_processor_mixed_precision():
     modified_steps = []
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
-            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="float16"))
+            modified_steps.append(
+                DeviceProcessorStep(device=config.device, float_dtype="float16")
+            )
         else:
             modified_steps.append(step)
     preprocessor.steps = modified_steps

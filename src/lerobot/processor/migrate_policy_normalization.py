@@ -58,11 +58,17 @@ from huggingface_hub import HfApi, hf_hub_download
 from safetensors.torch import load_file as load_safetensors
 
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
-from lerobot.policies.factory import get_policy_class, make_policy_config, make_pre_post_processors
+from lerobot.policies.factory import (
+    get_policy_class,
+    make_policy_config,
+    make_pre_post_processors,
+)
 from lerobot.utils.constants import ACTION
 
 
-def extract_normalization_stats(state_dict: dict[str, torch.Tensor]) -> dict[str, dict[str, torch.Tensor]]:
+def extract_normalization_stats(
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, dict[str, torch.Tensor]]:
     """
     Scans a model's state_dict to find and extract normalization statistics.
 
@@ -149,7 +155,9 @@ def detect_features_and_norm_modes(
 
     # First, check if there's a normalization_mapping in the config
     if "normalization_mapping" in config:
-        print(f"Found normalization_mapping in config: {config['normalization_mapping']}")
+        print(
+            f"Found normalization_mapping in config: {config['normalization_mapping']}"
+        )
         # Extract normalization modes from config
         for feature_type_str, mode_str in config["normalization_mapping"].items():
             # Convert string to FeatureType enum
@@ -161,10 +169,14 @@ def detect_features_and_norm_modes(
                 elif feature_type_str == "ACTION":
                     feature_type = FeatureType.ACTION
                 else:
-                    print(f"Warning: Unknown feature type '{feature_type_str}', skipping")
+                    print(
+                        f"Warning: Unknown feature type '{feature_type_str}', skipping"
+                    )
                     continue
             except (AttributeError, ValueError):
-                print(f"Warning: Could not parse feature type '{feature_type_str}', skipping")
+                print(
+                    f"Warning: Could not parse feature type '{feature_type_str}', skipping"
+                )
                 continue
 
             # Convert string to NormalizationMode enum
@@ -181,7 +193,9 @@ def detect_features_and_norm_modes(
                     )
                     continue
             except (AttributeError, ValueError):
-                print(f"Warning: Could not parse normalization mode '{mode_str}', skipping")
+                print(
+                    f"Warning: Could not parse normalization mode '{mode_str}', skipping"
+                )
                 continue
 
             norm_modes[feature_type] = mode
@@ -247,7 +261,9 @@ def detect_features_and_norm_modes(
     return features, norm_modes
 
 
-def remove_normalization_layers(state_dict: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+def remove_normalization_layers(
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
     """
     Creates a new state_dict with all normalization-related layers removed.
 
@@ -335,17 +351,25 @@ def load_state_dict_with_missing_key_handling(
     # Filter out whitelisted missing keys
     policy_type_lower = policy_type.lower()
     whitelisted_keys = known_missing_keys_whitelist.get(policy_type_lower, [])
-    problematic_missing_keys = [key for key in missing_keys if key not in whitelisted_keys]
+    problematic_missing_keys = [
+        key for key in missing_keys if key not in whitelisted_keys
+    ]
 
     if missing_keys:
         if problematic_missing_keys:
-            print(f"WARNING: Found {len(problematic_missing_keys)} unexpected missing keys:")
+            print(
+                f"WARNING: Found {len(problematic_missing_keys)} unexpected missing keys:"
+            )
             for key in problematic_missing_keys:
                 print(f"   - {key}")
 
         if len(missing_keys) > len(problematic_missing_keys):
-            whitelisted_missing = [key for key in missing_keys if key in whitelisted_keys]
-            print(f"INFO: Found {len(whitelisted_missing)} expected missing keys (whitelisted):")
+            whitelisted_missing = [
+                key for key in missing_keys if key in whitelisted_keys
+            ]
+            print(
+                f"INFO: Found {len(whitelisted_missing)} expected missing keys (whitelisted):"
+            )
             for key in whitelisted_missing:
                 print(f"   - {key}")
 
@@ -355,14 +379,18 @@ def load_state_dict_with_missing_key_handling(
             print(f"   - {key}")
 
     if not missing_keys and not unexpected_keys:
-        print("Successfully loaded cleaned state dict into policy model (all keys matched)")
+        print(
+            "Successfully loaded cleaned state dict into policy model (all keys matched)"
+        )
     else:
         print("State dict loaded with some missing/unexpected keys (see details above)")
 
     return problematic_missing_keys
 
 
-def convert_features_to_policy_features(features_dict: dict[str, dict]) -> dict[str, PolicyFeature]:
+def convert_features_to_policy_features(
+    features_dict: dict[str, dict],
+) -> dict[str, PolicyFeature]:
     """
     Converts a feature dictionary from the old config format to the new `PolicyFeature` format.
 
@@ -388,14 +416,20 @@ def convert_features_to_policy_features(features_dict: dict[str, dict]) -> dict[
 
         # Get shape from feature dict
         shape = feature_dict.get("shape", feature_dict.get("dim"))
-        shape = (shape,) if isinstance(shape, int) else tuple(shape) if shape is not None else ()
+        shape = (
+            (shape,)
+            if isinstance(shape, int)
+            else tuple(shape) if shape is not None else ()
+        )
 
         converted_features[key] = PolicyFeature(feature_type, shape)
 
     return converted_features
 
 
-def display_migration_summary_with_warnings(problematic_missing_keys: list[str]) -> None:
+def display_migration_summary_with_warnings(
+    problematic_missing_keys: list[str],
+) -> None:
     """
     Display final migration summary with warnings about problematic missing keys.
 
@@ -446,9 +480,13 @@ def load_model_from_hub(
         and the training configuration (None if train_config.json is not found).
     """
     # Download files.
-    safetensors_path = hf_hub_download(repo_id=repo_id, filename="model.safetensors", revision=revision)
+    safetensors_path = hf_hub_download(
+        repo_id=repo_id, filename="model.safetensors", revision=revision
+    )
 
-    config_path = hf_hub_download(repo_id=repo_id, filename="config.json", revision=revision)
+    config_path = hf_hub_download(
+        repo_id=repo_id, filename="config.json", revision=revision
+    )
 
     # Load state_dict
     state_dict = load_safetensors(safetensors_path)
@@ -460,7 +498,9 @@ def load_model_from_hub(
     # Try to load train_config (optional)
     train_config = None
     try:
-        train_config_path = hf_hub_download(repo_id=repo_id, filename="train_config.json", revision=revision)
+        train_config_path = hf_hub_download(
+            repo_id=repo_id, filename="train_config.json", revision=revision
+        )
         with open(train_config_path) as f:
             train_config = json.load(f)
     except FileNotFoundError:
@@ -485,15 +525,21 @@ def main():
         default=None,
         help="Output directory for migrated model (default: same as pretrained-path)",
     )
-    parser.add_argument("--push-to-hub", action="store_true", help="Push migrated model to hub")
+    parser.add_argument(
+        "--push-to-hub", action="store_true", help="Push migrated model to hub"
+    )
     parser.add_argument(
         "--hub-repo-id",
         type=str,
         default=None,
         help="Hub repository ID for pushing (default: same as pretrained-path)",
     )
-    parser.add_argument("--revision", type=str, default=None, help="Revision of the model to load")
-    parser.add_argument("--private", action="store_true", help="Make the hub repository private")
+    parser.add_argument(
+        "--revision", type=str, default=None, help="Revision of the model to load"
+    )
+    parser.add_argument(
+        "--private", action="store_true", help="Make the hub repository private"
+    )
     parser.add_argument(
         "--branch",
         type=str,
@@ -507,7 +553,9 @@ def main():
     print(f"Loading model from {args.pretrained_path}...")
     if os.path.isdir(args.pretrained_path):
         # Local directory
-        state_dict = load_safetensors(os.path.join(args.pretrained_path, "model.safetensors"))
+        state_dict = load_safetensors(
+            os.path.join(args.pretrained_path, "model.safetensors")
+        )
         with open(os.path.join(args.pretrained_path, "config.json")) as f:
             config = json.load(f)
 
@@ -518,10 +566,14 @@ def main():
             with open(train_config_path) as f:
                 train_config = json.load(f)
         else:
-            print("train_config.json not found - continuing without training configuration")
+            print(
+                "train_config.json not found - continuing without training configuration"
+            )
     else:
         # Hub repository
-        state_dict, config, train_config = load_model_from_hub(args.pretrained_path, args.revision)
+        state_dict, config, train_config = load_model_from_hub(
+            args.pretrained_path, args.revision
+        )
 
     # Extract normalization statistics
     print("Extracting normalization statistics...")
@@ -550,7 +602,10 @@ def main():
         output_dir = Path(args.output_dir)
     else:
         if os.path.isdir(args.pretrained_path):
-            output_dir = Path(args.pretrained_path).parent / f"{Path(args.pretrained_path).name}_migrated"
+            output_dir = (
+                Path(args.pretrained_path).parent
+                / f"{Path(args.pretrained_path).name}_migrated"
+            )
         else:
             output_dir = Path(f"./{args.pretrained_path.replace('/', '_')}_migrated")
 
@@ -558,7 +613,9 @@ def main():
 
     # Extract policy type from config
     if "type" not in config:
-        raise ValueError("Policy type not found in config.json. The config must contain a 'type' field.")
+        raise ValueError(
+            "Policy type not found in config.json. The config must contain a 'type' field."
+        )
 
     policy_type = config["type"]
     print(f"Detected policy type: {policy_type}")
@@ -597,7 +654,9 @@ def main():
 
     # Define whitelist of known missing keys that are acceptable (for example weight tie) for certain policy types
     known_missing_keys_whitelist = {
-        "pi0": ["model.paligemma_with_expert.paligemma.model.language_model.embed_tokens.weight"],
+        "pi0": [
+            "model.paligemma_with_expert.paligemma.model.language_model.embed_tokens.weight"
+        ],
         # Add other policy types and their known missing keys here as needed
     }
 
@@ -611,7 +670,9 @@ def main():
     policy.to(torch.float32)
     # Create preprocessor and postprocessor using the factory
     print("Creating preprocessor and postprocessor using make_pre_post_processors...")
-    preprocessor, postprocessor = make_pre_post_processors(policy_cfg=policy_config, dataset_stats=stats)
+    preprocessor, postprocessor = make_pre_post_processors(
+        policy_cfg=policy_config, dataset_stats=stats
+    )
 
     # Determine hub repo ID if pushing to hub
     hub_repo_id = None
@@ -623,7 +684,9 @@ def main():
                 # Use same repo with "_migrated" suffix
                 hub_repo_id = f"{args.pretrained_path}_migrated"
             else:
-                raise ValueError("--hub-repo-id must be specified when pushing local model to hub")
+                raise ValueError(
+                    "--hub-repo-id must be specified when pushing local model to hub"
+                )
 
     # Save all components to local directory first
     print(f"Saving preprocessor to {output_dir}...")
@@ -643,13 +706,20 @@ def main():
         dataset_repo_id = train_config.get("repo_id", "unknown")
     license = config.get("license", "apache-2.0")
 
-    tags = config.get("tags", ["robotics", "lerobot", policy_type]) or ["robotics", "lerobot", policy_type]
+    tags = config.get("tags", ["robotics", "lerobot", policy_type]) or [
+        "robotics",
+        "lerobot",
+        policy_type,
+    ]
     tags = set(tags).union({"robotics", "lerobot", policy_type})
     tags = list(tags)
 
     # Generate model card
     card = policy.generate_model_card(
-        dataset_repo_id=dataset_repo_id, model_type=policy_type, license=license, tags=tags
+        dataset_repo_id=dataset_repo_id,
+        model_type=policy_type,
+        license=license,
+        tags=tags,
     )
 
     # Save model card locally
@@ -754,7 +824,9 @@ final_action = postprocessor(action)
         else:
             print(f"Successfully pushed to https://huggingface.co/{hub_repo_id}")
         if args.branch:
-            print(f"\nView the branch at: https://huggingface.co/{hub_repo_id}/tree/{args.branch}")
+            print(
+                f"\nView the branch at: https://huggingface.co/{hub_repo_id}/tree/{args.branch}"
+            )
             print(
                 f"View the PR at: https://huggingface.co/{hub_repo_id}/discussions (look for the most recent PR)"
             )

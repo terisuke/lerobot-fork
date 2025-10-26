@@ -306,7 +306,9 @@ def test_robot_to_policy_registry():
     """Test RobotActionToPolicyActionProcessorStep registry."""
     assert "robot_action_to_policy_action_processor" in ProcessorStepRegistry.list()
 
-    retrieved_class = ProcessorStepRegistry.get("robot_action_to_policy_action_processor")
+    retrieved_class = ProcessorStepRegistry.get(
+        "robot_action_to_policy_action_processor"
+    )
     assert retrieved_class is RobotActionToPolicyActionProcessorStep
 
     instance = retrieved_class(motor_names=["test"])
@@ -318,7 +320,9 @@ def test_policy_to_robot_registry():
     """Test PolicyActionToRobotActionProcessorStep registry."""
     assert "policy_action_to_robot_action_processor" in ProcessorStepRegistry.list()
 
-    retrieved_class = ProcessorStepRegistry.get("policy_action_to_robot_action_processor")
+    retrieved_class = ProcessorStepRegistry.get(
+        "policy_action_to_robot_action_processor"
+    )
     assert retrieved_class is PolicyActionToRobotActionProcessorStep
 
     instance = retrieved_class(motor_names=["test"])

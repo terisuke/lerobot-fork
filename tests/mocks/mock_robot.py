@@ -83,7 +83,8 @@ class MockRobot(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3) for cam in self.cameras
+            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            for cam in self.cameras
         }
 
     @cached_property
@@ -127,7 +128,10 @@ class MockRobot(Robot):
             return {f"{motor}.pos": random.uniform(-100, 100) for motor in self.motors}
         else:
             return {
-                f"{motor}.pos": val for motor, val in zip(self.motors, self.config.static_values, strict=True)
+                f"{motor}.pos": val
+                for motor, val in zip(
+                    self.motors, self.config.static_values, strict=True
+                )
             }
 
     def send_action(self, action: dict[str, Any]) -> dict[str, Any]:

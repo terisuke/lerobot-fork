@@ -91,7 +91,11 @@ def base_params_dict():
             {
                 "actor": {"lr": 1e-4, "weight_decay": 1e-4, "betas": (0.9, 0.999)},
                 "critic": {"lr": 5e-4, "weight_decay": 1e-4, "betas": (0.9, 0.999)},
-                "temperature": {"lr": 2e-3, "weight_decay": 1e-4, "betas": (0.9, 0.999)},
+                "temperature": {
+                    "lr": 2e-3,
+                    "weight_decay": 1e-4,
+                    "betas": (0.9, 0.999),
+                },
             },
         ),
         # Test 2: Different weight decays and beta values
@@ -108,7 +112,11 @@ def base_params_dict():
             {
                 "actor": {"lr": 1e-4, "weight_decay": 1e-5, "betas": (0.9, 0.999)},
                 "critic": {"lr": 5e-4, "weight_decay": 1e-6, "betas": (0.9, 0.999)},
-                "temperature": {"lr": 2e-3, "weight_decay": 1e-4, "betas": (0.95, 0.999)},
+                "temperature": {
+                    "lr": 2e-3,
+                    "weight_decay": 1e-4,
+                    "betas": (0.95, 0.999),
+                },
             },
         ),
         # Test 3: Epsilon parameter customization
@@ -123,9 +131,24 @@ def base_params_dict():
                 },
             },
             {
-                "actor": {"lr": 1e-4, "weight_decay": 1e-4, "betas": (0.9, 0.999), "eps": 1e-6},
-                "critic": {"lr": 5e-4, "weight_decay": 1e-4, "betas": (0.9, 0.999), "eps": 1e-7},
-                "temperature": {"lr": 2e-3, "weight_decay": 1e-4, "betas": (0.9, 0.999), "eps": 1e-8},
+                "actor": {
+                    "lr": 1e-4,
+                    "weight_decay": 1e-4,
+                    "betas": (0.9, 0.999),
+                    "eps": 1e-6,
+                },
+                "critic": {
+                    "lr": 5e-4,
+                    "weight_decay": 1e-4,
+                    "betas": (0.9, 0.999),
+                    "eps": 1e-7,
+                },
+                "temperature": {
+                    "lr": 2e-3,
+                    "weight_decay": 1e-4,
+                    "betas": (0.9, 0.999),
+                    "eps": 1e-8,
+                },
             },
         ),
     ],
@@ -174,7 +197,9 @@ def test_save_multi_optimizer_state(multi_optimizers, tmp_path):
         assert (tmp_path / name / OPTIMIZER_PARAM_GROUPS).is_file()
 
 
-def test_save_and_load_multi_optimizer_state(base_params_dict, multi_optimizers, tmp_path):
+def test_save_and_load_multi_optimizer_state(
+    base_params_dict, multi_optimizers, tmp_path
+):
     # Option 1: Add a minimal backward pass to populate optimizer states
     for name, params in base_params_dict.items():
         if name in multi_optimizers:
@@ -205,7 +230,9 @@ def test_save_and_load_multi_optimizer_state(base_params_dict, multi_optimizers,
 
     # Verify state dictionaries match
     for name in multi_optimizers:
-        torch.testing.assert_close(multi_optimizers[name].state_dict(), loaded_optimizers[name].state_dict())
+        torch.testing.assert_close(
+            multi_optimizers[name].state_dict(), loaded_optimizers[name].state_dict()
+        )
 
 
 def test_save_and_load_empty_multi_optimizer_state(base_params_dict, tmp_path):
@@ -233,10 +260,14 @@ def test_save_and_load_empty_multi_optimizer_state(base_params_dict, tmp_path):
     # Verify hyperparameters match even with empty state
     for name, optimizer in optimizers.items():
         assert optimizer.defaults["lr"] == loaded_optimizers[name].defaults["lr"]
-        assert optimizer.defaults["weight_decay"] == loaded_optimizers[name].defaults["weight_decay"]
+        assert (
+            optimizer.defaults["weight_decay"]
+            == loaded_optimizers[name].defaults["weight_decay"]
+        )
         assert optimizer.defaults["betas"] == loaded_optimizers[name].defaults["betas"]
 
         # Verify state dictionaries match (they will be empty)
         torch.testing.assert_close(
-            optimizer.state_dict()["param_groups"], loaded_optimizers[name].state_dict()["param_groups"]
+            optimizer.state_dict()["param_groups"],
+            loaded_optimizers[name].state_dict()["param_groups"],
         )

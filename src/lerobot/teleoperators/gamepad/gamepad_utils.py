@@ -212,7 +212,9 @@ class GamepadController(InputController):
         pygame.joystick.init()
 
         if pygame.joystick.get_count() == 0:
-            logging.error("No gamepad detected. Please connect a gamepad and try again.")
+            logging.error(
+                "No gamepad detected. Please connect a gamepad and try again."
+            )
             self.running = False
             return
 
@@ -347,7 +349,10 @@ class GamepadControllerHID(InputController):
         devices = hid.enumerate()
         for device in devices:
             device_name = device["product_string"]
-            if any(controller in device_name for controller in ["Logitech", "Xbox", "PS4", "PS5"]):
+            if any(
+                controller in device_name
+                for controller in ["Logitech", "Xbox", "PS4", "PS5"]
+            ):
                 return device
 
         logging.error(
@@ -383,7 +388,9 @@ class GamepadControllerHID(InputController):
 
         except OSError as e:
             logging.error(f"Error opening gamepad: {e}")
-            logging.error("You might need to run this with sudo/admin privileges on some systems")
+            logging.error(
+                "You might need to run this with sudo/admin privileges on some systems"
+            )
             self.running = False
 
     def stop(self):

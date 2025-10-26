@@ -43,7 +43,9 @@ def test_load_config_directory():
         config_file.write_text(json.dumps(test_config))
 
         # Load from directory
-        loaded_config, base_path = DataProcessorPipeline._load_config(str(tmp_path), "processor.json", {})
+        loaded_config, base_path = DataProcessorPipeline._load_config(
+            str(tmp_path), "processor.json", {}
+        )
 
         assert loaded_config == test_config
         assert base_path == tmp_path
@@ -106,7 +108,9 @@ def test_validate_loaded_config_valid_config():
     valid_config = {"name": "TestProcessor", "steps": []}
 
     # Should not raise any exception
-    DataProcessorPipeline._validate_loaded_config("any-path", valid_config, "processor.json")
+    DataProcessorPipeline._validate_loaded_config(
+        "any-path", valid_config, "processor.json"
+    )
 
 
 def test_validate_loaded_config_invalid_config():
@@ -120,7 +124,9 @@ def test_validate_loaded_config_invalid_config():
         invalid_config = {"type": "act", "hidden_dim": 256}
 
         with pytest.raises(ProcessorMigrationError):
-            DataProcessorPipeline._validate_loaded_config(str(tmp_path), invalid_config, "config.json")
+            DataProcessorPipeline._validate_loaded_config(
+                str(tmp_path), invalid_config, "config.json"
+            )
 
 
 def test_validate_loaded_config_invalid_config_no_migration():
@@ -129,7 +135,9 @@ def test_validate_loaded_config_invalid_config_no_migration():
     invalid_config = {"type": "act", "hidden_dim": 256}
 
     with pytest.raises(ValueError, match="not a valid processor configuration"):
-        DataProcessorPipeline._validate_loaded_config("user/repo", invalid_config, "config.json")
+        DataProcessorPipeline._validate_loaded_config(
+            "user/repo", invalid_config, "config.json"
+        )
 
 
 # Step Class Resolution Tests
@@ -162,7 +170,9 @@ def test_resolve_step_class_registry_name_not_found():
     """Test resolution with non-existent registry name."""
     step_entry = {"registry_name": "nonexistent_step"}
 
-    with pytest.raises(ImportError, match="Failed to load processor step from registry"):
+    with pytest.raises(
+        ImportError, match="Failed to load processor step from registry"
+    ):
         DataProcessorPipeline._resolve_step_class(step_entry)
 
 
@@ -247,7 +257,9 @@ def test_simplified_three_way_loading():
         test_config = {"name": "DirectoryTest", "steps": []}
         config_file.write_text(json.dumps(test_config))
 
-        loaded_config, base_path = DataProcessorPipeline._load_config(str(tmp_path), "processor.json", {})
+        loaded_config, base_path = DataProcessorPipeline._load_config(
+            str(tmp_path), "processor.json", {}
+        )
         assert loaded_config["name"] == "DirectoryTest"
         assert base_path == tmp_path
 

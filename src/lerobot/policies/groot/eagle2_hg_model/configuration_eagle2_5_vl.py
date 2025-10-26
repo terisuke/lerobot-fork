@@ -61,7 +61,9 @@ class Eagle25VLConfig(PretrainedConfig):
 
         if vision_config is None:
             vision_config = {"model_type": "siglip_vision_model"}
-            logger.info("vision_config is None. Initializing the InternVisionConfig with default values.")
+            logger.info(
+                "vision_config is None. Initializing the InternVisionConfig with default values."
+            )
 
         if text_config is None:
             text_config = {"architectures": ["Qwen2ForCausalLM"]}
@@ -72,7 +74,9 @@ class Eagle25VLConfig(PretrainedConfig):
         if vision_config["model_type"] == "siglip_vision_model":
             self.vision_config = SiglipVisionConfig(**vision_config)
         else:
-            raise ValueError("Unsupported model_type: {}".format(vision_config["model_type"]))
+            raise ValueError(
+                "Unsupported model_type: {}".format(vision_config["model_type"])
+            )
 
         if text_config["architectures"][0] == "LlamaForCausalLM":
             self.text_config = LlamaConfig(**text_config)
@@ -81,7 +85,9 @@ class Eagle25VLConfig(PretrainedConfig):
         elif text_config["architectures"][0] == "Qwen3ForCausalLM":
             self.text_config = Qwen3Config(**text_config)
         else:
-            raise ValueError("Unsupported architecture: {}".format(text_config["architectures"][0]))
+            raise ValueError(
+                "Unsupported architecture: {}".format(text_config["architectures"][0])
+            )
         self.use_backbone_lora = use_backbone_lora
         self.use_llm_lora = use_llm_lora
         self.mlp_checkpoint = mlp_checkpoint

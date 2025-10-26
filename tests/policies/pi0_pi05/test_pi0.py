@@ -28,10 +28,10 @@ pytestmark = pytest.mark.skipif(
 )
 
 from lerobot.policies.factory import make_policy_config  # noqa: E402
+from lerobot.policies.pi0 import make_pi0_pre_post_processors  # noqa: E402
 from lerobot.policies.pi0 import (  # noqa: E402
     PI0Config,
     PI0Policy,
-    make_pi0_pre_post_processors,  # noqa: E402
 )
 from lerobot.utils.random_utils import set_seed  # noqa: E402
 from tests.utils import require_cuda  # noqa: E402
@@ -82,13 +82,19 @@ def test_policy_instantiation():
 
     # Instantiate policy
     policy = PI0Policy(config)
-    preprocessor, postprocessor = make_pi0_pre_post_processors(config=config, dataset_stats=dataset_stats)
+    preprocessor, postprocessor = make_pi0_pre_post_processors(
+        config=config, dataset_stats=dataset_stats
+    )
     # Test forward pass with dummy data
     batch_size = 1
     device = config.device
     batch = {
-        "observation.state": torch.randn(batch_size, 14, dtype=torch.float32, device=device),
-        "action": torch.randn(batch_size, config.chunk_size, 7, dtype=torch.float32, device=device),
+        "observation.state": torch.randn(
+            batch_size, 14, dtype=torch.float32, device=device
+        ),
+        "action": torch.randn(
+            batch_size, config.chunk_size, 7, dtype=torch.float32, device=device
+        ),
         "observation.images.base_0_rgb": torch.rand(
             batch_size, 3, 224, 224, dtype=torch.float32, device=device
         ),  # Use rand for [0,1] range

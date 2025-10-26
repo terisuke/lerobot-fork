@@ -115,7 +115,11 @@ class AddBatchDimensionObservationStep(ObservationProcessorStep):
 
         # Process multiple image observations - add batch dim if 3D
         for key, value in observation.items():
-            if key.startswith(f"{OBS_IMAGES}.") and isinstance(value, Tensor) and value.dim() == 3:
+            if (
+                key.startswith(f"{OBS_IMAGES}.")
+                and isinstance(value, Tensor)
+                and value.dim() == 3
+            ):
                 observation[key] = value.unsqueeze(0)
         return observation
 
@@ -214,8 +218,8 @@ class AddBatchDimensionProcessorStep(ProcessorStep):
     to_batch_observation_processor: AddBatchDimensionObservationStep = field(
         default_factory=AddBatchDimensionObservationStep
     )
-    to_batch_complementary_data_processor: AddBatchDimensionComplementaryDataStep = field(
-        default_factory=AddBatchDimensionComplementaryDataStep
+    to_batch_complementary_data_processor: AddBatchDimensionComplementaryDataStep = (
+        field(default_factory=AddBatchDimensionComplementaryDataStep)
     )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:

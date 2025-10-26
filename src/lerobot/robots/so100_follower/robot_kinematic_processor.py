@@ -70,15 +70,21 @@ class EEReferenceAndDelta(RobotActionProcessorStep):
 
     reference_ee_pose: np.ndarray | None = field(default=None, init=False, repr=False)
     _prev_enabled: bool = field(default=False, init=False, repr=False)
-    _command_when_disabled: np.ndarray | None = field(default=None, init=False, repr=False)
+    _command_when_disabled: np.ndarray | None = field(
+        default=None, init=False, repr=False
+    )
 
     def action(self, action: RobotAction) -> RobotAction:
         observation = self.transition.get(TransitionKey.OBSERVATION).copy()
 
         if observation is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
-        if self.use_ik_solution and "IK_solution" in self.transition.get(TransitionKey.COMPLEMENTARY_DATA):
+        if self.use_ik_solution and "IK_solution" in self.transition.get(
+            TransitionKey.COMPLEMENTARY_DATA
+        ):
             q_raw = self.transition.get(TransitionKey.COMPLEMENTARY_DATA)["IK_solution"]
         else:
             q_raw = np.array(
@@ -93,7 +99,9 @@ class EEReferenceAndDelta(RobotActionProcessorStep):
             )
 
         if q_raw is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         # Current pose from FK on measured joints
         t_curr = self.kinematics.forward_kinematics(q_raw)
@@ -115,7 +123,11 @@ class EEReferenceAndDelta(RobotActionProcessorStep):
                 # Latched reference mode: latch reference at the rising edge
                 if not self._prev_enabled or self.reference_ee_pose is None:
                     self.reference_ee_pose = t_curr.copy()
-                ref = self.reference_ee_pose if self.reference_ee_pose is not None else t_curr
+                ref = (
+                    self.reference_ee_pose
+                    if self.reference_ee_pose is not None
+                    else t_curr
+                )
 
             delta_p = np.array(
                 [
@@ -218,7 +230,9 @@ class EEBoundsAndSafety(RobotActionProcessorStep):
         twist = np.array([wx, wy, wz], dtype=float)
 
         # Clip position
-        pos = np.clip(pos, self.end_effector_bounds["min"], self.end_effector_bounds["max"])
+        pos = np.clip(
+            pos, self.end_effector_bounds["min"], self.end_effector_bounds["max"]
+        )
 
         # Check for jumps in position
         if self._last_pos is not None:
@@ -286,14 +300,22 @@ class InverseKinematicsEEToJoints(RobotActionProcessorStep):
 
         observation = self.transition.get(TransitionKey.OBSERVATION).copy()
         if observation is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         q_raw = np.array(
-            [float(v) for k, v in observation.items() if isinstance(k, str) and k.endswith(".pos")],
+            [
+                float(v)
+                for k, v in observation.items()
+                if isinstance(k, str) and k.endswith(".pos")
+            ],
             dtype=float,
         )
         if q_raw is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         if self.initial_guess_current_joints:  # Use current joints as initial guess
             self.q_curr = q_raw
@@ -366,14 +388,22 @@ class GripperVelocityToJoint(RobotActionProcessorStep):
         gripper_vel = action.pop("ee.gripper_vel")
 
         if observation is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         q_raw = np.array(
-            [float(v) for k, v in observation.items() if isinstance(k, str) and k.endswith(".pos")],
+            [
+                float(v)
+                for k, v in observation.items()
+                if isinstance(k, str) and k.endswith(".pos")
+            ],
             dtype=float,
         )
         if q_raw is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         if self.discrete_gripper:
             # Discrete gripper actions are in [0, 1, 2]
@@ -439,7 +469,9 @@ class ForwardKinematicsJointsToEEObservation(ObservationProcessorStep):
     motor_names: list[str]
 
     def observation(self, observation: dict[str, Any]) -> dict[str, Any]:
-        return compute_forward_kinematics_joints_to_ee(observation, self.kinematics, self.motor_names)
+        return compute_forward_kinematics_joints_to_ee(
+            observation, self.kinematics, self.motor_names
+        )
 
     def transform_features(
         self, features: dict[PipelineFeatureType, dict[str, PolicyFeature]]
@@ -472,7 +504,9 @@ class ForwardKinematicsJointsToEEAction(RobotActionProcessorStep):
     motor_names: list[str]
 
     def action(self, action: RobotAction) -> RobotAction:
-        return compute_forward_kinematics_joints_to_ee(action, self.kinematics, self.motor_names)
+        return compute_forward_kinematics_joints_to_ee(
+            action, self.kinematics, self.motor_names
+        )
 
     def transform_features(
         self, features: dict[PipelineFeatureType, dict[str, PolicyFeature]]
@@ -498,8 +532,10 @@ class ForwardKinematicsJointsToEE(ProcessorStep):
         self.joints_to_ee_action_processor = ForwardKinematicsJointsToEEAction(
             kinematics=self.kinematics, motor_names=self.motor_names
         )
-        self.joints_to_ee_observation_processor = ForwardKinematicsJointsToEEObservation(
-            kinematics=self.kinematics, motor_names=self.motor_names
+        self.joints_to_ee_observation_processor = (
+            ForwardKinematicsJointsToEEObservation(
+                kinematics=self.kinematics, motor_names=self.motor_names
+            )
         )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:
@@ -515,7 +551,9 @@ class ForwardKinematicsJointsToEE(ProcessorStep):
         if features[PipelineFeatureType.ACTION] is not None:
             features = self.joints_to_ee_action_processor.transform_features(features)
         if features[PipelineFeatureType.OBSERVATION] is not None:
-            features = self.joints_to_ee_observation_processor.transform_features(features)
+            features = self.joints_to_ee_observation_processor.transform_features(
+                features
+            )
         return features
 
 
@@ -555,14 +593,22 @@ class InverseKinematicsRLStep(ProcessorStep):
 
         observation = new_transition.get(TransitionKey.OBSERVATION).copy()
         if observation is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         q_raw = np.array(
-            [float(v) for k, v in observation.items() if isinstance(k, str) and k.endswith(".pos")],
+            [
+                float(v)
+                for k, v in observation.items()
+                if isinstance(k, str) and k.endswith(".pos")
+            ],
             dtype=float,
         )
         if q_raw is None:
-            raise ValueError("Joints observation is require for computing robot kinematics")
+            raise ValueError(
+                "Joints observation is require for computing robot kinematics"
+            )
 
         if self.initial_guess_current_joints:  # Use current joints as initial guess
             self.q_curr = q_raw

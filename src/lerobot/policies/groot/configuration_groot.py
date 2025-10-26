@@ -130,7 +130,11 @@ class GrootConfig(PreTrainedConfig):
 
     def validate_features(self) -> None:
         """Validate and set up input/output features for Groot."""
-        image_features = [key for key, feat in self.input_features.items() if feat.type == FeatureType.VISUAL]
+        image_features = [
+            key
+            for key, feat in self.input_features.items()
+            if feat.type == FeatureType.VISUAL
+        ]
         if not image_features:
             raise ValueError(
                 "Groot policy requires at least one visual input feature. "

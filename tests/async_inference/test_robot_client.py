@@ -80,7 +80,9 @@ def _make_actions(start_ts: float, start_t: int, count: int):
         timestep = start_t + i
         timestamp = start_ts + i * (1 / fps)
         action_tensor = torch.full((6,), timestep, dtype=torch.float32)
-        actions.append(TimedAction(action=action_tensor, timestep=timestep, timestamp=timestamp))
+        actions.append(
+            TimedAction(action=action_tensor, timestep=timestep, timestamp=timestamp)
+        )
     return actions
 
 
@@ -133,7 +135,11 @@ def test_aggregate_action_queues_combines_actions_in_overlap(
         start_ts=time.time(), start_t=5, count=2
     )  # actions are [torch.ones(6), torch.ones(6), ...]
     current_actions = [
-        TimedAction(action=10 * a.get_action(), timestep=a.get_timestep(), timestamp=a.get_timestamp())
+        TimedAction(
+            action=10 * a.get_action(),
+            timestep=a.get_timestep(),
+            timestamp=a.get_timestamp(),
+        )
         for a in current_actions
     ]
 
@@ -143,7 +149,10 @@ def test_aggregate_action_queues_combines_actions_in_overlap(
     # Incoming chunk contains timesteps 3..7 -> expect 5,6,7 kept.
     incoming = _make_actions(start_ts=time.time(), start_t=3, count=5)  # 3,4,5,6,7
 
-    overlap_timesteps = [5, 6]  # properly tested in test_aggregate_action_queues_discards_stale
+    overlap_timesteps = [
+        5,
+        6,
+    ]  # properly tested in test_aggregate_action_queues_discards_stale
     nonoverlap_timesteps = [7]
 
     robot_client._aggregate_action_queues(
@@ -158,18 +167,26 @@ def test_aggregate_action_queues_combines_actions_in_overlap(
         elif a.get_timestep() in nonoverlap_timesteps:
             queue_non_overlap_actions.append(a)
 
-    queue_overlap_actions = sorted(queue_overlap_actions, key=lambda x: x.get_timestep())
-    queue_non_overlap_actions = sorted(queue_non_overlap_actions, key=lambda x: x.get_timestep())
+    queue_overlap_actions = sorted(
+        queue_overlap_actions, key=lambda x: x.get_timestep()
+    )
+    queue_non_overlap_actions = sorted(
+        queue_non_overlap_actions, key=lambda x: x.get_timestep()
+    )
 
     assert torch.allclose(
         queue_overlap_actions[0].get_action(),
-        weight_old * current_actions[0].get_action() + weight_new * incoming[-3].get_action(),
+        weight_old * current_actions[0].get_action()
+        + weight_new * incoming[-3].get_action(),
     )
     assert torch.allclose(
         queue_overlap_actions[1].get_action(),
-        weight_old * current_actions[1].get_action() + weight_new * incoming[-2].get_action(),
+        weight_old * current_actions[1].get_action()
+        + weight_new * incoming[-2].get_action(),
     )
-    assert torch.allclose(queue_non_overlap_actions[0].get_action(), incoming[-1].get_action())
+    assert torch.allclose(
+        queue_non_overlap_actions[0].get_action(), incoming[-1].get_action()
+    )
 
 
 @pytest.mark.parametrize(
@@ -181,7 +198,9 @@ def test_aggregate_action_queues_combines_actions_in_overlap(
         (10, 6, False),
     ],
 )
-def test_ready_to_send_observation(robot_client, chunk_size: int, queue_len: int, expected: bool):
+def test_ready_to_send_observation(
+    robot_client, chunk_size: int, queue_len: int, expected: bool
+):
     """Validate `_ready_to_send_observation` ratio logic for various sizes."""
 
     robot_client.action_chunk_size = chunk_size
@@ -214,7 +233,9 @@ def test_ready_to_send_observation(robot_client, chunk_size: int, queue_len: int
         (1.0, True),
     ],
 )
-def test_ready_to_send_observation_with_varying_threshold(robot_client, g_threshold: float, expected: bool):
+def test_ready_to_send_observation_with_varying_threshold(
+    robot_client, g_threshold: float, expected: bool
+):
     """Validate `_ready_to_send_observation` with fixed sizes and varying `g`."""
     # Fixed sizes for this test: ratio = 6 / 10 = 0.6
     chunk_size = 10

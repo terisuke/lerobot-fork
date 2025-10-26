@@ -60,7 +60,9 @@ def strip_prefix(key: str, prefixes_to_strip: tuple[str]) -> str:
 # Define prefixes to strip from feature keys for clean names.
 # Handles both fully qualified (e.g., "action.state") and short (e.g., "state") forms.
 PREFIXES_TO_STRIP = tuple(
-    f"{token}." for const in (ACTION, OBS_STATE, OBS_IMAGES) for token in (const, const.split(".")[-1])
+    f"{token}."
+    for const in (ACTION, OBS_STATE, OBS_IMAGES)
+    for token in (const, const.split(".")[-1])
 )
 
 
@@ -132,8 +134,12 @@ def aggregate_pipeline_dataset_features(
     # Convert the processed features into the final dataset format.
     dataset_features = {}
     if processed_features[ACTION]:
-        dataset_features.update(hw_to_dataset_features(processed_features[ACTION], ACTION, use_videos))
+        dataset_features.update(
+            hw_to_dataset_features(processed_features[ACTION], ACTION, use_videos)
+        )
     if processed_features[OBS_STR]:
-        dataset_features.update(hw_to_dataset_features(processed_features[OBS_STR], OBS_STR, use_videos))
+        dataset_features.update(
+            hw_to_dataset_features(processed_features[OBS_STR], OBS_STR, use_videos)
+        )
 
     return dataset_features

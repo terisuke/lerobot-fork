@@ -28,7 +28,9 @@ import rerun as rr
 RERUN_MEMORY_LIMIT = os.getenv("LEROBOT_RERUN_MEMORY_LIMIT", "5%")
 
 
-def display_and_save_video_stream(output_dir: Path, fps: int, width: int, height: int, duration: int):
+def display_and_save_video_stream(
+    output_dir: Path, fps: int, width: int, height: int, duration: int
+):
     rr.init("lerobot_capture_camera_feed")
     rr.spawn(memory_limit=RERUN_MEMORY_LIMIT)
 

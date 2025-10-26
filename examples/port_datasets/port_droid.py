@@ -83,7 +83,15 @@ DROID_FEATURES = {
         "dtype": "float32",
         "shape": (7,),
         "names": {
-            "axes": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"],
+            "axes": [
+                "joint_0",
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+            ],
         },
     },
     # Add this new feature to follow LeRobot standard of using joint position + gripper
@@ -91,7 +99,16 @@ DROID_FEATURES = {
         "dtype": "float32",
         "shape": (8,),
         "names": {
-            "axes": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6", "gripper"],
+            "axes": [
+                "joint_0",
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+                "gripper",
+            ],
         },
     },
     # Initially called wrist_image_left
@@ -156,14 +173,30 @@ DROID_FEATURES = {
         "dtype": "float32",
         "shape": (7,),
         "names": {
-            "axes": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"],
+            "axes": [
+                "joint_0",
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+            ],
         },
     },
     "action.joint_velocity": {
         "dtype": "float32",
         "shape": (7,),
         "names": {
-            "axes": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"],
+            "axes": [
+                "joint_0",
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+            ],
         },
     },
     # This feature was called "action" in RLDS dataset and consists of [6x joint velocities, 1x gripper position]
@@ -179,7 +212,16 @@ DROID_FEATURES = {
         "dtype": "float32",
         "shape": (8,),
         "names": {
-            "axes": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6", "gripper"],
+            "axes": [
+                "joint_0",
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+                "gripper",
+            ],
         },
     },
     "discount": {
@@ -268,12 +310,24 @@ def generate_lerobot_frames(tf_episode):
             "language_instruction": f["language_instruction"].numpy().decode(),
             "language_instruction_2": f["language_instruction_2"].numpy().decode(),
             "language_instruction_3": f["language_instruction_3"].numpy().decode(),
-            "observation.state.gripper_position": f["observation"]["gripper_position"].numpy(),
-            "observation.state.cartesian_position": f["observation"]["cartesian_position"].numpy(),
-            "observation.state.joint_position": f["observation"]["joint_position"].numpy(),
-            "observation.images.wrist_left": f["observation"]["wrist_image_left"].numpy(),
-            "observation.images.exterior_1_left": f["observation"]["exterior_image_1_left"].numpy(),
-            "observation.images.exterior_2_left": f["observation"]["exterior_image_2_left"].numpy(),
+            "observation.state.gripper_position": f["observation"][
+                "gripper_position"
+            ].numpy(),
+            "observation.state.cartesian_position": f["observation"][
+                "cartesian_position"
+            ].numpy(),
+            "observation.state.joint_position": f["observation"][
+                "joint_position"
+            ].numpy(),
+            "observation.images.wrist_left": f["observation"][
+                "wrist_image_left"
+            ].numpy(),
+            "observation.images.exterior_1_left": f["observation"][
+                "exterior_image_1_left"
+            ].numpy(),
+            "observation.images.exterior_2_left": f["observation"][
+                "exterior_image_2_left"
+            ].numpy(),
             "action.gripper_position": f["action_dict"]["gripper_position"].numpy(),
             "action.gripper_velocity": f["action_dict"]["gripper_velocity"].numpy(),
             "action.cartesian_position": f["action_dict"]["cartesian_position"].numpy(),
@@ -290,9 +344,14 @@ def generate_lerobot_frames(tf_episode):
 
         # Add this new feature to follow LeRobot standard of using joint position + gripper
         frame["observation.state"] = np.concatenate(
-            [frame["observation.state.joint_position"], frame["observation.state.gripper_position"]]
+            [
+                frame["observation.state.joint_position"],
+                frame["observation.state.gripper_position"],
+            ]
         )
-        frame["action"] = np.concatenate([frame["action.joint_position"], frame["action.gripper_position"]])
+        frame["action"] = np.concatenate(
+            [frame["action.joint_position"], frame["action.gripper_position"]]
+        )
 
         # Meta data that are the same for all frames in the episode
         frame.update(frame_meta)

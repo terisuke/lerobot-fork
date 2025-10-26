@@ -44,13 +44,19 @@ from huggingface_hub import HfApi
 from requests import HTTPError
 from tqdm import tqdm
 
-from lerobot.datasets.compute_stats import DEFAULT_QUANTILES, aggregate_stats, get_feature_stats
+from lerobot.datasets.compute_stats import (
+    DEFAULT_QUANTILES,
+    aggregate_stats,
+    get_feature_stats,
+)
 from lerobot.datasets.lerobot_dataset import CODEBASE_VERSION, LeRobotDataset
 from lerobot.datasets.utils import write_stats
 from lerobot.utils.utils import init_logging
 
 
-def has_quantile_stats(stats: dict[str, dict] | None, quantile_list_keys: list[str] | None = None) -> bool:
+def has_quantile_stats(
+    stats: dict[str, dict] | None, quantile_list_keys: list[str] | None = None
+) -> bool:
     """Check if dataset statistics already contain quantile information.
 
     Args:
@@ -115,12 +121,16 @@ def process_single_episode(dataset: LeRobotDataset, episode_idx: int) -> dict:
             keepdims = data.ndim == 1
 
         ep_stats[key] = get_feature_stats(
-            data, axis=axes_to_reduce, keepdims=keepdims, quantile_list=DEFAULT_QUANTILES
+            data,
+            axis=axes_to_reduce,
+            keepdims=keepdims,
+            quantile_list=DEFAULT_QUANTILES,
         )
 
         if dataset.features[key]["dtype"] in ["image", "video"]:
             ep_stats[key] = {
-                k: v if k == "count" else np.squeeze(v, axis=0) for k, v in ep_stats[key].items()
+                k: v if k == "count" else np.squeeze(v, axis=0)
+                for k, v in ep_stats[key].items()
             }
 
     return ep_stats
@@ -140,23 +150,33 @@ def compute_quantile_stats_for_dataset(dataset: LeRobotDataset) -> dict[str, dic
         when video keys are present. For datasets without videos, we use parallel processing
         with ThreadPoolExecutor for better performance.
     """
-    logging.info(f"Computing quantile statistics for dataset with {dataset.num_episodes} episodes")
+    logging.info(
+        f"Computing quantile statistics for dataset with {dataset.num_episodes} episodes"
+    )
 
     episode_stats_list = []
     has_videos = len(dataset.meta.video_keys) > 0
 
     if has_videos:
-        logging.info("Dataset contains video keys - using sequential processing for thread safety")
-        for episode_idx in tqdm(range(dataset.num_episodes), desc="Processing episodes"):
+        logging.info(
+            "Dataset contains video keys - using sequential processing for thread safety"
+        )
+        for episode_idx in tqdm(
+            range(dataset.num_episodes), desc="Processing episodes"
+        ):
             ep_stats = process_single_episode(dataset, episode_idx)
             episode_stats_list.append(ep_stats)
     else:
-        logging.info("Dataset has no video keys - using parallel processing for better performance")
+        logging.info(
+            "Dataset has no video keys - using parallel processing for better performance"
+        )
         max_workers = min(dataset.num_episodes, 16)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_episode = {
-                executor.submit(process_single_episode, dataset, episode_idx): episode_idx
+                executor.submit(
+                    process_single_episode, dataset, episode_idx
+                ): episode_idx
                 for episode_idx in range(dataset.num_episodes)
             }
 
@@ -217,14 +237,20 @@ def augment_dataset_with_quantile_stats(
     try:
         hub_api.delete_tag(repo_id, tag=CODEBASE_VERSION, repo_type="dataset")
     except HTTPError as e:
-        logging.info(f"tag={CODEBASE_VERSION} probably doesn't exist. Skipping exception ({e})")
+        logging.info(
+            f"tag={CODEBASE_VERSION} probably doesn't exist. Skipping exception ({e})"
+        )
         pass
-    hub_api.create_tag(repo_id, tag=CODEBASE_VERSION, revision=None, repo_type="dataset")
+    hub_api.create_tag(
+        repo_id, tag=CODEBASE_VERSION, revision=None, repo_type="dataset"
+    )
 
 
 def main():
     """Main function to run the augmentation script."""
-    parser = argparse.ArgumentParser(description="Augment LeRobot dataset with quantile statistics")
+    parser = argparse.ArgumentParser(
+        description="Augment LeRobot dataset with quantile statistics"
+    )
 
     parser.add_argument(
         "--repo-id",

@@ -94,7 +94,10 @@ class LeKiwiClient(Robot):
 
     @cached_property
     def _cameras_ft(self) -> dict[str, tuple[int, int, int]]:
-        return {name: (cfg.height, cfg.width, 3) for name, cfg in self.config.cameras.items()}
+        return {
+            name: (cfg.height, cfg.width, 3)
+            for name, cfg in self.config.cameras.items()
+        }
 
     @cached_property
     def observation_features(self) -> dict[str, type | tuple]:
@@ -128,15 +131,22 @@ class LeKiwiClient(Robot):
         self.zmq_cmd_socket.setsockopt(zmq.CONFLATE, 1)
 
         self.zmq_observation_socket = self.zmq_context.socket(zmq.PULL)
-        zmq_observations_locator = f"tcp://{self.remote_ip}:{self.port_zmq_observations}"
+        zmq_observations_locator = (
+            f"tcp://{self.remote_ip}:{self.port_zmq_observations}"
+        )
         self.zmq_observation_socket.connect(zmq_observations_locator)
         self.zmq_observation_socket.setsockopt(zmq.CONFLATE, 1)
 
         poller = zmq.Poller()
         poller.register(self.zmq_observation_socket, zmq.POLLIN)
         socks = dict(poller.poll(self.connect_timeout_s * 1000))
-        if self.zmq_observation_socket not in socks or socks[self.zmq_observation_socket] != zmq.POLLIN:
-            raise DeviceNotConnectedError("Timeout waiting for LeKiwi Host to connect expired.")
+        if (
+            self.zmq_observation_socket not in socks
+            or socks[self.zmq_observation_socket] != zmq.POLLIN
+        ):
+            raise DeviceNotConnectedError(
+                "Timeout waiting for LeKiwi Host to connect expired."
+            )
 
         self._is_connected = True
 
@@ -202,7 +212,9 @@ class LeKiwiClient(Robot):
 
         flat_state = {key: observation.get(key, 0.0) for key in self._state_order}
 
-        state_vec = np.array([flat_state[key] for key in self._state_order], dtype=np.float32)
+        state_vec = np.array(
+            [flat_state[key] for key in self._state_order], dtype=np.float32
+        )
 
         obs_dict: dict[str, Any] = {**flat_state, OBS_STATE: state_vec}
 
@@ -244,7 +256,9 @@ class LeKiwiClient(Robot):
         try:
             new_frames, new_state = self._remote_state_from_obs(observation)
         except Exception as e:
-            logging.error(f"Error processing observation data, serving last observation: {e}")
+            logging.error(
+                f"Error processing observation data, serving last observation: {e}"
+            )
             return self.last_frames, self.last_remote_state
 
         self.last_frames = new_frames
@@ -259,7 +273,9 @@ class LeKiwiClient(Robot):
         and a camera frame. Receives over ZMQ, translate to body-frame vel
         """
         if not self._is_connected:
-            raise DeviceNotConnectedError("LeKiwiClient is not connected. You need to run `robot.connect()`.")
+            raise DeviceNotConnectedError(
+                "LeKiwiClient is not connected. You need to run `robot.connect()`."
+            )
 
         frames, obs_dict = self._get_data()
 
@@ -327,7 +343,9 @@ class LeKiwiClient(Robot):
         self.zmq_cmd_socket.send_string(json.dumps(action))  # action is in motor space
 
         # TODO(Steven): Remove the np conversion when it is possible to record a non-numpy array value
-        actions = np.array([action.get(k, 0.0) for k in self._state_order], dtype=np.float32)
+        actions = np.array(
+            [action.get(k, 0.0) for k in self._state_order], dtype=np.float32
+        )
 
         action_sent = {key: actions[i] for i, key in enumerate(self._state_order)}
         action_sent[ACTION] = actions

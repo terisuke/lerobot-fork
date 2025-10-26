@@ -80,7 +80,9 @@ def test_mlp_with_custom_final_activation():
 
 
 def test_sac_policy_with_default_args():
-    with pytest.raises(ValueError, match="should be an instance of class `PreTrainedConfig`"):
+    with pytest.raises(
+        ValueError, match="should be an instance of class `PreTrainedConfig`"
+    ):
         SACPolicy()
 
 
@@ -125,20 +127,26 @@ def create_train_batch_with_visual_input(
     }
 
 
-def create_observation_batch(batch_size: int = 8, state_dim: int = 10) -> dict[str, Tensor]:
+def create_observation_batch(
+    batch_size: int = 8, state_dim: int = 10
+) -> dict[str, Tensor]:
     return {
         OBS_STATE: torch.randn(batch_size, state_dim),
     }
 
 
-def create_observation_batch_with_visual_input(batch_size: int = 8, state_dim: int = 10) -> dict[str, Tensor]:
+def create_observation_batch_with_visual_input(
+    batch_size: int = 8, state_dim: int = 10
+) -> dict[str, Tensor]:
     return {
         OBS_STATE: torch.randn(batch_size, state_dim),
         OBS_IMAGE: torch.randn(batch_size, 3, 84, 84),
     }
 
 
-def make_optimizers(policy: SACPolicy, has_discrete_action: bool = False) -> dict[str, torch.optim.Optimizer]:
+def make_optimizers(
+    policy: SACPolicy, has_discrete_action: bool = False
+) -> dict[str, torch.optim.Optimizer]:
     """Create optimizers for the SAC policy."""
     optimizer_actor = torch.optim.Adam(
         # Handle the case of shared encoder where the encoder weights are not optimized with the actor gradient
@@ -181,8 +189,14 @@ def create_default_config(
         action_dim += 1
 
     config = SACConfig(
-        input_features={OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(state_dim,))},
-        output_features={ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(continuous_action_dim,))},
+        input_features={
+            OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(state_dim,))
+        },
+        output_features={
+            ACTION: PolicyFeature(
+                type=FeatureType.ACTION, shape=(continuous_action_dim,)
+            )
+        },
         dataset_stats={
             OBS_STATE: {
                 "min": [0.0] * state_dim,
@@ -206,7 +220,9 @@ def create_config_with_visual_input(
         continuous_action_dim=continuous_action_dim,
         has_discrete_action=has_discrete_action,
     )
-    config.input_features[OBS_IMAGE] = PolicyFeature(type=FeatureType.VISUAL, shape=(3, 84, 84))
+    config.input_features[OBS_IMAGE] = PolicyFeature(
+        type=FeatureType.VISUAL, shape=(3, 84, 84)
+    )
     config.dataset_stats[OBS_IMAGE] = {
         "mean": torch.randn(3, 1, 1),
         "std": torch.randn(3, 1, 1),
@@ -221,9 +237,15 @@ def create_config_with_visual_input(
 
 
 @pytest.mark.parametrize("batch_size,state_dim,action_dim", [(2, 6, 6), (1, 10, 10)])
-def test_sac_policy_with_default_config(batch_size: int, state_dim: int, action_dim: int):
-    batch = create_default_train_batch(batch_size=batch_size, action_dim=action_dim, state_dim=state_dim)
-    config = create_default_config(state_dim=state_dim, continuous_action_dim=action_dim)
+def test_sac_policy_with_default_config(
+    batch_size: int, state_dim: int, action_dim: int
+):
+    batch = create_default_train_batch(
+        batch_size=batch_size, action_dim=action_dim, state_dim=state_dim
+    )
+    config = create_default_config(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
 
     policy = SACPolicy(config=config)
     policy.train()
@@ -252,14 +274,18 @@ def test_sac_policy_with_default_config(batch_size: int, state_dim: int, action_
 
     policy.eval()
     with torch.no_grad():
-        observation_batch = create_observation_batch(batch_size=batch_size, state_dim=state_dim)
+        observation_batch = create_observation_batch(
+            batch_size=batch_size, state_dim=state_dim
+        )
         selected_action = policy.select_action(observation_batch)
         assert selected_action.shape == (batch_size, action_dim)
 
 
 @pytest.mark.parametrize("batch_size,state_dim,action_dim", [(2, 6, 6), (1, 10, 10)])
 def test_sac_policy_with_visual_input(batch_size: int, state_dim: int, action_dim: int):
-    config = create_config_with_visual_input(state_dim=state_dim, continuous_action_dim=action_dim)
+    config = create_config_with_visual_input(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
     policy = SACPolicy(config=config)
 
     batch = create_train_batch_with_visual_input(
@@ -308,7 +334,9 @@ def test_sac_policy_with_visual_input(batch_size: int, state_dim: int, action_di
 def test_sac_policy_with_pretrained_encoder(
     batch_size: int, state_dim: int, action_dim: int, vision_encoder_name: str
 ):
-    config = create_config_with_visual_input(state_dim=state_dim, continuous_action_dim=action_dim)
+    config = create_config_with_visual_input(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
     config.vision_encoder_name = vision_encoder_name
     policy = SACPolicy(config=config)
     policy.train()
@@ -334,7 +362,9 @@ def test_sac_policy_with_shared_encoder():
     batch_size = 2
     action_dim = 10
     state_dim = 10
-    config = create_config_with_visual_input(state_dim=state_dim, continuous_action_dim=action_dim)
+    config = create_config_with_visual_input(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
     config.shared_encoder = True
 
     policy = SACPolicy(config=config)
@@ -368,7 +398,9 @@ def test_sac_policy_with_discrete_critic():
     full_action_dim = continuous_action_dim + 1  # the last action is discrete
     state_dim = 10
     config = create_config_with_visual_input(
-        state_dim=state_dim, continuous_action_dim=continuous_action_dim, has_discrete_action=True
+        state_dim=state_dim,
+        continuous_action_dim=continuous_action_dim,
+        has_discrete_action=True,
     )
 
     num_discrete_actions = 5
@@ -391,7 +423,9 @@ def test_sac_policy_with_discrete_critic():
     cirtic_loss.backward()
     optimizers["critic"].step()
 
-    discrete_critic_loss = policy.forward(batch, model="discrete_critic")["loss_discrete_critic"]
+    discrete_critic_loss = policy.forward(batch, model="discrete_critic")[
+        "loss_discrete_critic"
+    ]
     assert discrete_critic_loss.item() is not None
     assert discrete_critic_loss.shape == ()
     discrete_critic_loss.backward()
@@ -415,9 +449,9 @@ def test_sac_policy_with_discrete_critic():
         discrete_actions = selected_action[:, -1].long()
         discrete_action_values = set(discrete_actions.tolist())
 
-        assert all(action in range(num_discrete_actions) for action in discrete_action_values), (
-            f"Discrete action {discrete_action_values} is not in range({num_discrete_actions})"
-        )
+        assert all(
+            action in range(num_discrete_actions) for action in discrete_action_values
+        ), f"Discrete action {discrete_action_values} is not in range({num_discrete_actions})"
 
 
 def test_sac_policy_with_default_entropy():
@@ -427,7 +461,9 @@ def test_sac_policy_with_default_entropy():
 
 
 def test_sac_policy_default_target_entropy_with_discrete_action():
-    config = create_config_with_visual_input(state_dim=10, continuous_action_dim=6, has_discrete_action=True)
+    config = create_config_with_visual_input(
+        state_dim=10, continuous_action_dim=6, has_discrete_action=True
+    )
     policy = SACPolicy(config=config)
     assert policy.target_entropy == -3.0
 
@@ -462,9 +498,9 @@ def test_sac_policy_update_target_network():
 
     policy.update_target_networks()
     for p in policy.critic_target.parameters():
-        assert torch.allclose(p.data, torch.ones_like(p.data)), (
-            f"Target network {p.data} is not equal to {torch.ones_like(p.data)}"
-        )
+        assert torch.allclose(
+            p.data, torch.ones_like(p.data)
+        ), f"Target network {p.data} is not equal to {torch.ones_like(p.data)}"
 
 
 @pytest.mark.parametrize("num_critics", [1, 3])
@@ -472,7 +508,9 @@ def test_sac_policy_with_critics_number_of_heads(num_critics: int):
     batch_size = 2
     action_dim = 10
     state_dim = 10
-    config = create_config_with_visual_input(state_dim=state_dim, continuous_action_dim=action_dim)
+    config = create_config_with_visual_input(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
     config.num_critics = num_critics
 
     policy = SACPolicy(config=config)
@@ -502,7 +540,9 @@ def test_sac_policy_save_and_load(tmp_path):
     action_dim = 10
     batch_size = 2
 
-    config = create_default_config(state_dim=state_dim, continuous_action_dim=action_dim)
+    config = create_default_config(
+        state_dim=state_dim, continuous_action_dim=action_dim
+    )
     policy = SACPolicy(config=config)
     policy.eval()
     policy.save_pretrained(root)
@@ -516,23 +556,37 @@ def test_sac_policy_save_and_load(tmp_path):
             # Collect policy values before saving
             cirtic_loss = policy.forward(batch, model="critic")["loss_critic"]
             actor_loss = policy.forward(batch, model="actor")["loss_actor"]
-            temperature_loss = policy.forward(batch, model="temperature")["loss_temperature"]
+            temperature_loss = policy.forward(batch, model="temperature")[
+                "loss_temperature"
+            ]
 
-            observation_batch = create_observation_batch(batch_size=batch_size, state_dim=state_dim)
+            observation_batch = create_observation_batch(
+                batch_size=batch_size, state_dim=state_dim
+            )
             actions = policy.select_action(observation_batch)
 
         with seeded_context(12):
             # Collect policy values after loading
-            loaded_cirtic_loss = loaded_policy.forward(batch, model="critic")["loss_critic"]
-            loaded_actor_loss = loaded_policy.forward(batch, model="actor")["loss_actor"]
-            loaded_temperature_loss = loaded_policy.forward(batch, model="temperature")["loss_temperature"]
+            loaded_cirtic_loss = loaded_policy.forward(batch, model="critic")[
+                "loss_critic"
+            ]
+            loaded_actor_loss = loaded_policy.forward(batch, model="actor")[
+                "loss_actor"
+            ]
+            loaded_temperature_loss = loaded_policy.forward(batch, model="temperature")[
+                "loss_temperature"
+            ]
 
-            loaded_observation_batch = create_observation_batch(batch_size=batch_size, state_dim=state_dim)
+            loaded_observation_batch = create_observation_batch(
+                batch_size=batch_size, state_dim=state_dim
+            )
             loaded_actions = loaded_policy.select_action(loaded_observation_batch)
 
         assert policy.state_dict().keys() == loaded_policy.state_dict().keys()
         for k in policy.state_dict():
-            assert torch.allclose(policy.state_dict()[k], loaded_policy.state_dict()[k], atol=1e-6)
+            assert torch.allclose(
+                policy.state_dict()[k], loaded_policy.state_dict()[k], atol=1e-6
+            )
 
         # Compare values before and after saving and loading
         # They should be the same

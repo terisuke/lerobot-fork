@@ -25,7 +25,8 @@ import safetensors
 from huggingface_hub import HfApi, ModelCard, ModelCardData, hf_hub_download
 from huggingface_hub.constants import SAFETENSORS_SINGLE_FILE
 from huggingface_hub.errors import HfHubHTTPError
-from safetensors.torch import load_model as load_model_as_safetensor, save_model as save_model_as_safetensor
+from safetensors.torch import load_model as load_model_as_safetensor
+from safetensors.torch import save_model as save_model_as_safetensor
 from torch import Tensor, nn
 from typing_extensions import Unpack
 
@@ -69,7 +70,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
     def _save_pretrained(self, save_directory: Path) -> None:
         self.config._save_pretrained(save_directory)
         model_to_save = self.module if hasattr(self, "module") else self
-        save_model_as_safetensor(model_to_save, str(save_directory / SAFETENSORS_SINGLE_FILE))
+        save_model_as_safetensor(
+            model_to_save, str(save_directory / SAFETENSORS_SINGLE_FILE)
+        )
 
     @classmethod
     def from_pretrained(
@@ -108,7 +111,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         if os.path.isdir(model_id):
             print("Loading weights from local directory")
             model_file = os.path.join(model_id, SAFETENSORS_SINGLE_FILE)
-            policy = cls._load_as_safetensor(instance, model_file, config.device, strict)
+            policy = cls._load_as_safetensor(
+                instance, model_file, config.device, strict
+            )
         else:
             try:
                 model_file = hf_hub_download(
@@ -122,7 +127,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
                     token=token,
                     local_files_only=local_files_only,
                 )
-                policy = cls._load_as_safetensor(instance, model_file, config.device, strict)
+                policy = cls._load_as_safetensor(
+                    instance, model_file, config.device, strict
+                )
             except HfHubHTTPError as e:
                 raise FileNotFoundError(
                     f"{SAFETENSORS_SINGLE_FILE} not found on the HuggingFace Hub in {model_id}"
@@ -133,16 +140,22 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         return policy
 
     @classmethod
-    def _load_as_safetensor(cls, model: T, model_file: str, map_location: str, strict: bool) -> T:
+    def _load_as_safetensor(
+        cls, model: T, model_file: str, map_location: str, strict: bool
+    ) -> T:
         # Create base kwargs
         kwargs = {"strict": strict}
 
         # Add device parameter for newer versions that support it
-        if packaging.version.parse(safetensors.__version__) >= packaging.version.parse("0.4.3"):
+        if packaging.version.parse(safetensors.__version__) >= packaging.version.parse(
+            "0.4.3"
+        ):
             kwargs["device"] = map_location
 
         # Load the model with appropriate kwargs
-        missing_keys, unexpected_keys = load_model_as_safetensor(model, model_file, **kwargs)
+        missing_keys, unexpected_keys = load_model_as_safetensor(
+            model, model_file, **kwargs
+        )
         log_model_loading_keys(missing_keys, unexpected_keys)
 
         # For older versions, manually move to device if needed
@@ -186,7 +199,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def predict_action_chunk(self, batch: dict[str, Tensor], **kwargs: Unpack[ActionSelectKwargs]) -> Tensor:
+    def predict_action_chunk(
+        self, batch: dict[str, Tensor], **kwargs: Unpack[ActionSelectKwargs]
+    ) -> Tensor:
         """Returns the action chunk (for action chunking policies) for a given observation, potentially in batch mode.
 
         Child classes using action chunking should use this method within `select_action` to form the action chunk
@@ -195,7 +210,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def select_action(self, batch: dict[str, Tensor], **kwargs: Unpack[ActionSelectKwargs]) -> Tensor:
+    def select_action(
+        self, batch: dict[str, Tensor], **kwargs: Unpack[ActionSelectKwargs]
+    ) -> Tensor:
         """Return one action to run in the environment (potentially in batch mode).
 
         When the model uses a history of observations, or outputs a sequence of actions, this method deals
@@ -216,14 +233,21 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         with TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             saved_path = Path(tmp) / repo_id
 
-            self.save_pretrained(saved_path)  # Calls _save_pretrained and stores model tensors
+            self.save_pretrained(
+                saved_path
+            )  # Calls _save_pretrained and stores model tensors
 
             card = self.generate_model_card(
-                cfg.dataset.repo_id, self.config.type, self.config.license, self.config.tags
+                cfg.dataset.repo_id,
+                self.config.type,
+                self.config.license,
+                self.config.tags,
             )
             card.save(str(saved_path / "README.md"))
 
-            cfg.save_pretrained(saved_path)  # Calls _save_pretrained and stores train config
+            cfg.save_pretrained(
+                saved_path
+            )  # Calls _save_pretrained and stores train config
 
             commit_info = api.upload_folder(
                 repo_id=repo_id,
@@ -237,9 +261,15 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
             logging.info(f"Model pushed to {commit_info.repo_url.url}")
 
     def generate_model_card(
-        self, dataset_repo_id: str, model_type: str, license: str | None, tags: list[str] | None
+        self,
+        dataset_repo_id: str,
+        model_type: str,
+        license: str | None,
+        tags: list[str] | None,
     ) -> ModelCard:
-        base_model = "lerobot/smolvla_base" if model_type == "smolvla" else None  # Set a base model
+        base_model = (
+            "lerobot/smolvla_base" if model_type == "smolvla" else None
+        )  # Set a base model
 
         card_data = ModelCardData(
             license=license or "apache-2.0",
@@ -252,7 +282,9 @@ class PreTrainedPolicy(nn.Module, HubMixin, abc.ABC):
         )
 
         template_card = (
-            files("lerobot.templates").joinpath("lerobot_modelcard_template.md").read_text(encoding="utf-8")
+            files("lerobot.templates")
+            .joinpath("lerobot_modelcard_template.md")
+            .read_text(encoding="utf-8")
         )
         card = ModelCard.from_template(card_data, template_str=template_card)
         card.validate()

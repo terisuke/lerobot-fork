@@ -18,7 +18,15 @@ import torch
 
 from lerobot.processor import DataProcessorPipeline, TransitionKey
 from lerobot.processor.converters import batch_to_transition, transition_to_batch
-from lerobot.utils.constants import ACTION, DONE, OBS_IMAGE, OBS_PREFIX, OBS_STATE, REWARD, TRUNCATED
+from lerobot.utils.constants import (
+    ACTION,
+    DONE,
+    OBS_IMAGE,
+    OBS_PREFIX,
+    OBS_STATE,
+    REWARD,
+    TRUNCATED,
+)
 
 
 def _dummy_batch():
@@ -43,13 +51,17 @@ def test_observation_grouping_roundtrip():
 
     # Check that all observation.* keys are preserved
     original_obs_keys = {k: v for k, v in batch_in.items() if k.startswith(OBS_PREFIX)}
-    reconstructed_obs_keys = {k: v for k, v in batch_out.items() if k.startswith(OBS_PREFIX)}
+    reconstructed_obs_keys = {
+        k: v for k, v in batch_out.items() if k.startswith(OBS_PREFIX)
+    }
 
     assert set(original_obs_keys.keys()) == set(reconstructed_obs_keys.keys())
 
     # Check tensor values
     assert torch.allclose(batch_out[f"{OBS_IMAGE}.left"], batch_in[f"{OBS_IMAGE}.left"])
-    assert torch.allclose(batch_out[f"{OBS_IMAGE}.right"], batch_in[f"{OBS_IMAGE}.right"])
+    assert torch.allclose(
+        batch_out[f"{OBS_IMAGE}.right"], batch_in[f"{OBS_IMAGE}.right"]
+    )
     assert torch.allclose(batch_out[OBS_STATE], batch_in[OBS_STATE])
 
     # Check other fields
@@ -83,15 +95,19 @@ def test_batch_to_transition_observation_grouping():
 
     # Check values are preserved
     assert torch.allclose(
-        transition[TransitionKey.OBSERVATION][f"{OBS_IMAGE}.top"], batch[f"{OBS_IMAGE}.top"]
+        transition[TransitionKey.OBSERVATION][f"{OBS_IMAGE}.top"],
+        batch[f"{OBS_IMAGE}.top"],
     )
     assert torch.allclose(
-        transition[TransitionKey.OBSERVATION][f"{OBS_IMAGE}.left"], batch[f"{OBS_IMAGE}.left"]
+        transition[TransitionKey.OBSERVATION][f"{OBS_IMAGE}.left"],
+        batch[f"{OBS_IMAGE}.left"],
     )
     assert transition[TransitionKey.OBSERVATION][OBS_STATE] == [1, 2, 3, 4]
 
     # Check other fields
-    assert torch.allclose(transition[TransitionKey.ACTION], torch.tensor([0.1, 0.2, 0.3, 0.4]))
+    assert torch.allclose(
+        transition[TransitionKey.ACTION], torch.tensor([0.1, 0.2, 0.3, 0.4])
+    )
     assert transition[TransitionKey.REWARD] == 1.5
     assert transition[TransitionKey.DONE]
     assert not transition[TransitionKey.TRUNCATED]
@@ -125,8 +141,12 @@ def test_transition_to_batch_observation_flattening():
     assert OBS_STATE in batch
 
     # Check values are preserved
-    assert torch.allclose(batch[f"{OBS_IMAGE}.top"], observation_dict[f"{OBS_IMAGE}.top"])
-    assert torch.allclose(batch[f"{OBS_IMAGE}.left"], observation_dict[f"{OBS_IMAGE}.left"])
+    assert torch.allclose(
+        batch[f"{OBS_IMAGE}.top"], observation_dict[f"{OBS_IMAGE}.top"]
+    )
+    assert torch.allclose(
+        batch[f"{OBS_IMAGE}.left"], observation_dict[f"{OBS_IMAGE}.left"]
+    )
     assert batch[OBS_STATE] == [1, 2, 3, 4]
 
     # Check other fields are mapped to next.* format
@@ -222,8 +242,14 @@ def test_empty_batch():
 def test_complex_nested_observation():
     """Test with complex nested observation data."""
     batch = {
-        f"{OBS_IMAGE}.top": {"image": torch.randn(1, 3, 128, 128), "timestamp": 1234567890},
-        f"{OBS_IMAGE}.left": {"image": torch.randn(1, 3, 128, 128), "timestamp": 1234567891},
+        f"{OBS_IMAGE}.top": {
+            "image": torch.randn(1, 3, 128, 128),
+            "timestamp": 1234567890,
+        },
+        f"{OBS_IMAGE}.left": {
+            "image": torch.randn(1, 3, 128, 128),
+            "timestamp": 1234567891,
+        },
         OBS_STATE: torch.randn(7),
         ACTION: torch.randn(8),
         REWARD: 3.14,
@@ -237,7 +263,9 @@ def test_complex_nested_observation():
 
     # Check that all observation keys are preserved
     original_obs_keys = {k for k in batch if k.startswith(OBS_PREFIX)}
-    reconstructed_obs_keys = {k for k in reconstructed_batch if k.startswith(OBS_PREFIX)}
+    reconstructed_obs_keys = {
+        k for k in reconstructed_batch if k.startswith(OBS_PREFIX)
+    }
 
     assert original_obs_keys == reconstructed_obs_keys
 
@@ -246,10 +274,12 @@ def test_complex_nested_observation():
 
     # Check nested dict with tensors
     assert torch.allclose(
-        batch[f"{OBS_IMAGE}.top"]["image"], reconstructed_batch[f"{OBS_IMAGE}.top"]["image"]
+        batch[f"{OBS_IMAGE}.top"]["image"],
+        reconstructed_batch[f"{OBS_IMAGE}.top"]["image"],
     )
     assert torch.allclose(
-        batch[f"{OBS_IMAGE}.left"]["image"], reconstructed_batch[f"{OBS_IMAGE}.left"]["image"]
+        batch[f"{OBS_IMAGE}.left"]["image"],
+        reconstructed_batch[f"{OBS_IMAGE}.left"]["image"],
     )
 
     # Check action tensor

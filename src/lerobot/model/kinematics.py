@@ -47,7 +47,9 @@ class RobotKinematics:
         self.target_frame_name = target_frame_name
 
         # Set joint names
-        self.joint_names = list(self.robot.joint_names()) if joint_names is None else joint_names
+        self.joint_names = (
+            list(self.robot.joint_names()) if joint_names is None else joint_names
+        )
 
         # Initialize frame task for IK
         self.tip_frame = self.solver.add_frame_task(self.target_frame_name, np.eye(4))
@@ -107,7 +109,9 @@ class RobotKinematics:
         self.tip_frame.T_world_frame = desired_ee_pose
 
         # Configure the task based on position_only flag
-        self.tip_frame.configure(self.target_frame_name, "soft", position_weight, orientation_weight)
+        self.tip_frame.configure(
+            self.target_frame_name, "soft", position_weight, orientation_weight
+        )
 
         # Solve IK
         self.solver.solve(True)

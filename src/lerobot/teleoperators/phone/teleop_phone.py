@@ -90,7 +90,9 @@ class IOSPhone(BasePhone, Teleoperator):
         time.sleep(2.0)
         group = lookup.get_group_from_names(["HEBI"], ["mobileIO"])
         if group is None:
-            raise RuntimeError("Mobile I/O not found — check name/family settings in the app.")
+            raise RuntimeError(
+                "Mobile I/O not found — check name/family settings in the app."
+            )
         self._group = group
         logger.info(f"{self} connected to HEBI group with {group.size} module(s).")
 
@@ -135,7 +137,9 @@ class IOSPhone(BasePhone, Teleoperator):
 
             time.sleep(0.01)
 
-    def _read_current_pose(self) -> tuple[bool, np.ndarray | None, Rotation | None, object | None]:
+    def _read_current_pose(
+        self,
+    ) -> tuple[bool, np.ndarray | None, Rotation | None, object | None]:
         """
         Reads the instantaneous 6-DoF pose from the connected iOS device via the HEBI SDK.
 
@@ -276,7 +280,9 @@ class AndroidPhone(BasePhone, Teleoperator):
 
             time.sleep(0.01)
 
-    def _read_current_pose(self) -> tuple[bool, np.ndarray | None, Rotation | None, object | None]:
+    def _read_current_pose(
+        self,
+    ) -> tuple[bool, np.ndarray | None, Rotation | None, object | None]:
         """
         Reads the latest 6-DoF pose received from the Android device's WebXR session.
 

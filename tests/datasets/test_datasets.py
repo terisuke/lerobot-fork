@@ -84,7 +84,9 @@ def test_same_attributes_defined(tmp_path, lerobot_dataset_factory):
     )
 
     root_init = tmp_path / "init"
-    dataset_init = lerobot_dataset_factory(root=root_init, total_episodes=1, total_frames=1)
+    dataset_init = lerobot_dataset_factory(
+        root=root_init, total_episodes=1, total_frames=1
+    )
 
     init_attr = set(vars(dataset_init).keys())
     create_attr = set(vars(dataset_create).keys())
@@ -132,7 +134,8 @@ def test_add_frame_missing_task(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
-        ValueError, match="Feature mismatch in `frame` dictionary:\nMissing features: {'task'}\n"
+        ValueError,
+        match="Feature mismatch in `frame` dictionary:\nMissing features: {'task'}\n",
     ):
         dataset.add_frame({"state": torch.randn(1)})
 
@@ -141,7 +144,8 @@ def test_add_frame_missing_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
-        ValueError, match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n"
+        ValueError,
+        match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n",
     ):
         dataset.add_frame({"task": "Dummy task"})
 
@@ -150,18 +154,24 @@ def test_add_frame_extra_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
-        ValueError, match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n"
+        ValueError,
+        match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n",
     ):
-        dataset.add_frame({"state": torch.randn(1), "task": "Dummy task", "extra": "dummy_extra"})
+        dataset.add_frame(
+            {"state": torch.randn(1), "task": "Dummy task", "extra": "dummy_extra"}
+        )
 
 
 def test_add_frame_wrong_type(tmp_path, empty_lerobot_dataset_factory):
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
-        ValueError, match="The feature 'state' of dtype 'float16' is not of the expected dtype 'float32'.\n"
+        ValueError,
+        match="The feature 'state' of dtype 'float16' is not of the expected dtype 'float32'.\n",
     ):
-        dataset.add_frame({"state": torch.randn(1, dtype=torch.float16), "task": "Dummy task"})
+        dataset.add_frame(
+            {"state": torch.randn(1, dtype=torch.float16), "task": "Dummy task"}
+        )
 
 
 def test_add_frame_wrong_shape(tmp_path, empty_lerobot_dataset_factory):
@@ -169,7 +179,9 @@ def test_add_frame_wrong_shape(tmp_path, empty_lerobot_dataset_factory):
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
         ValueError,
-        match=re.escape("The feature 'state' of shape '(1,)' does not have the expected shape '(2,)'.\n"),
+        match=re.escape(
+            "The feature 'state' of shape '(1,)' does not have the expected shape '(2,)'.\n"
+        ),
     ):
         dataset.add_frame({"state": torch.randn(1), "task": "Dummy task"})
 
@@ -191,7 +203,9 @@ def test_add_frame_wrong_shape_torch_ndim_0(tmp_path, empty_lerobot_dataset_fact
     dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features)
     with pytest.raises(
         ValueError,
-        match=re.escape("The feature 'state' of shape '()' does not have the expected shape '(1,)'.\n"),
+        match=re.escape(
+            "The feature 'state' of shape '()' does not have the expected shape '(1,)'.\n"
+        ),
     ):
         dataset.add_frame({"state": torch.tensor(1.0), "task": "Dummy task"})
 
@@ -512,9 +526,9 @@ def test_backward_compatibility(repo_id):
         assert new_keys == old_keys, f"{new_keys=} and {old_keys=} are not the same"
 
         for key in new_frame:
-            assert torch.isclose(new_frame[key], old_frame[key]).all(), (
-                f"{key=} for index={i} does not contain the same value"
-            )
+            assert torch.isclose(
+                new_frame[key], old_frame[key]
+            ).all(), f"{key=} for index={i} does not contain the same value"
 
     # test2 first frames of first episode
     i = dataset.meta.episodes[0]["dataset_from_index"]
@@ -523,7 +537,11 @@ def test_backward_compatibility(repo_id):
 
     # test 2 frames at the middle of first episode
     i = int(
-        (dataset.meta.episodes[0]["dataset_to_index"] - dataset.meta.episodes[0]["dataset_from_index"]) / 2
+        (
+            dataset.meta.episodes[0]["dataset_to_index"]
+            - dataset.meta.episodes[0]["dataset_from_index"]
+        )
+        / 2
     )
     load_and_compare(i)
     load_and_compare(i + 1)
@@ -626,7 +644,9 @@ def test_check_cached_episodes_sufficient(tmp_path, lerobot_dataset_factory):
     # Create a filtered dataset
     filtered_data = {}
     # Find image keys by checking features
-    image_keys = [key for key, ft in sparse_dataset.features.items() if ft.get("dtype") == "image"]
+    image_keys = [
+        key for key, ft in sparse_dataset.features.items() if ft.get("dtype") == "image"
+    ]
 
     for key in sparse_dataset.hf_dataset.column_names:
         values = sparse_dataset.hf_dataset[key]
@@ -637,7 +657,8 @@ def test_check_cached_episodes_sufficient(tmp_path, lerobot_dataset_factory):
         if key in image_keys and len(filtered_values) > 0:
             # Convert torch tensors (float32, [0, 1], CHW) back to numpy arrays (uint8, [0, 255], HWC)
             filtered_values = [
-                (val.permute(1, 2, 0).numpy() * 255).astype(np.uint8) for val in filtered_values
+                (val.permute(1, 2, 0).numpy() * 255).astype(np.uint8)
+                for val in filtered_values
             ]
 
         filtered_data[key] = filtered_values
@@ -666,12 +687,26 @@ def test_update_chunk_settings(tmp_path, empty_lerobot_dataset_factory):
         OBS_STATE: {
             "dtype": "float32",
             "shape": (6,),
-            "names": ["shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wrist_3"],
+            "names": [
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow",
+                "wrist_1",
+                "wrist_2",
+                "wrist_3",
+            ],
         },
         ACTION: {
             "dtype": "float32",
             "shape": (6,),
-            "names": ["shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wrist_3"],
+            "names": [
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow",
+                "wrist_1",
+                "wrist_2",
+                "wrist_3",
+            ],
         },
     }
 
@@ -775,12 +810,20 @@ def test_update_chunk_settings_video_dataset(tmp_path):
             "shape": (480, 640, 3),
             "names": ["height", "width", "channels"],
         },
-        ACTION: {"dtype": "float32", "shape": (6,), "names": ["j1", "j2", "j3", "j4", "j5", "j6"]},
+        ACTION: {
+            "dtype": "float32",
+            "shape": (6,),
+            "names": ["j1", "j2", "j3", "j4", "j5", "j6"],
+        },
     }
 
     # Create video dataset
     dataset = LeRobotDataset.create(
-        repo_id=DUMMY_REPO_ID, fps=30, features=features, root=tmp_path / "video_test", use_videos=True
+        repo_id=DUMMY_REPO_ID,
+        fps=30,
+        features=features,
+        root=tmp_path / "video_test",
+        use_videos=True,
     )
 
     # Test that video-specific settings work
@@ -795,7 +838,9 @@ def test_update_chunk_settings_video_dataset(tmp_path):
 def test_episode_index_distribution(tmp_path, empty_lerobot_dataset_factory):
     """Test that all frames have correct episode indices across multiple episodes."""
     features = {"state": {"dtype": "float32", "shape": (2,), "names": None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     # Create 3 episodes with different lengths
     num_episodes = 3
@@ -822,22 +867,24 @@ def test_episode_index_distribution(tmp_path, empty_lerobot_dataset_factory):
         for frame_idx in [start_frame, middle_frame, end_frame]:
             frame_data = loaded_dataset[frame_idx]
             actual_ep_idx = frame_data["episode_index"].item()
-            assert actual_ep_idx == ep_idx, (
-                f"Frame {frame_idx} has episode_index {actual_ep_idx}, should be {ep_idx}"
-            )
+            assert (
+                actual_ep_idx == ep_idx
+            ), f"Frame {frame_idx} has episode_index {actual_ep_idx}, should be {ep_idx}"
 
         cumulative += ep_length
 
     # Check episode index distribution
-    all_episode_indices = [loaded_dataset[i]["episode_index"].item() for i in range(len(loaded_dataset))]
+    all_episode_indices = [
+        loaded_dataset[i]["episode_index"].item() for i in range(len(loaded_dataset))
+    ]
     from collections import Counter
 
     distribution = Counter(all_episode_indices)
     expected_dist = {i: frames_per_episode[i] for i in range(num_episodes)}
 
-    assert dict(distribution) == expected_dist, (
-        f"Episode distribution {dict(distribution)} != expected {expected_dist}"
-    )
+    assert (
+        dict(distribution) == expected_dist
+    ), f"Episode distribution {dict(distribution)} != expected {expected_dist}"
 
 
 def test_multi_episode_metadata_consistency(tmp_path, empty_lerobot_dataset_factory):
@@ -846,7 +893,9 @@ def test_multi_episode_metadata_consistency(tmp_path, empty_lerobot_dataset_fact
         "state": {"dtype": "float32", "shape": (3,), "names": ["x", "y", "z"]},
         ACTION: {"dtype": "float32", "shape": (2,), "names": ["v", "w"]},
     }
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     num_episodes = 4
     frames_per_episode = [20, 35, 10, 25]
@@ -854,7 +903,13 @@ def test_multi_episode_metadata_consistency(tmp_path, empty_lerobot_dataset_fact
 
     for episode_idx in range(num_episodes):
         for _ in range(frames_per_episode[episode_idx]):
-            dataset.add_frame({"state": torch.randn(3), ACTION: torch.randn(2), "task": tasks[episode_idx]})
+            dataset.add_frame(
+                {
+                    "state": torch.randn(3),
+                    ACTION: torch.randn(2),
+                    "task": tasks[episode_idx],
+                }
+            )
         dataset.save_episode()
 
     dataset.finalize()
@@ -887,7 +942,9 @@ def test_multi_episode_metadata_consistency(tmp_path, empty_lerobot_dataset_fact
 def test_data_consistency_across_episodes(tmp_path, empty_lerobot_dataset_factory):
     """Test that episodes have no gaps or overlaps in their data indices."""
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     num_episodes = 5
     frames_per_episode = [12, 8, 20, 15, 5]
@@ -909,24 +966,24 @@ def test_data_consistency_across_episodes(tmp_path, empty_lerobot_dataset_factor
         to_idx = episode_metadata["dataset_to_index"]
 
         # Check that episode starts exactly where previous ended
-        assert from_idx == cumulative_check, (
-            f"Episode {episode_idx} starts at {from_idx}, expected {cumulative_check}"
-        )
+        assert (
+            from_idx == cumulative_check
+        ), f"Episode {episode_idx} starts at {from_idx}, expected {cumulative_check}"
 
         # Check that episode length matches expected
         actual_length = to_idx - from_idx
         expected_length = frames_per_episode[episode_idx]
-        assert actual_length == expected_length, (
-            f"Episode {episode_idx} length {actual_length} != expected {expected_length}"
-        )
+        assert (
+            actual_length == expected_length
+        ), f"Episode {episode_idx} length {actual_length} != expected {expected_length}"
 
         cumulative_check = to_idx
 
     # Final check: last episode should end at total frames
     expected_total_frames = sum(frames_per_episode)
-    assert cumulative_check == expected_total_frames, (
-        f"Final frame count {cumulative_check} != expected {expected_total_frames}"
-    )
+    assert (
+        cumulative_check == expected_total_frames
+    ), f"Final frame count {cumulative_check} != expected {expected_total_frames}"
 
 
 def test_statistics_metadata_validation(tmp_path, empty_lerobot_dataset_factory):
@@ -935,7 +992,9 @@ def test_statistics_metadata_validation(tmp_path, empty_lerobot_dataset_factory)
         "state": {"dtype": "float32", "shape": (2,), "names": ["pos", "vel"]},
         ACTION: {"dtype": "float32", "shape": (1,), "names": ["force"]},
     }
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     # Create controlled data to verify statistics
     num_episodes = 2
@@ -945,9 +1004,13 @@ def test_statistics_metadata_validation(tmp_path, empty_lerobot_dataset_factory)
     torch.manual_seed(42)
     for episode_idx in range(num_episodes):
         for frame_idx in range(frames_per_episode[episode_idx]):
-            state_data = torch.tensor([frame_idx * 0.1, frame_idx * 0.2], dtype=torch.float32)
+            state_data = torch.tensor(
+                [frame_idx * 0.1, frame_idx * 0.2], dtype=torch.float32
+            )
             action_data = torch.tensor([frame_idx * 0.05], dtype=torch.float32)
-            dataset.add_frame({"state": state_data, ACTION: action_data, "task": "stats_test"})
+            dataset.add_frame(
+                {"state": state_data, ACTION: action_data, "task": "stats_test"}
+            )
         dataset.save_episode()
 
     dataset.finalize()
@@ -958,43 +1021,61 @@ def test_statistics_metadata_validation(tmp_path, empty_lerobot_dataset_factory)
     assert loaded_dataset.meta.stats is not None, "No statistics found"
 
     for feature_name in features:
-        assert feature_name in loaded_dataset.meta.stats, f"No statistics for feature '{feature_name}'"
+        assert (
+            feature_name in loaded_dataset.meta.stats
+        ), f"No statistics for feature '{feature_name}'"
 
         feature_stats = loaded_dataset.meta.stats[feature_name]
         expected_stats = ["min", "max", "mean", "std", "count"]
 
         for stat_key in expected_stats:
-            assert stat_key in feature_stats, f"Missing '{stat_key}' statistic for '{feature_name}'"
+            assert (
+                stat_key in feature_stats
+            ), f"Missing '{stat_key}' statistic for '{feature_name}'"
 
             stat_value = feature_stats[stat_key]
             # Basic sanity checks
             if stat_key == "count":
-                assert stat_value == sum(frames_per_episode), f"Wrong count for '{feature_name}'"
+                assert stat_value == sum(
+                    frames_per_episode
+                ), f"Wrong count for '{feature_name}'"
             elif stat_key in ["min", "max", "mean", "std"]:
                 # Check that statistics are reasonable (not NaN, proper shapes)
                 if hasattr(stat_value, "shape"):
                     expected_shape = features[feature_name]["shape"]
-                    assert stat_value.shape == expected_shape or len(stat_value) == expected_shape[0], (
-                        f"Wrong shape for {stat_key} of '{feature_name}'"
-                    )
+                    assert (
+                        stat_value.shape == expected_shape
+                        or len(stat_value) == expected_shape[0]
+                    ), f"Wrong shape for {stat_key} of '{feature_name}'"
                 # Check no NaN values
                 if hasattr(stat_value, "__iter__"):
-                    assert not any(np.isnan(v) for v in stat_value), f"NaN in {stat_key} for '{feature_name}'"
+                    assert not any(
+                        np.isnan(v) for v in stat_value
+                    ), f"NaN in {stat_key} for '{feature_name}'"
                 else:
-                    assert not np.isnan(stat_value), f"NaN in {stat_key} for '{feature_name}'"
+                    assert not np.isnan(
+                        stat_value
+                    ), f"NaN in {stat_key} for '{feature_name}'"
 
 
 def test_episode_boundary_integrity(tmp_path, empty_lerobot_dataset_factory):
     """Test frame indices and episode transitions at episode boundaries."""
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     num_episodes = 3
     frames_per_episode = [7, 12, 5]
 
     for episode_idx in range(num_episodes):
         for frame_idx in range(frames_per_episode[episode_idx]):
-            dataset.add_frame({"state": torch.tensor([float(frame_idx)]), "task": f"episode_{episode_idx}"})
+            dataset.add_frame(
+                {
+                    "state": torch.tensor([float(frame_idx)]),
+                    "task": f"episode_{episode_idx}",
+                }
+            )
         dataset.save_episode()
 
     dataset.finalize()
@@ -1018,10 +1099,12 @@ def test_episode_boundary_integrity(tmp_path, empty_lerobot_dataset_factory):
         for i in range(ep_length):
             if cumulative + i < len(loaded_dataset):
                 frame = loaded_dataset[cumulative + i]
-                assert frame["frame_index"].item() == i, f"Frame {cumulative + i} has wrong frame_index"
-                assert frame["episode_index"].item() == ep_idx, (
-                    f"Frame {cumulative + i} has wrong episode_index"
-                )
+                assert (
+                    frame["frame_index"].item() == i
+                ), f"Frame {cumulative + i} has wrong frame_index"
+                assert (
+                    frame["episode_index"].item() == ep_idx
+                ), f"Frame {cumulative + i} has wrong episode_index"
 
         cumulative += ep_length
 
@@ -1029,7 +1112,9 @@ def test_episode_boundary_integrity(tmp_path, empty_lerobot_dataset_factory):
 def test_task_indexing_and_validation(tmp_path, empty_lerobot_dataset_factory):
     """Test that tasks are properly indexed and retrievable."""
     features = {"state": {"dtype": "float32", "shape": (1,), "names": None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     # Use multiple tasks, including repeated ones
     tasks = ["pick", "place", "pick", "navigate", "place"]
@@ -1047,7 +1132,9 @@ def test_task_indexing_and_validation(tmp_path, empty_lerobot_dataset_factory):
 
     # Check that all unique tasks are in the tasks metadata
     stored_tasks = set(loaded_dataset.meta.tasks.index)
-    assert stored_tasks == set(unique_tasks), f"Stored tasks {stored_tasks} != expected {set(unique_tasks)}"
+    assert stored_tasks == set(
+        unique_tasks
+    ), f"Stored tasks {stored_tasks} != expected {set(unique_tasks)}"
 
     # Check that task indices are consistent
     cumulative = 0
@@ -1058,7 +1145,9 @@ def test_task_indexing_and_validation(tmp_path, empty_lerobot_dataset_factory):
         # Check frames in this episode have correct task
         for i in range(frames_per_episode[episode_idx]):
             frame = loaded_dataset[cumulative + i]
-            assert frame["task"] == expected_task, f"Frame {cumulative + i} has wrong task"
+            assert (
+                frame["task"] == expected_task
+            ), f"Frame {cumulative + i} has wrong task"
 
             # Check task_index consistency
             expected_task_index = loaded_dataset.meta.get_task_index(expected_task)
@@ -1087,7 +1176,9 @@ def test_dataset_resume_recording(tmp_path, empty_lerobot_dataset_factory):
         "action": {"dtype": "float32", "shape": (2,), "names": ["x", "y"]},
     }
 
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
 
     initial_episodes = 2
     frames_per_episode = 3
@@ -1096,7 +1187,9 @@ def test_dataset_resume_recording(tmp_path, empty_lerobot_dataset_factory):
         for frame_idx in range(frames_per_episode):
             dataset.add_frame(
                 {
-                    "observation.state": torch.tensor([float(ep_idx), float(frame_idx)]),
+                    "observation.state": torch.tensor(
+                        [float(ep_idx), float(frame_idx)]
+                    ),
                     "action": torch.tensor([0.5, 0.5]),
                     "task": f"task_{ep_idx}",
                 }
@@ -1129,7 +1222,9 @@ def test_dataset_resume_recording(tmp_path, empty_lerobot_dataset_factory):
     del dataset_verify
 
     # Phase 3: Resume recording - add more episodes
-    dataset_resumed = LeRobotDataset(initial_repo_id, root=initial_root, revision="v3.0")
+    dataset_resumed = LeRobotDataset(
+        initial_repo_id, root=initial_root, revision="v3.0"
+    )
 
     assert dataset_resumed.meta.total_episodes == initial_episodes
     assert dataset_resumed.meta.total_frames == initial_episodes * frames_per_episode
@@ -1142,7 +1237,9 @@ def test_dataset_resume_recording(tmp_path, empty_lerobot_dataset_factory):
         for frame_idx in range(frames_per_episode):
             dataset_resumed.add_frame(
                 {
-                    "observation.state": torch.tensor([float(ep_idx), float(frame_idx)]),
+                    "observation.state": torch.tensor(
+                        [float(ep_idx), float(frame_idx)]
+                    ),
                     "action": torch.tensor([0.5, 0.5]),
                     "task": f"task_{ep_idx}",
                 }
@@ -1168,15 +1265,15 @@ def test_dataset_resume_recording(tmp_path, empty_lerobot_dataset_factory):
         expected_ep = idx // frames_per_episode
         expected_frame = idx % frames_per_episode
 
-        assert item["episode_index"].item() == expected_ep, (
-            f"Frame {idx}: wrong episode_index. Expected {expected_ep}, got {item['episode_index'].item()}"
-        )
-        assert item["frame_index"].item() == expected_frame, (
-            f"Frame {idx}: wrong frame_index. Expected {expected_frame}, got {item['frame_index'].item()}"
-        )
-        assert item["index"].item() == idx, (
-            f"Frame {idx}: wrong index. Expected {idx}, got {item['index'].item()}"
-        )
+        assert (
+            item["episode_index"].item() == expected_ep
+        ), f"Frame {idx}: wrong episode_index. Expected {expected_ep}, got {item['episode_index'].item()}"
+        assert (
+            item["frame_index"].item() == expected_frame
+        ), f"Frame {idx}: wrong frame_index. Expected {expected_frame}, got {item['frame_index'].item()}"
+        assert (
+            item["index"].item() == idx
+        ), f"Frame {idx}: wrong index. Expected {idx}, got {item['index'].item()}"
 
         # Verify data integrity
         assert item["observation.state"][0].item() == float(expected_ep), (
@@ -1208,7 +1305,9 @@ def test_frames_in_current_file_calculation(tmp_path, empty_lerobot_dataset_fact
         "action": {"dtype": "float32", "shape": (2,), "names": ["vx", "vy"]},
     }
 
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / "test", features=features, use_videos=False)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / "test", features=features, use_videos=False
+    )
     dataset.meta.update_chunk_settings(data_files_size_in_mb=100)
 
     assert dataset._current_file_start_frame is None

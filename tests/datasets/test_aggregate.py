@@ -25,12 +25,12 @@ from tests.fixtures.constants import DUMMY_REPO_ID
 
 def assert_episode_and_frame_counts(aggr_ds, expected_episodes, expected_frames):
     """Test that total number of episodes and frames are correctly aggregated."""
-    assert aggr_ds.num_episodes == expected_episodes, (
-        f"Expected {expected_episodes} episodes, got {aggr_ds.num_episodes}"
-    )
-    assert aggr_ds.num_frames == expected_frames, (
-        f"Expected {expected_frames} frames, got {aggr_ds.num_frames}"
-    )
+    assert (
+        aggr_ds.num_episodes == expected_episodes
+    ), f"Expected {expected_episodes} episodes, got {aggr_ds.num_episodes}"
+    assert (
+        aggr_ds.num_frames == expected_frames
+    ), f"Expected {expected_frames} frames, got {aggr_ds.num_frames}"
 
 
 def assert_dataset_content_integrity(aggr_ds, ds_0, ds_1):
@@ -45,14 +45,16 @@ def assert_dataset_content_integrity(aggr_ds, ds_0, ds_1):
     for key in ds_0_first_item:
         if key not in keys_to_ignore:
             # Handle both tensor and non-tensor data
-            if torch.is_tensor(aggr_first_item[key]) and torch.is_tensor(ds_0_first_item[key]):
-                assert torch.allclose(aggr_first_item[key], ds_0_first_item[key], atol=1e-6), (
-                    f"First item key '{key}' doesn't match between aggregated and ds_0"
-                )
+            if torch.is_tensor(aggr_first_item[key]) and torch.is_tensor(
+                ds_0_first_item[key]
+            ):
+                assert torch.allclose(
+                    aggr_first_item[key], ds_0_first_item[key], atol=1e-6
+                ), f"First item key '{key}' doesn't match between aggregated and ds_0"
             else:
-                assert aggr_first_item[key] == ds_0_first_item[key], (
-                    f"First item key '{key}' doesn't match between aggregated and ds_0"
-                )
+                assert (
+                    aggr_first_item[key] == ds_0_first_item[key]
+                ), f"First item key '{key}' doesn't match between aggregated and ds_0"
 
     # Check last item of ds_0 part (index len(ds_0)-1) matches ds_0[-1]
     aggr_ds_0_last_item = aggr_ds[len(ds_0) - 1]
@@ -61,14 +63,16 @@ def assert_dataset_content_integrity(aggr_ds, ds_0, ds_1):
     for key in ds_0_last_item:
         if key not in keys_to_ignore:
             # Handle both tensor and non-tensor data
-            if torch.is_tensor(aggr_ds_0_last_item[key]) and torch.is_tensor(ds_0_last_item[key]):
-                assert torch.allclose(aggr_ds_0_last_item[key], ds_0_last_item[key], atol=1e-6), (
-                    f"Last ds_0 item key '{key}' doesn't match between aggregated and ds_0"
-                )
+            if torch.is_tensor(aggr_ds_0_last_item[key]) and torch.is_tensor(
+                ds_0_last_item[key]
+            ):
+                assert torch.allclose(
+                    aggr_ds_0_last_item[key], ds_0_last_item[key], atol=1e-6
+                ), f"Last ds_0 item key '{key}' doesn't match between aggregated and ds_0"
             else:
-                assert aggr_ds_0_last_item[key] == ds_0_last_item[key], (
-                    f"Last ds_0 item key '{key}' doesn't match between aggregated and ds_0"
-                )
+                assert (
+                    aggr_ds_0_last_item[key] == ds_0_last_item[key]
+                ), f"Last ds_0 item key '{key}' doesn't match between aggregated and ds_0"
 
     # Test second part of dataset corresponds to ds_1
     # Check first item of ds_1 part (index len(ds_0)) matches ds_1[0]
@@ -78,14 +82,16 @@ def assert_dataset_content_integrity(aggr_ds, ds_0, ds_1):
     for key in ds_1_first_item:
         if key not in keys_to_ignore:
             # Handle both tensor and non-tensor data
-            if torch.is_tensor(aggr_ds_1_first_item[key]) and torch.is_tensor(ds_1_first_item[key]):
-                assert torch.allclose(aggr_ds_1_first_item[key], ds_1_first_item[key], atol=1e-6), (
-                    f"First ds_1 item key '{key}' doesn't match between aggregated and ds_1"
-                )
+            if torch.is_tensor(aggr_ds_1_first_item[key]) and torch.is_tensor(
+                ds_1_first_item[key]
+            ):
+                assert torch.allclose(
+                    aggr_ds_1_first_item[key], ds_1_first_item[key], atol=1e-6
+                ), f"First ds_1 item key '{key}' doesn't match between aggregated and ds_1"
             else:
-                assert aggr_ds_1_first_item[key] == ds_1_first_item[key], (
-                    f"First ds_1 item key '{key}' doesn't match between aggregated and ds_1"
-                )
+                assert (
+                    aggr_ds_1_first_item[key] == ds_1_first_item[key]
+                ), f"First ds_1 item key '{key}' doesn't match between aggregated and ds_1"
 
     # Check last item matches ds_1[-1]
     aggr_last_item = aggr_ds[-1]
@@ -94,50 +100,62 @@ def assert_dataset_content_integrity(aggr_ds, ds_0, ds_1):
     for key in ds_1_last_item:
         if key not in keys_to_ignore:
             # Handle both tensor and non-tensor data
-            if torch.is_tensor(aggr_last_item[key]) and torch.is_tensor(ds_1_last_item[key]):
-                assert torch.allclose(aggr_last_item[key], ds_1_last_item[key], atol=1e-6), (
-                    f"Last item key '{key}' doesn't match between aggregated and ds_1"
-                )
+            if torch.is_tensor(aggr_last_item[key]) and torch.is_tensor(
+                ds_1_last_item[key]
+            ):
+                assert torch.allclose(
+                    aggr_last_item[key], ds_1_last_item[key], atol=1e-6
+                ), f"Last item key '{key}' doesn't match between aggregated and ds_1"
             else:
-                assert aggr_last_item[key] == ds_1_last_item[key], (
-                    f"Last item key '{key}' doesn't match between aggregated and ds_1"
-                )
+                assert (
+                    aggr_last_item[key] == ds_1_last_item[key]
+                ), f"Last item key '{key}' doesn't match between aggregated and ds_1"
 
 
 def assert_metadata_consistency(aggr_ds, ds_0, ds_1):
     """Test that metadata is correctly aggregated."""
     # Test basic info
-    assert aggr_ds.fps == ds_0.fps == ds_1.fps, "FPS should be the same across all datasets"
-    assert aggr_ds.meta.info["robot_type"] == ds_0.meta.info["robot_type"] == ds_1.meta.info["robot_type"], (
-        "Robot type should be the same"
-    )
+    assert (
+        aggr_ds.fps == ds_0.fps == ds_1.fps
+    ), "FPS should be the same across all datasets"
+    assert (
+        aggr_ds.meta.info["robot_type"]
+        == ds_0.meta.info["robot_type"]
+        == ds_1.meta.info["robot_type"]
+    ), "Robot type should be the same"
 
     # Test features are the same
-    assert aggr_ds.features == ds_0.features == ds_1.features, "Features should be the same"
+    assert (
+        aggr_ds.features == ds_0.features == ds_1.features
+    ), "Features should be the same"
 
     # Test tasks aggregation
     expected_tasks = set(ds_0.meta.tasks.index) | set(ds_1.meta.tasks.index)
     actual_tasks = set(aggr_ds.meta.tasks.index)
-    assert actual_tasks == expected_tasks, f"Expected tasks {expected_tasks}, got {actual_tasks}"
+    assert (
+        actual_tasks == expected_tasks
+    ), f"Expected tasks {expected_tasks}, got {actual_tasks}"
 
 
 def assert_episode_indices_updated_correctly(aggr_ds, ds_0, ds_1):
     """Test that episode indices are correctly updated after aggregation."""
     # ds_0 episodes should have episode_index 0 to ds_0.num_episodes-1
     for i in range(len(ds_0)):
-        assert aggr_ds[i]["episode_index"] < ds_0.num_episodes, (
-            f"Episode index {aggr_ds[i]['episode_index']} at position {i} should be < {ds_0.num_episodes}"
-        )
+        assert (
+            aggr_ds[i]["episode_index"] < ds_0.num_episodes
+        ), f"Episode index {aggr_ds[i]['episode_index']} at position {i} should be < {ds_0.num_episodes}"
 
     def ds1_episodes_condition(ep_idx):
-        return (ep_idx >= ds_0.num_episodes) and (ep_idx < ds_0.num_episodes + ds_1.num_episodes)
+        return (ep_idx >= ds_0.num_episodes) and (
+            ep_idx < ds_0.num_episodes + ds_1.num_episodes
+        )
 
     # ds_1 episodes should have episode_index ds_0.num_episodes to total_episodes-1
     for i in range(len(ds_0), len(ds_0) + len(ds_1)):
         expected_min_episode_idx = ds_0.num_episodes
-        assert ds1_episodes_condition(aggr_ds[i]["episode_index"]), (
-            f"Episode index {aggr_ds[i]['episode_index']} at position {i} should be >= {expected_min_episode_idx}"
-        )
+        assert ds1_episodes_condition(
+            aggr_ds[i]["episode_index"]
+        ), f"Episode index {aggr_ds[i]['episode_index']} at position {i} should be >= {expected_min_episode_idx}"
 
 
 def assert_video_frames_integrity(aggr_ds, ds_0, ds_1):
@@ -155,24 +173,24 @@ def assert_video_frames_integrity(aggr_ds, ds_0, ds_1):
 
     # Test the section corresponding to the first dataset (ds_0)
     for i in range(len(ds_0)):
-        assert aggr_ds[i]["index"] == i, (
-            f"Frame index at position {i} should be {i}, but got {aggr_ds[i]['index']}"
-        )
+        assert (
+            aggr_ds[i]["index"] == i
+        ), f"Frame index at position {i} should be {i}, but got {aggr_ds[i]['index']}"
         for key in video_keys:
-            assert visual_frames_equal(aggr_ds[i][key], ds_0[i][key]), (
-                f"Visual frames at position {i} should be equal between aggregated and ds_0"
-            )
+            assert visual_frames_equal(
+                aggr_ds[i][key], ds_0[i][key]
+            ), f"Visual frames at position {i} should be equal between aggregated and ds_0"
 
     # Test the section corresponding to the second dataset (ds_1)
     for i in range(len(ds_0), len(ds_0) + len(ds_1)):
         # The frame index in the aggregated dataset should also match its position.
-        assert aggr_ds[i]["index"] == i, (
-            f"Frame index at position {i} should be {i}, but got {aggr_ds[i]['index']}"
-        )
+        assert (
+            aggr_ds[i]["index"] == i
+        ), f"Frame index at position {i} should be {i}, but got {aggr_ds[i]['index']}"
         for key in video_keys:
-            assert visual_frames_equal(aggr_ds[i][key], ds_1[i - len(ds_0)][key]), (
-                f"Visual frames at position {i} should be equal between aggregated and ds_1"
-            )
+            assert visual_frames_equal(
+                aggr_ds[i][key], ds_1[i - len(ds_0)][key]
+            ), f"Visual frames at position {i} should be equal between aggregated and ds_1"
 
 
 def assert_dataset_iteration_works(aggr_ds):
@@ -198,7 +216,9 @@ def assert_video_timestamps_within_bounds(aggr_ds):
         for vid_key in aggr_ds.meta.video_keys:
             from_ts = ep[f"videos/{vid_key}/from_timestamp"]
             to_ts = ep[f"videos/{vid_key}/to_timestamp"]
-            video_path = aggr_ds.root / aggr_ds.meta.get_video_file_path(ep_idx, vid_key)
+            video_path = aggr_ds.root / aggr_ds.meta.get_video_file_path(
+                ep_idx, vid_key
+            )
 
             if not video_path.exists():
                 continue
@@ -211,18 +231,18 @@ def assert_video_timestamps_within_bounds(aggr_ds):
                 num_frames = len(decoder)
 
                 # Verify timestamps don't exceed video bounds
-                assert from_frame_idx >= 0, (
-                    f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) < 0"
-                )
-                assert from_frame_idx < num_frames, (
-                    f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) >= video frames ({num_frames})"
-                )
-                assert to_frame_idx <= num_frames, (
-                    f"Episode {ep_idx}, {vid_key}: to_frame_idx ({to_frame_idx}) > video frames ({num_frames})"
-                )
-                assert from_frame_idx < to_frame_idx, (
-                    f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) >= to_frame_idx ({to_frame_idx})"
-                )
+                assert (
+                    from_frame_idx >= 0
+                ), f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) < 0"
+                assert (
+                    from_frame_idx < num_frames
+                ), f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) >= video frames ({num_frames})"
+                assert (
+                    to_frame_idx <= num_frames
+                ), f"Episode {ep_idx}, {vid_key}: to_frame_idx ({to_frame_idx}) > video frames ({num_frames})"
+                assert (
+                    from_frame_idx < to_frame_idx
+                ), f"Episode {ep_idx}, {vid_key}: from_frame_idx ({from_frame_idx}) >= to_frame_idx ({to_frame_idx})"
             except Exception as e:
                 raise AssertionError(
                     f"Failed to verify timestamps for episode {ep_idx}, {vid_key}: {e}"
@@ -259,8 +279,12 @@ def test_aggregate_datasets(tmp_path, lerobot_dataset_factory):
 
     # Mock the revision to prevent Hub calls during dataset loading
     with (
-        patch("lerobot.datasets.lerobot_dataset.get_safe_version") as mock_get_safe_version,
-        patch("lerobot.datasets.lerobot_dataset.snapshot_download") as mock_snapshot_download,
+        patch(
+            "lerobot.datasets.lerobot_dataset.get_safe_version"
+        ) as mock_get_safe_version,
+        patch(
+            "lerobot.datasets.lerobot_dataset.snapshot_download"
+        ) as mock_snapshot_download,
     ):
         mock_get_safe_version.return_value = "v3.0"
         mock_snapshot_download.return_value = str(tmp_path / "test_aggr")
@@ -270,7 +294,9 @@ def test_aggregate_datasets(tmp_path, lerobot_dataset_factory):
     expected_total_episodes = ds_0.num_episodes + ds_1.num_episodes
     expected_total_frames = ds_0.num_frames + ds_1.num_frames
 
-    assert_episode_and_frame_counts(aggr_ds, expected_total_episodes, expected_total_frames)
+    assert_episode_and_frame_counts(
+        aggr_ds, expected_total_episodes, expected_total_frames
+    )
     assert_dataset_content_integrity(aggr_ds, ds_0, ds_1)
     assert_metadata_consistency(aggr_ds, ds_0, ds_1)
     assert_episode_indices_updated_correctly(aggr_ds, ds_0, ds_1)
@@ -310,18 +336,26 @@ def test_aggregate_with_low_threshold(tmp_path, lerobot_dataset_factory):
 
     # Mock the revision to prevent Hub calls during dataset loading
     with (
-        patch("lerobot.datasets.lerobot_dataset.get_safe_version") as mock_get_safe_version,
-        patch("lerobot.datasets.lerobot_dataset.snapshot_download") as mock_snapshot_download,
+        patch(
+            "lerobot.datasets.lerobot_dataset.get_safe_version"
+        ) as mock_get_safe_version,
+        patch(
+            "lerobot.datasets.lerobot_dataset.snapshot_download"
+        ) as mock_snapshot_download,
     ):
         mock_get_safe_version.return_value = "v3.0"
         mock_snapshot_download.return_value = str(tmp_path / "small_aggr")
-        aggr_ds = LeRobotDataset(f"{DUMMY_REPO_ID}_small_aggr", root=tmp_path / "small_aggr")
+        aggr_ds = LeRobotDataset(
+            f"{DUMMY_REPO_ID}_small_aggr", root=tmp_path / "small_aggr"
+        )
 
     # Verify aggregation worked correctly despite file size constraints
     expected_total_episodes = ds_0_num_episodes + ds_1_num_episodes
     expected_total_frames = ds_0_num_frames + ds_1_num_frames
 
-    assert_episode_and_frame_counts(aggr_ds, expected_total_episodes, expected_total_frames)
+    assert_episode_and_frame_counts(
+        aggr_ds, expected_total_episodes, expected_total_frames
+    )
     assert_dataset_content_integrity(aggr_ds, ds_0, ds_1)
     assert_metadata_consistency(aggr_ds, ds_0, ds_1)
     assert_episode_indices_updated_correctly(aggr_ds, ds_0, ds_1)
@@ -335,11 +369,15 @@ def test_aggregate_with_low_threshold(tmp_path, lerobot_dataset_factory):
 
     if data_dir.exists():
         parquet_files = list(data_dir.rglob("*.parquet"))
-        assert len(parquet_files) > 1, "Small file size limits should create multiple parquet files"
+        assert (
+            len(parquet_files) > 1
+        ), "Small file size limits should create multiple parquet files"
 
     if video_dir.exists():
         video_files = list(video_dir.rglob("*.mp4"))
-        assert len(video_files) > 1, "Small file size limits should create multiple video files"
+        assert (
+            len(video_files) > 1
+        ), "Small file size limits should create multiple video files"
 
 
 def test_video_timestamps_regression(tmp_path, lerobot_dataset_factory):
@@ -366,12 +404,18 @@ def test_video_timestamps_regression(tmp_path, lerobot_dataset_factory):
     )
 
     with (
-        patch("lerobot.datasets.lerobot_dataset.get_safe_version") as mock_get_safe_version,
-        patch("lerobot.datasets.lerobot_dataset.snapshot_download") as mock_snapshot_download,
+        patch(
+            "lerobot.datasets.lerobot_dataset.get_safe_version"
+        ) as mock_get_safe_version,
+        patch(
+            "lerobot.datasets.lerobot_dataset.snapshot_download"
+        ) as mock_snapshot_download,
     ):
         mock_get_safe_version.return_value = "v3.0"
         mock_snapshot_download.return_value = str(tmp_path / "regression_aggr")
-        aggr_ds = LeRobotDataset(f"{DUMMY_REPO_ID}_regression_aggr", root=tmp_path / "regression_aggr")
+        aggr_ds = LeRobotDataset(
+            f"{DUMMY_REPO_ID}_regression_aggr", root=tmp_path / "regression_aggr"
+        )
 
     assert_video_timestamps_within_bounds(aggr_ds)
 

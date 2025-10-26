@@ -34,7 +34,9 @@ from lerobot.scripts.lerobot_imgtransform_viz import (
     save_each_transform,
 )
 from lerobot.utils.random_utils import seeded_context
-from tests.artifacts.image_transforms.save_image_transforms_to_safetensors import ARTIFACT_DIR
+from tests.artifacts.image_transforms.save_image_transforms_to_safetensors import (
+    ARTIFACT_DIR,
+)
 from tests.utils import require_x86_64_kernel
 
 
@@ -81,7 +83,11 @@ def test_get_image_transforms_brightness(img_tensor_factory, min_max):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
         enable=True,
-        tfs={"brightness": ImageTransformConfig(type="ColorJitter", kwargs={"brightness": min_max})},
+        tfs={
+            "brightness": ImageTransformConfig(
+                type="ColorJitter", kwargs={"brightness": min_max}
+            )
+        },
     )
     tf_actual = ImageTransforms(tf_cfg)
     tf_expected = v2.ColorJitter(brightness=min_max)
@@ -92,7 +98,12 @@ def test_get_image_transforms_brightness(img_tensor_factory, min_max):
 def test_get_image_transforms_contrast(img_tensor_factory, min_max):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
-        enable=True, tfs={"contrast": ImageTransformConfig(type="ColorJitter", kwargs={"contrast": min_max})}
+        enable=True,
+        tfs={
+            "contrast": ImageTransformConfig(
+                type="ColorJitter", kwargs={"contrast": min_max}
+            )
+        },
     )
     tf_actual = ImageTransforms(tf_cfg)
     tf_expected = v2.ColorJitter(contrast=min_max)
@@ -104,7 +115,11 @@ def test_get_image_transforms_saturation(img_tensor_factory, min_max):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
         enable=True,
-        tfs={"saturation": ImageTransformConfig(type="ColorJitter", kwargs={"saturation": min_max})},
+        tfs={
+            "saturation": ImageTransformConfig(
+                type="ColorJitter", kwargs={"saturation": min_max}
+            )
+        },
     )
     tf_actual = ImageTransforms(tf_cfg)
     tf_expected = v2.ColorJitter(saturation=min_max)
@@ -115,7 +130,8 @@ def test_get_image_transforms_saturation(img_tensor_factory, min_max):
 def test_get_image_transforms_hue(img_tensor_factory, min_max):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
-        enable=True, tfs={"hue": ImageTransformConfig(type="ColorJitter", kwargs={"hue": min_max})}
+        enable=True,
+        tfs={"hue": ImageTransformConfig(type="ColorJitter", kwargs={"hue": min_max})},
     )
     tf_actual = ImageTransforms(tf_cfg)
     tf_expected = v2.ColorJitter(hue=min_max)
@@ -127,14 +143,20 @@ def test_get_image_transforms_sharpness(img_tensor_factory, min_max):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
         enable=True,
-        tfs={"sharpness": ImageTransformConfig(type="SharpnessJitter", kwargs={"sharpness": min_max})},
+        tfs={
+            "sharpness": ImageTransformConfig(
+                type="SharpnessJitter", kwargs={"sharpness": min_max}
+            )
+        },
     )
     tf_actual = ImageTransforms(tf_cfg)
     tf_expected = SharpnessJitter(sharpness=min_max)
     torch.testing.assert_close(tf_actual(img_tensor), tf_expected(img_tensor))
 
 
-@pytest.mark.parametrize("degrees, translate", [((-5.0, 5.0), (0.05, 0.05)), ((10.0, 10.0), (0.1, 0.1))])
+@pytest.mark.parametrize(
+    "degrees, translate", [((-5.0, 5.0), (0.05, 0.05)), ((10.0, 10.0), (0.1, 0.1))]
+)
 def test_get_image_transforms_affine(img_tensor_factory, degrees, translate):
     img_tensor = img_tensor_factory()
     tf_cfg = ImageTransformsConfig(
@@ -399,14 +421,16 @@ def test_save_all_transforms(img_tensor_factory, tmp_path):
 
     # Check if the combined transforms directory exists and contains the right files
     combined_transforms_dir = tmp_path / "all"
-    assert combined_transforms_dir.exists(), "Combined transforms directory was not created."
-    assert any(combined_transforms_dir.iterdir()), (
-        "No transformed images found in combined transforms directory."
-    )
+    assert (
+        combined_transforms_dir.exists()
+    ), "Combined transforms directory was not created."
+    assert any(
+        combined_transforms_dir.iterdir()
+    ), "No transformed images found in combined transforms directory."
     for i in range(1, n_examples + 1):
-        assert (combined_transforms_dir / f"{i}.png").exists(), (
-            f"Combined transform image {i}.png was not found."
-        )
+        assert (
+            combined_transforms_dir / f"{i}.png"
+        ).exists(), f"Combined transform image {i}.png was not found."
 
 
 def test_save_each_transform(img_tensor_factory, tmp_path):
@@ -421,11 +445,17 @@ def test_save_each_transform(img_tensor_factory, tmp_path):
     for transform in transforms:
         transform_dir = tmp_path / transform
         assert transform_dir.exists(), f"{transform} directory was not created."
-        assert any(transform_dir.iterdir()), f"No transformed images found in {transform} directory."
+        assert any(
+            transform_dir.iterdir()
+        ), f"No transformed images found in {transform} directory."
 
         # Check for specific files within each transform directory
-        expected_files = [f"{i}.png" for i in range(1, n_examples + 1)] + ["min.png", "max.png", "mean.png"]
+        expected_files = [f"{i}.png" for i in range(1, n_examples + 1)] + [
+            "min.png",
+            "max.png",
+            "mean.png",
+        ]
         for file_name in expected_files:
-            assert (transform_dir / file_name).exists(), (
-                f"{file_name} was not found in {transform} directory."
-            )
+            assert (
+                transform_dir / file_name
+            ).exists(), f"{file_name} was not found in {transform} directory."

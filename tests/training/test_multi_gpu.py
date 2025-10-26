@@ -99,7 +99,10 @@ def run_accelerate_training(config_args, num_processes=4, temp_dir=None):
         cmd,
         capture_output=True,
         text=True,
-        env={**os.environ, "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(num_processes)))},
+        env={
+            **os.environ,
+            "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(num_processes))),
+        },
     )
 
     return result
@@ -139,7 +142,9 @@ class TestMultiGPUTraining:
                 "--num_workers=0",
             ]
 
-            result = run_accelerate_training(config_args, num_processes=4, temp_dir=temp_dir)
+            result = run_accelerate_training(
+                config_args, num_processes=4, temp_dir=temp_dir
+            )
 
             # Check that training completed successfully
             assert result.returncode == 0, (
@@ -153,7 +158,9 @@ class TestMultiGPUTraining:
             assert checkpoints_dir.exists(), "Checkpoints directory was not created"
 
             # Verify that training completed
-            assert "End of training" in result.stdout or "End of training" in result.stderr
+            assert (
+                "End of training" in result.stdout or "End of training" in result.stderr
+            )
 
     def test_checkpoint_saving_multi_gpu(self):
         """
@@ -182,11 +189,13 @@ class TestMultiGPUTraining:
                 "--num_workers=0",
             ]
 
-            result = run_accelerate_training(config_args, num_processes=2, temp_dir=temp_dir)
-
-            assert result.returncode == 0, (
-                f"Training failed:\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+            result = run_accelerate_training(
+                config_args, num_processes=2, temp_dir=temp_dir
             )
+
+            assert (
+                result.returncode == 0
+            ), f"Training failed:\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
 
             # Verify checkpoint directory exists
             checkpoints_dir = output_dir / "checkpoints"
@@ -194,18 +203,26 @@ class TestMultiGPUTraining:
 
             # Count checkpoint directories (should have checkpoint at step 10 and 20)
             checkpoint_dirs = [d for d in checkpoints_dir.iterdir() if d.is_dir()]
-            assert len(checkpoint_dirs) >= 1, f"Expected at least 1 checkpoint, found {len(checkpoint_dirs)}"
+            assert (
+                len(checkpoint_dirs) >= 1
+            ), f"Expected at least 1 checkpoint, found {len(checkpoint_dirs)}"
 
             # Verify checkpoint contents
             for checkpoint_dir in checkpoint_dirs:
                 # Check for model files
                 model_files = list(checkpoint_dir.rglob("*.safetensors"))
-                assert len(model_files) > 0, f"No model files in checkpoint {checkpoint_dir}"
+                assert (
+                    len(model_files) > 0
+                ), f"No model files in checkpoint {checkpoint_dir}"
 
                 # Check for training state
                 training_state_dir = checkpoint_dir / "training_state"
-                assert training_state_dir.exists(), f"No training state in checkpoint {checkpoint_dir}"
+                assert (
+                    training_state_dir.exists()
+                ), f"No training state in checkpoint {checkpoint_dir}"
 
                 # Verify optimizer state exists
                 optimizer_state = training_state_dir / "optimizer_state.safetensors"
-                assert optimizer_state.exists(), f"No optimizer state in checkpoint {checkpoint_dir}"
+                assert (
+                    optimizer_state.exists()
+                ), f"No optimizer state in checkpoint {checkpoint_dir}"

@@ -153,8 +153,8 @@ def test_lerobot_groot_inference():
     set_seed_all(42)
 
     # Instantiate policy and processors
-    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = instantiate_lerobot_groot(
-        from_pretrained=True
+    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = (
+        instantiate_lerobot_groot(from_pretrained=True)
     )
     batch = create_dummy_data()
 
@@ -187,7 +187,9 @@ def test_lerobot_groot_forward_pass():
     set_seed_all(42)
 
     # Instantiate policy and processors
-    lerobot_policy, lerobot_preprocessor, _ = instantiate_lerobot_groot(from_pretrained=True)
+    lerobot_policy, lerobot_preprocessor, _ = instantiate_lerobot_groot(
+        from_pretrained=True
+    )
     batch = create_dummy_data()
 
     lerobot_policy.eval()

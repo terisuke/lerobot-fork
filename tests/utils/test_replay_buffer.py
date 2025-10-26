@@ -186,21 +186,27 @@ def test_zero_capacity_buffer_raises_error():
 
 def test_add_transition(replay_buffer, dummy_state, dummy_action):
     replay_buffer.add(dummy_state, dummy_action, 1.0, dummy_state, False, False)
-    assert len(replay_buffer) == 1, "Replay buffer should have one transition after adding."
-    assert torch.equal(replay_buffer.actions[0], dummy_action), (
-        "Action should be equal to the first transition."
-    )
-    assert replay_buffer.rewards[0] == 1.0, "Reward should be equal to the first transition."
+    assert (
+        len(replay_buffer) == 1
+    ), "Replay buffer should have one transition after adding."
+    assert torch.equal(
+        replay_buffer.actions[0], dummy_action
+    ), "Action should be equal to the first transition."
+    assert (
+        replay_buffer.rewards[0] == 1.0
+    ), "Reward should be equal to the first transition."
     assert not replay_buffer.dones[0], "Done should be False for the first transition."
-    assert not replay_buffer.truncateds[0], "Truncated should be False for the first transition."
+    assert not replay_buffer.truncateds[
+        0
+    ], "Truncated should be False for the first transition."
 
     for dim in state_dims():
-        assert torch.equal(replay_buffer.states[dim][0], dummy_state[dim]), (
-            "Observation should be equal to the first transition."
-        )
-        assert torch.equal(replay_buffer.next_states[dim][0], dummy_state[dim]), (
-            "Next observation should be equal to the first transition."
-        )
+        assert torch.equal(
+            replay_buffer.states[dim][0], dummy_state[dim]
+        ), "Observation should be equal to the first transition."
+        assert torch.equal(
+            replay_buffer.next_states[dim][0], dummy_state[dim]
+        ), "Next observation should be equal to the first transition."
 
 
 def test_add_over_capacity():
@@ -218,22 +224,28 @@ def test_add_over_capacity():
     replay_buffer.add(dummy_state_2, dummy_action_2, 1.0, dummy_state_2, False, False)
     replay_buffer.add(dummy_state_3, dummy_action_3, 1.0, dummy_state_3, True, True)
 
-    assert len(replay_buffer) == 2, "Replay buffer should have 2 transitions after adding 3."
+    assert (
+        len(replay_buffer) == 2
+    ), "Replay buffer should have 2 transitions after adding 3."
 
     for dim in state_dims():
-        assert torch.equal(replay_buffer.states[dim][0], dummy_state_3[dim]), (
-            "Observation should be equal to the first transition."
-        )
-        assert torch.equal(replay_buffer.next_states[dim][0], dummy_state_3[dim]), (
-            "Next observation should be equal to the first transition."
-        )
+        assert torch.equal(
+            replay_buffer.states[dim][0], dummy_state_3[dim]
+        ), "Observation should be equal to the first transition."
+        assert torch.equal(
+            replay_buffer.next_states[dim][0], dummy_state_3[dim]
+        ), "Next observation should be equal to the first transition."
 
-    assert torch.equal(replay_buffer.actions[0], dummy_action_3), (
-        "Action should be equal to the last transition."
-    )
-    assert replay_buffer.rewards[0] == 1.0, "Reward should be equal to the last transition."
+    assert torch.equal(
+        replay_buffer.actions[0], dummy_action_3
+    ), "Action should be equal to the last transition."
+    assert (
+        replay_buffer.rewards[0] == 1.0
+    ), "Reward should be equal to the last transition."
     assert replay_buffer.dones[0], "Done should be True for the first transition."
-    assert replay_buffer.truncateds[0], "Truncated should be True for the first transition."
+    assert replay_buffer.truncateds[
+        0
+    ], "Truncated should be True for the first transition."
 
 
 def test_sample_from_empty_buffer(replay_buffer):
@@ -241,7 +253,9 @@ def test_sample_from_empty_buffer(replay_buffer):
         replay_buffer.sample(1)
 
 
-def test_sample_with_1_transition(replay_buffer, dummy_state, next_dummy_state, dummy_action):
+def test_sample_with_1_transition(
+    replay_buffer, dummy_state, next_dummy_state, dummy_action
+):
     replay_buffer.add(dummy_state, dummy_action, 1.0, next_dummy_state, False, False)
     got_batch_transition = replay_buffer.sample(1)
 
@@ -261,7 +275,9 @@ def test_sample_with_1_transition(replay_buffer, dummy_state, next_dummy_state, 
             assert got_state.shape[0] == 1, f"{k} should have 1 transition."
             assert got_state.device.type == "cpu", f"{k} should be on cpu."
 
-            assert torch.equal(got_state[0], v), f"{k} should be equal to the expected batch transition."
+            assert torch.equal(
+                got_state[0], v
+            ), f"{k} should be equal to the expected batch transition."
 
     for key, _value in expected_batch_transition.items():
         if key in dict_properties():
@@ -275,7 +291,9 @@ def test_sample_with_1_transition(replay_buffer, dummy_state, next_dummy_state, 
 
         assert got_value.shape[0] == 1, f"{key} should have 1 transition."
         assert got_value.device.type == "cpu", f"{key} should be on cpu."
-        assert torch.equal(got_value[0], v_tensor), f"{key} should be equal to the expected batch transition."
+        assert torch.equal(
+            got_value[0], v_tensor
+        ), f"{key} should be equal to the expected batch transition."
 
 
 def test_sample_with_batch_bigger_than_buffer_size(
@@ -337,14 +355,15 @@ def test_sample_batch(replay_buffer):
             assert got_state.shape[0] == 3, f"{k} should have 3 transition."
 
             for got_state_item in got_state:
-                assert any(torch.equal(got_state_item, dummy_state[k]) for dummy_state in dummy_states), (
-                    f"{k} should be equal to one of the dummy states."
-                )
+                assert any(
+                    torch.equal(got_state_item, dummy_state[k])
+                    for dummy_state in dummy_states
+                ), f"{k} should be equal to one of the dummy states."
 
     for got_action_item in got_batch_transition[ACTION]:
-        assert any(torch.equal(got_action_item, dummy_action) for dummy_action in dummy_actions), (
-            "Actions should be equal to the dummy actions."
-        )
+        assert any(
+            torch.equal(got_action_item, dummy_action) for dummy_action in dummy_actions
+        ), "Actions should be equal to the dummy actions."
 
     for k in got_batch_transition:
         if k in dict_properties() or k == "complementary_info":
@@ -355,14 +374,18 @@ def test_sample_batch(replay_buffer):
 
 
 def test_to_lerobot_dataset_with_empty_buffer(replay_buffer):
-    with pytest.raises(ValueError, match="The replay buffer is empty. Cannot convert to a dataset."):
+    with pytest.raises(
+        ValueError, match="The replay buffer is empty. Cannot convert to a dataset."
+    ):
         replay_buffer.to_lerobot_dataset("dummy_repo")
 
 
 def test_to_lerobot_dataset(tmp_path):
     ds, buffer = create_dataset_from_replay_buffer(tmp_path)
 
-    assert len(ds) == len(buffer), "Dataset should have the same size as the Replay Buffer"
+    assert len(ds) == len(
+        buffer
+    ), "Dataset should have the same size as the Replay Buffer"
     assert ds.fps == 1, "FPS should be 1"
     assert ds.repo_id == "dummy/repo", "The dataset should have `dummy/repo` repo id"
 
@@ -387,7 +410,9 @@ def test_to_lerobot_dataset(tmp_path):
             elif feature == OBS_IMAGE:
                 # Tensor -> numpy is not precise, so we have some diff there
                 # TODO: Check and fix it
-                torch.testing.assert_close(value, buffer.states[OBS_IMAGE][i], rtol=0.3, atol=0.003)
+                torch.testing.assert_close(
+                    value, buffer.states[OBS_IMAGE][i], rtol=0.3, atol=0.003
+                )
             elif feature == OBS_STATE:
                 assert torch.equal(value, buffer.states[OBS_STATE][i])
 
@@ -415,7 +440,11 @@ def test_from_lerobot_dataset(tmp_path):
     ds = replay_buffer.to_lerobot_dataset(DUMMY_REPO_ID, root=root)
 
     reconverted_buffer = ReplayBuffer.from_lerobot_dataset(
-        ds, state_keys=list(state_dims()), device="cpu", capacity=replay_buffer.capacity, use_drq=False
+        ds,
+        state_keys=list(state_dims()),
+        device="cpu",
+        capacity=replay_buffer.capacity,
+        use_drq=False,
     )
 
     # Check only the part of the buffer that's actually filled with data
@@ -424,17 +453,19 @@ def test_from_lerobot_dataset(tmp_path):
         replay_buffer.actions[: len(replay_buffer)],
     ), "Actions from converted buffer should be equal to the original replay buffer."
     assert torch.equal(
-        reconverted_buffer.rewards[: len(replay_buffer)], replay_buffer.rewards[: len(replay_buffer)]
+        reconverted_buffer.rewards[: len(replay_buffer)],
+        replay_buffer.rewards[: len(replay_buffer)],
     ), "Rewards from converted buffer should be equal to the original replay buffer."
     assert torch.equal(
-        reconverted_buffer.dones[: len(replay_buffer)], replay_buffer.dones[: len(replay_buffer)]
+        reconverted_buffer.dones[: len(replay_buffer)],
+        replay_buffer.dones[: len(replay_buffer)],
     ), "Dones from converted buffer should be equal to the original replay buffer."
 
     # Lerobot DS haven't supported truncateds yet
     expected_truncateds = torch.zeros(len(replay_buffer)).bool()
-    assert torch.equal(reconverted_buffer.truncateds[: len(replay_buffer)], expected_truncateds), (
-        "Truncateds from converted buffer should be equal False"
-    )
+    assert torch.equal(
+        reconverted_buffer.truncateds[: len(replay_buffer)], expected_truncateds
+    ), "Truncateds from converted buffer should be equal False"
 
     assert torch.equal(
         replay_buffer.states[OBS_STATE][: len(replay_buffer)],
@@ -470,7 +501,9 @@ def test_from_lerobot_dataset(tmp_path):
 
 def test_buffer_sample_alignment():
     # Initialize buffer
-    buffer = ReplayBuffer(capacity=100, device="cpu", state_keys=["state_value"], storage_device="cpu")
+    buffer = ReplayBuffer(
+        capacity=100, device="cpu", state_keys=["state_value"], storage_device="cpu"
+    )
 
     # Fill buffer with patterned data
     for i in range(100):
@@ -501,26 +534,27 @@ def test_buffer_sample_alignment():
         is_done = batch["done"][i].item() > 0.5
 
         # Verify relationships
-        assert abs(action_val - 2.0 * state_sig) < 1e-4, (
-            f"Action {action_val} should be 2x state signature {state_sig}"
-        )
+        assert (
+            abs(action_val - 2.0 * state_sig) < 1e-4
+        ), f"Action {action_val} should be 2x state signature {state_sig}"
 
-        assert abs(reward_val - 3.0 * state_sig) < 1e-4, (
-            f"Reward {reward_val} should be 3x state signature {state_sig}"
-        )
+        assert (
+            abs(reward_val - 3.0 * state_sig) < 1e-4
+        ), f"Reward {reward_val} should be 3x state signature {state_sig}"
 
         if is_done:
-            assert abs(next_state_sig - state_sig) < 1e-4, (
-                f"For done states, next_state {next_state_sig} should equal state {state_sig}"
-            )
+            assert (
+                abs(next_state_sig - state_sig) < 1e-4
+            ), f"For done states, next_state {next_state_sig} should equal state {state_sig}"
         else:
             # Either it's the next sequential state (+0.01) or same state (for episode boundaries)
             valid_next = (
-                abs(next_state_sig - state_sig - 0.01) < 1e-4 or abs(next_state_sig - state_sig) < 1e-4
+                abs(next_state_sig - state_sig - 0.01) < 1e-4
+                or abs(next_state_sig - state_sig) < 1e-4
             )
-            assert valid_next, (
-                f"Next state {next_state_sig} should be either state+0.01 or same as state {state_sig}"
-            )
+            assert (
+                valid_next
+            ), f"Next state {next_state_sig} should be either state+0.01 or same as state {state_sig}"
 
 
 def test_memory_optimization():
@@ -543,17 +577,25 @@ def test_memory_optimization():
     replay_buffer.add(dummy_state_4, dummy_action_4, 1.0, dummy_state_4, True, True)
 
     optimized_replay_buffer = create_empty_replay_buffer(True)
-    optimized_replay_buffer.add(dummy_state_1, dummy_action_1, 1.0, dummy_state_2, False, False)
-    optimized_replay_buffer.add(dummy_state_2, dummy_action_2, 1.0, dummy_state_3, False, False)
-    optimized_replay_buffer.add(dummy_state_3, dummy_action_3, 1.0, dummy_state_4, False, False)
+    optimized_replay_buffer.add(
+        dummy_state_1, dummy_action_1, 1.0, dummy_state_2, False, False
+    )
+    optimized_replay_buffer.add(
+        dummy_state_2, dummy_action_2, 1.0, dummy_state_3, False, False
+    )
+    optimized_replay_buffer.add(
+        dummy_state_3, dummy_action_3, 1.0, dummy_state_4, False, False
+    )
     optimized_replay_buffer.add(dummy_state_4, dummy_action_4, 1.0, None, True, True)
 
-    assert get_object_memory(optimized_replay_buffer) < get_object_memory(replay_buffer), (
-        "Optimized replay buffer should be smaller than the original replay buffer"
-    )
+    assert get_object_memory(optimized_replay_buffer) < get_object_memory(
+        replay_buffer
+    ), "Optimized replay buffer should be smaller than the original replay buffer"
 
 
-def test_check_image_augmentations_with_drq_and_dummy_image_augmentation_function(dummy_state, dummy_action):
+def test_check_image_augmentations_with_drq_and_dummy_image_augmentation_function(
+    dummy_state, dummy_action
+):
     def dummy_image_augmentation_function(x):
         return torch.ones_like(x) * 10
 
@@ -564,10 +606,12 @@ def test_check_image_augmentations_with_drq_and_dummy_image_augmentation_functio
     replay_buffer.add(dummy_state, dummy_action, 1.0, dummy_state, False, False)
 
     sampled_transitions = replay_buffer.sample(1)
-    assert torch.all(sampled_transitions["state"][OBS_IMAGE] == 10), "Image augmentations should be applied"
-    assert torch.all(sampled_transitions["next_state"][OBS_IMAGE] == 10), (
-        "Image augmentations should be applied"
-    )
+    assert torch.all(
+        sampled_transitions["state"][OBS_IMAGE] == 10
+    ), "Image augmentations should be applied"
+    assert torch.all(
+        sampled_transitions["next_state"][OBS_IMAGE] == 10
+    ), "Image augmentations should be applied"
 
 
 def test_check_image_augmentations_with_drq_and_default_image_augmentation_function(
@@ -607,10 +651,14 @@ def test_random_crop_vectorized_invalid_size():
     images = torch.zeros((2, 3, 10, 8))
 
     # Test crop size larger than image
-    with pytest.raises(ValueError, match="Requested crop size .* is bigger than the image size"):
+    with pytest.raises(
+        ValueError, match="Requested crop size .* is bigger than the image size"
+    ):
         random_crop_vectorized(images, (12, 8))
 
-    with pytest.raises(ValueError, match="Requested crop size .* is bigger than the image size"):
+    with pytest.raises(
+        ValueError, match="Requested crop size .* is bigger than the image size"
+    ):
         random_crop_vectorized(images, (10, 10))
 
 
@@ -644,7 +692,9 @@ def _populate_buffer_for_async_test(capacity: int = 10) -> ReplayBuffer:
 def test_async_iterator_shapes_basic():
     buffer = _populate_buffer_for_async_test()
     batch_size = 2
-    iterator = buffer.get_iterator(batch_size=batch_size, async_prefetch=True, queue_size=1)
+    iterator = buffer.get_iterator(
+        batch_size=batch_size, async_prefetch=True, queue_size=1
+    )
     batch = next(iterator)
 
     images = batch["state"][OBS_IMAGE]
@@ -663,7 +713,9 @@ def test_async_iterator_shapes_basic():
 def test_async_iterator_multiple_iterations():
     buffer = _populate_buffer_for_async_test()
     batch_size = 2
-    iterator = buffer.get_iterator(batch_size=batch_size, async_prefetch=True, queue_size=2)
+    iterator = buffer.get_iterator(
+        batch_size=batch_size, async_prefetch=True, queue_size=2
+    )
 
     for _ in range(5):
         batch = next(iterator)

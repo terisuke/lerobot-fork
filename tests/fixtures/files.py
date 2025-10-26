@@ -85,7 +85,9 @@ def write_hf_dataset(
 
         while next_episode_to_try_idx < num_episodes:
             potential_shard_end_row = episode_ends[next_episode_to_try_idx]
-            dataset_shard_candidate = hf_dataset.select(range(shard_start_row, potential_shard_end_row))
+            dataset_shard_candidate = hf_dataset.select(
+                range(shard_start_row, potential_shard_end_row)
+            )
             shard_size_mb = get_hf_dataset_size_in_mb(dataset_shard_candidate)
 
             if shard_size_mb > data_file_size_mb:
@@ -109,7 +111,9 @@ def write_hf_dataset(
                 )
 
         # Define the path for the current shard and ensure the directory exists.
-        path = local_dir / DEFAULT_DATA_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+        path = local_dir / DEFAULT_DATA_PATH.format(
+            chunk_index=chunk_idx, file_index=file_idx
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write the shard to a Parquet file.

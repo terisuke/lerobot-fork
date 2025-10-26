@@ -24,7 +24,11 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
 def mock_load_image_as_numpy(path, dtype, channel_first):
     """Mock image loading for consistent test results."""
-    return np.ones((3, 32, 32), dtype=dtype) if channel_first else np.ones((32, 32, 3), dtype=dtype)
+    return (
+        np.ones((3, 32, 32), dtype=dtype)
+        if channel_first
+        else np.ones((32, 32, 3), dtype=dtype)
+    )
 
 
 @pytest.fixture
@@ -70,7 +74,9 @@ def test_save_episode_computes_all_quantiles(tmp_path, simple_features):
     for _ in range(10):
         dataset.add_frame(
             {
-                "action": np.random.randn(4).astype(np.float32),  # Correct shape for action
+                "action": np.random.randn(4).astype(
+                    np.float32
+                ),  # Correct shape for action
                 "observation.state": np.random.randn(10).astype(np.float32),
                 "task": "test_task",
             }
@@ -102,7 +108,9 @@ def test_quantile_values_ordering(tmp_path, simple_features):
     for _ in range(100):
         dataset.add_frame(
             {
-                "action": np.random.randn(4).astype(np.float32),  # Correct shape for action
+                "action": np.random.randn(4).astype(
+                    np.float32
+                ),  # Correct shape for action
                 "observation.state": np.random.randn(10).astype(np.float32),
                 "task": "test_task",
             }
@@ -144,7 +152,18 @@ def test_save_episode_with_fixed_quantiles(tmp_path, simple_features):
     stats = dataset.meta.stats
     for key in ["action", "observation.state"]:
         feature_stats = stats[key]
-        expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+        expected_keys = {
+            "min",
+            "max",
+            "mean",
+            "std",
+            "count",
+            "q01",
+            "q10",
+            "q50",
+            "q90",
+            "q99",
+        }
         assert set(feature_stats.keys()) == expected_keys
 
 
@@ -173,7 +192,18 @@ def test_quantile_aggregation_across_episodes(tmp_path, simple_features):
     stats = dataset.meta.stats
     for key in ["action", "observation.state"]:
         feature_stats = stats[key]
-        expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+        expected_keys = {
+            "min",
+            "max",
+            "mean",
+            "std",
+            "count",
+            "q01",
+            "q10",
+            "q50",
+            "q90",
+            "q99",
+        }
         assert set(feature_stats.keys()) == expected_keys
         assert feature_stats["q01"].shape == (simple_features[key]["shape"][0],)
         assert feature_stats["q50"].shape == (simple_features[key]["shape"][0],)
@@ -196,8 +226,12 @@ def test_save_multiple_episodes_with_quantiles(tmp_path, simple_features):
     for episode_idx in range(3):
         for _ in range(50):
             frame = {
-                "action": np.random.normal(episode_idx * 2.0, 1, (4,)).astype(np.float32),
-                "observation.state": np.random.normal(-episode_idx * 1.5, 1, (10,)).astype(np.float32),
+                "action": np.random.normal(episode_idx * 2.0, 1, (4,)).astype(
+                    np.float32
+                ),
+                "observation.state": np.random.normal(
+                    -episode_idx * 1.5, 1, (10,)
+                ).astype(np.float32),
                 "task": f"task_{episode_idx}",
             }
             dataset.add_frame(frame)

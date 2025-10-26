@@ -149,7 +149,11 @@ def test_to_tensor_dictionaries():
 
 def test_to_tensor_none_filtering():
     """Test that None values are filtered out from dictionaries."""
-    data = {"valid": [1, 2, 3], "none_value": None, "nested": {"valid": [4, 5], "also_none": None}}
+    data = {
+        "valid": [1, 2, 3],
+        "none_value": None,
+        "nested": {"valid": [4, 5], "also_none": None},
+    }
     result = to_tensor(data)
     assert "none_value" not in result
     assert "also_none" not in result["nested"]
@@ -267,8 +271,12 @@ def testtransition_to_batch_with_index_fields():
     assert "task" in batch
 
     # Verify values
-    assert torch.equal(batch["index"], transition[TransitionKey.COMPLEMENTARY_DATA]["index"])
-    assert torch.equal(batch["task_index"], transition[TransitionKey.COMPLEMENTARY_DATA]["task_index"])
+    assert torch.equal(
+        batch["index"], transition[TransitionKey.COMPLEMENTARY_DATA]["index"]
+    )
+    assert torch.equal(
+        batch["task_index"], transition[TransitionKey.COMPLEMENTARY_DATA]["task_index"]
+    )
     assert batch["task"] == transition[TransitionKey.COMPLEMENTARY_DATA]["task"]
 
 

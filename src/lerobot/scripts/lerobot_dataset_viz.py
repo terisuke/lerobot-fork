@@ -95,8 +95,12 @@ def to_hwc_uint8_numpy(chw_float32_torch: torch.Tensor) -> np.ndarray:
     assert chw_float32_torch.dtype == torch.float32
     assert chw_float32_torch.ndim == 3
     c, h, w = chw_float32_torch.shape
-    assert c < h and c < w, f"expect channel first images, but instead {chw_float32_torch.shape}"
-    hwc_uint8_numpy = (chw_float32_torch * 255).type(torch.uint8).permute(1, 2, 0).numpy()
+    assert (
+        c < h and c < w
+    ), f"expect channel first images, but instead {chw_float32_torch.shape}"
+    hwc_uint8_numpy = (
+        (chw_float32_torch * 255).type(torch.uint8).permute(1, 2, 0).numpy()
+    )
     return hwc_uint8_numpy
 
 
@@ -112,9 +116,9 @@ def visualize_dataset(
     output_dir: Path | None = None,
 ) -> Path | None:
     if save:
-        assert output_dir is not None, (
-            "Set an output directory where to write .rrd files with `--output-dir path/to/directory`."
-        )
+        assert (
+            output_dir is not None
+        ), "Set an output directory where to write .rrd files with `--output-dir path/to/directory`."
 
     repo_id = dataset.repo_id
 
@@ -284,7 +288,9 @@ def main():
     tolerance_s = kwargs.pop("tolerance_s")
 
     logging.info("Loading dataset")
-    dataset = LeRobotDataset(repo_id, episodes=[args.episode_index], root=root, tolerance_s=tolerance_s)
+    dataset = LeRobotDataset(
+        repo_id, episodes=[args.episode_index], root=root, tolerance_s=tolerance_s
+    )
 
     visualize_dataset(dataset, **vars(args))
 

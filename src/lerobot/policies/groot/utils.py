@@ -4,7 +4,9 @@ from shutil import copytree
 from huggingface_hub import hf_hub_download
 
 
-def ensure_eagle_cache_ready(vendor_dir: Path, cache_dir: Path, assets_repo: str) -> None:
+def ensure_eagle_cache_ready(
+    vendor_dir: Path, cache_dir: Path, assets_repo: str
+) -> None:
     """Populate the Eagle processor directory in cache and ensure tokenizer assets exist.
 
     - Copies the vendored Eagle files into cache_dir (overwriting when needed).
@@ -15,7 +17,9 @@ def ensure_eagle_cache_ready(vendor_dir: Path, cache_dir: Path, assets_repo: str
 
     try:
         # Populate/refresh cache with vendor files to ensure a complete processor directory
-        print(f"[GROOT] Copying vendor Eagle files to cache: {vendor_dir} -> {cache_dir}")
+        print(
+            f"[GROOT] Copying vendor Eagle files to cache: {vendor_dir} -> {cache_dir}"
+        )
         copytree(vendor_dir, cache_dir, dirs_exist_ok=True)
     except Exception as exc:  # nosec: B110
         print(f"[GROOT] Warning: Failed to copy vendor Eagle files to cache: {exc}")

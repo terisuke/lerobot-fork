@@ -18,9 +18,9 @@ from transformers.image_processing_utils_fast import (
     group_images_by_shape,
     reorder_images,
 )
+from transformers.image_utils import IMAGENET_STANDARD_MEAN  # 0.5, 0.5, 0.5
+from transformers.image_utils import IMAGENET_STANDARD_STD  # 0.5, 0.5, 0.5
 from transformers.image_utils import (
-    IMAGENET_STANDARD_MEAN,  # 0.5, 0.5, 0.5
-    IMAGENET_STANDARD_STD,  # 0.5, 0.5, 0.5
     ChannelDimension,
     ImageInput,
     PILImageResampling,
@@ -47,7 +47,9 @@ else:
     from torchvision.transforms import functional as F  # noqa: N812
 
 
-def crop(img: torch.Tensor, left: int, top: int, right: int, bottom: int) -> torch.Tensor:
+def crop(
+    img: torch.Tensor, left: int, top: int, right: int, bottom: int
+) -> torch.Tensor:
     """Crop the given numpy array.
 
     Args:
@@ -186,14 +188,20 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
         Returns:
             "torch.Tensor": The resized and padded image.
         """
-        new_height, new_width = get_patch_output_size(image, target_resolution, input_data_format)
+        new_height, new_width = get_patch_output_size(
+            image, target_resolution, input_data_format
+        )
 
         # Resize the image
-        resized_image = F.resize(image, (new_height, new_width), interpolation=interpolation)
+        resized_image = F.resize(
+            image, (new_height, new_width), interpolation=interpolation
+        )
 
         return resized_image
 
-    def find_closest_aspect_ratio(self, aspect_ratio, target_ratios, width, height, image_size):
+    def find_closest_aspect_ratio(
+        self, aspect_ratio, target_ratios, width, height, image_size
+    ):
         """
         previous version mainly focus on ratio.
         We also consider area ratio here.
@@ -210,7 +218,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
             """
             factor_based_on_area_n_ratio = min(
                 (ratio[0] * ratio[1] * image_size * image_size) / area, 0.6
-            ) * min(target_aspect_ratio / aspect_ratio, aspect_ratio / target_aspect_ratio)
+            ) * min(
+                target_aspect_ratio / aspect_ratio, aspect_ratio / target_aspect_ratio
+            )
 
             if factor_based_on_area_n_ratio > best_factor:
                 best_factor = factor_based_on_area_n_ratio
@@ -219,13 +229,18 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
         return best_ratio
 
     def _pad_for_patching(
-        self, image: "torch.Tensor", target_resolution: tuple, input_data_format: ChannelDimension
+        self,
+        image: "torch.Tensor",
+        target_resolution: tuple,
+        input_data_format: ChannelDimension,
     ) -> "torch.Tensor":
         """
         Pad an image to a target resolution while maintaining aspect ratio.
         """
         target_height, target_width = target_resolution
-        new_height, new_width = get_patch_output_size(image, target_resolution, input_data_format)
+        new_height, new_width = get_patch_output_size(
+            image, target_resolution, input_data_format
+        )
 
         paste_x = (target_width - new_width) // 2
         paste_y = (target_height - new_height) // 2
@@ -282,7 +297,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
             )
             image_used_to_split = padded_image
         else:
-            image_used_to_split = F.resize(image, (target_height, target_width), interpolation=interpolation)
+            image_used_to_split = F.resize(
+                image, (target_height, target_width), interpolation=interpolation
+            )
 
         processed_tiles = []
         for i in range(blocks):
@@ -298,7 +315,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
         assert len(processed_tiles) == blocks
 
         if use_thumbnail and len(processed_tiles) != 1:
-            thumbnail_img = F.resize(image, (tile_size, tile_size), interpolation=interpolation)
+            thumbnail_img = F.resize(
+                image, (tile_size, tile_size), interpolation=interpolation
+            )
             processed_tiles.append(thumbnail_img)
 
         return processed_tiles
@@ -319,7 +338,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
         """
         max_patch = max(len(x) for x in pixel_values)
         pixel_values = [
-            torch.nn.functional.pad(image, pad=[0, 0, 0, 0, 0, 0, 0, max_patch - image.shape[0]])
+            torch.nn.functional.pad(
+                image, pad=[0, 0, 0, 0, 0, 0, 0, max_patch - image.shape[0]]
+            )
             for image in pixel_values
         ]
 
@@ -344,8 +365,12 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
         image_std: float | list[float] | None,
         do_pad: bool,
         return_tensors: str | TensorType | None,
-        pad_size: SizeDict | None = None,  # Added for transformers >=4.53.0 compatibility
-        disable_grouping: bool | None = None,  # Added for transformers >=4.53.0 compatibility
+        pad_size: (
+            SizeDict | None
+        ) = None,  # Added for transformers >=4.53.0 compatibility
+        disable_grouping: (
+            bool | None
+        ) = None,  # Added for transformers >=4.53.0 compatibility
     ) -> BatchFeature:
         processed_images = []
         image_sizes = []
@@ -391,7 +416,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
                         interpolation=interpolation,
                     )
                 if do_center_crop:
-                    stacked_image_patches = self.center_crop(stacked_image_patches, crop_size)
+                    stacked_image_patches = self.center_crop(
+                        stacked_image_patches, crop_size
+                    )
                 # Fused rescale and normalize
                 stacked_image_patches = self.rescale_and_normalize(
                     stacked_image_patches,
@@ -406,7 +433,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
                 processed_image_patches_grouped, grouped_image_patches_index
             )
             processed_image_patches = (
-                torch.stack(processed_image_patches, dim=0) if return_tensors else processed_image_patches
+                torch.stack(processed_image_patches, dim=0)
+                if return_tensors
+                else processed_image_patches
             )
             processed_images.append(processed_image_patches)
             image_sizes.append(get_image_size(image, ChannelDimension.FIRST))
@@ -415,7 +444,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
             processed_images = self._pad_for_batching(processed_images)
 
         # processed_images = torch.stack(processed_images, dim=0) if return_tensors else processed_images
-        processed_images = torch.cat(processed_images, dim=0) if return_tensors else processed_images
+        processed_images = (
+            torch.cat(processed_images, dim=0) if return_tensors else processed_images
+        )
         return BatchFeature(
             data={"pixel_values": processed_images, "image_sizes": image_sizes},
             tensor_type=return_tensors,
@@ -494,7 +525,9 @@ class Eagle25VLImageProcessorFast(BaseImageProcessorFast):
             "pad_size",
             "disable_grouping",
         }
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_preprocess_kwargs}
+        filtered_kwargs = {
+            k: v for k, v in kwargs.items() if k in valid_preprocess_kwargs
+        }
         if images is not None:
             return self._preprocess(images, **filtered_kwargs)
         elif videos is not None:

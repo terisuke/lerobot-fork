@@ -42,7 +42,9 @@ task = ...
 
 if client.start():
     # Start action receiver thread
-    action_receiver_thread = threading.Thread(target=client.receive_actions, daemon=True)
+    action_receiver_thread = threading.Thread(
+        target=client.receive_actions, daemon=True
+    )
     action_receiver_thread.start()
 
     try:

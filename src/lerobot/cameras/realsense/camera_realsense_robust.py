@@ -4,13 +4,15 @@ Robust RealSense Camera Implementation
 Handles power state errors and hardware absence gracefully
 """
 
-import os
 import logging
-from typing import Optional, Tuple, Any
+import os
+from typing import Any, Optional, Tuple
+
 import numpy as np
 
 try:
     import pyrealsense2 as rs
+
     REALSENSE_AVAILABLE = True
 except ImportError:
     REALSENSE_AVAILABLE = False
@@ -18,13 +20,16 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class RealSenseCameraRobust:
     """
     Robust RealSense camera implementation that handles power state errors
     and hardware absence gracefully.
     """
 
-    def __init__(self, serial_number: str, width: int = 640, height: int = 480, fps: int = 30):
+    def __init__(
+        self, serial_number: str, width: int = 640, height: int = 480, fps: int = 30
+    ):
         self.serial_number = serial_number
         self.width = width
         self.height = height
@@ -36,7 +41,7 @@ class RealSenseCameraRobust:
     def connect(self) -> bool:
         """
         Connect to RealSense camera with robust error handling.
-        
+
         Returns:
             bool: True if connection successful, False otherwise
         """
@@ -56,8 +61,12 @@ class RealSenseCameraRobust:
             self.pipeline = rs.pipeline()
             config = rs.config()
             config.enable_device(self.serial_number)
-            config.enable_stream(rs.stream.color, self.width, self.height, rs.format.rgb8, self.fps)
-            config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
+            config.enable_stream(
+                rs.stream.color, self.width, self.height, rs.format.rgb8, self.fps
+            )
+            config.enable_stream(
+                rs.stream.depth, self.width, self.height, rs.format.z16, self.fps
+            )
 
             # Start pipeline
             self.pipeline.start(config)
@@ -69,8 +78,12 @@ class RealSenseCameraRobust:
             error_msg = str(e)
             if "failed to set power state" in error_msg:
                 self.power_error_occurred = True
-                logger.error("❌ RealSense USB power error: check power supply or use a powered hub.")
-                logger.error("💡 Solution: Use a powered USB hub to connect the RealSense camera.")
+                logger.error(
+                    "❌ RealSense USB power error: check power supply or use a powered hub."
+                )
+                logger.error(
+                    "💡 Solution: Use a powered USB hub to connect the RealSense camera."
+                )
                 return False
             else:
                 logger.error(f"RealSense camera connection failed: {e}")
@@ -82,7 +95,7 @@ class RealSenseCameraRobust:
     def read_frames(self) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
         """
         Read frames from RealSense camera with error handling.
-        
+
         Returns:
             Tuple[Optional[np.ndarray], Optional[np.ndarray]]: (color_frame, depth_frame)
         """
@@ -93,7 +106,7 @@ class RealSenseCameraRobust:
             frames = self.pipeline.wait_for_frames(timeout_ms=1000)
             color_frame = frames.get_color_frame()
             depth_frame = frames.get_depth_frame()
-            
+
             color_array = np.asarray(color_frame.get_data()) if color_frame else None
             depth_array = np.asarray(depth_frame.get_data()) if depth_frame else None
 
@@ -129,6 +142,7 @@ class RealSenseCameraRobust:
         """Check if camera is connected."""
         return self.is_connected
 
+
 def test_realsense_robust():
     """Test function for robust RealSense camera."""
     print("=== Robust RealSense Camera Test ===")
@@ -162,6 +176,7 @@ def test_realsense_robust():
         else:
             print("❌ Camera connection failed")
         return False
+
 
 if __name__ == "__main__":
     test_realsense_robust()

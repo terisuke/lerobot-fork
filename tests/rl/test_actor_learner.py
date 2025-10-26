@@ -111,19 +111,27 @@ def test_end_to_end_transitions_flow(cfg):
 
     learner_thread = threading.Thread(
         target=start_learner,
-        args=(parameters_queue, transitions_learner_queue, interactions_queue, shutdown_event, cfg),
+        args=(
+            parameters_queue,
+            transitions_learner_queue,
+            interactions_queue,
+            shutdown_event,
+            cfg,
+        ),
     )
     learner_thread.start()
 
     policy_cfg = cfg.policy
     learner_client, channel = learner_service_client(
-        host=policy_cfg.actor_learner_config.learner_host, port=policy_cfg.actor_learner_config.learner_port
+        host=policy_cfg.actor_learner_config.learner_host,
+        port=policy_cfg.actor_learner_config.learner_port,
     )
 
     assert establish_learner_connection(learner_client, shutdown_event, attempts=5)
 
     send_transitions_thread = threading.Thread(
-        target=send_transitions, args=(cfg, transitions_actor_queue, shutdown_event, learner_client, channel)
+        target=send_transitions,
+        args=(cfg, transitions_actor_queue, shutdown_event, learner_client, channel),
     )
     send_transitions_thread.start()
 
@@ -143,7 +151,9 @@ def test_end_to_end_transitions_flow(cfg):
 
     received_transitions = []
     while not transitions_learner_queue.empty():
-        received_transitions.extend(bytes_to_transitions(transitions_learner_queue.get()))
+        received_transitions.extend(
+            bytes_to_transitions(transitions_learner_queue.get())
+        )
 
     assert len(received_transitions) == len(input_transitions)
     for i, transition in enumerate(received_transitions):
@@ -175,14 +185,21 @@ def test_end_to_end_interactions_flow(cfg):
     # Start the learner in a separate thread
     learner_thread = threading.Thread(
         target=start_learner,
-        args=(parameters_queue, transitions_learner_queue, interactions_learner_queue, shutdown_event, cfg),
+        args=(
+            parameters_queue,
+            transitions_learner_queue,
+            interactions_learner_queue,
+            shutdown_event,
+            cfg,
+        ),
     )
     learner_thread.start()
 
     # Establish connection from actor to learner
     policy_cfg = cfg.policy
     learner_client, channel = learner_service_client(
-        host=policy_cfg.actor_learner_config.learner_host, port=policy_cfg.actor_learner_config.learner_port
+        host=policy_cfg.actor_learner_config.learner_host,
+        port=policy_cfg.actor_learner_config.learner_port,
     )
 
     assert establish_learner_connection(learner_client, shutdown_event, attempts=5)
@@ -211,7 +228,9 @@ def test_end_to_end_interactions_flow(cfg):
     # Verify that the learner received the interactions
     received_interactions = []
     while not interactions_learner_queue.empty():
-        received_interactions.append(bytes_to_python_object(interactions_learner_queue.get()))
+        received_interactions.append(
+            bytes_to_python_object(interactions_learner_queue.get())
+        )
 
     assert len(received_interactions) == len(input_interactions)
 
@@ -219,7 +238,9 @@ def test_end_to_end_interactions_flow(cfg):
     received_interactions.sort(key=lambda x: x["step"])
     input_interactions.sort(key=lambda x: x["step"])
 
-    for received, expected in zip(received_interactions, input_interactions, strict=False):
+    for received, expected in zip(
+        received_interactions, input_interactions, strict=False
+    ):
         assert received == expected
 
 
@@ -227,7 +248,11 @@ def test_end_to_end_interactions_flow(cfg):
 @pytest.mark.parametrize("data_size", ["small", "large"])
 @pytest.mark.timeout(10)
 def test_end_to_end_parameters_flow(cfg, data_size):
-    from lerobot.rl.actor import establish_learner_connection, learner_service_client, receive_policy
+    from lerobot.rl.actor import (
+        establish_learner_connection,
+        learner_service_client,
+        receive_policy,
+    )
     from lerobot.rl.learner import start_learner
     from lerobot.transport.utils import bytes_to_state_dict, state_to_bytes
 
@@ -259,7 +284,8 @@ def test_end_to_end_parameters_flow(cfg, data_size):
     # Establish connection from actor to learner
     policy_cfg = cfg.policy
     learner_client, channel = learner_service_client(
-        host=policy_cfg.actor_learner_config.learner_host, port=policy_cfg.actor_learner_config.learner_port
+        host=policy_cfg.actor_learner_config.learner_host,
+        port=policy_cfg.actor_learner_config.learner_port,
     )
 
     assert establish_learner_connection(learner_client, shutdown_event, attempts=5)

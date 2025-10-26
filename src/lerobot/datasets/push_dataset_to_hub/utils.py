@@ -19,7 +19,9 @@ import torch
 
 
 # TODO(aliberts): remove
-def calculate_episode_data_index(hf_dataset: datasets.Dataset) -> dict[str, torch.Tensor]:
+def calculate_episode_data_index(
+    hf_dataset: datasets.Dataset,
+) -> dict[str, torch.Tensor]:
     """
     Calculate episode data index for the provided HuggingFace Dataset. Relies on episode_index column of hf_dataset.
 

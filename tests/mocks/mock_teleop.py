@@ -96,7 +96,10 @@ class MockTeleop(Teleoperator):
             return {f"{motor}.pos": random.uniform(-100, 100) for motor in self.motors}
         else:
             return {
-                f"{motor}.pos": val for motor, val in zip(self.motors, self.config.static_values, strict=True)
+                f"{motor}.pos": val
+                for motor, val in zip(
+                    self.motors, self.config.static_values, strict=True
+                )
             }
 
     def send_feedback(self, feedback: dict[str, Any]) -> None:

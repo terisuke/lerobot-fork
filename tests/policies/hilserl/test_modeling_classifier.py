@@ -17,7 +17,9 @@
 import torch
 
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
 from lerobot.policies.sac.reward_model.modeling_classifier import ClassifierOutput
 from lerobot.utils.constants import OBS_IMAGE, REWARD
 from tests.utils import require_package

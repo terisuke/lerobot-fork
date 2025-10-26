@@ -60,14 +60,19 @@ class RenameObservationsProcessorStep(ObservationProcessorStep):
         - Each key in the observation that appears in `rename_map` is renamed to its value.
         - Keys not in `rename_map` remain unchanged.
         """
-        new_features: dict[PipelineFeatureType, dict[str, PolicyFeature]] = features.copy()
+        new_features: dict[PipelineFeatureType, dict[str, PolicyFeature]] = (
+            features.copy()
+        )
         new_features[PipelineFeatureType.OBSERVATION] = {
-            self.rename_map.get(k, k): v for k, v in features[PipelineFeatureType.OBSERVATION].items()
+            self.rename_map.get(k, k): v
+            for k, v in features[PipelineFeatureType.OBSERVATION].items()
         }
         return new_features
 
 
-def rename_stats(stats: dict[str, dict[str, Any]], rename_map: dict[str, str]) -> dict[str, dict[str, Any]]:
+def rename_stats(
+    stats: dict[str, dict[str, Any]], rename_map: dict[str, str]
+) -> dict[str, dict[str, Any]]:
     """
     Renames the top-level keys in a statistics dictionary using a provided mapping.
 

@@ -43,7 +43,9 @@ class AggregateDatasets(PipelineStep):
         # Since aggregate_datasets already handles parallel processing internally,
         # we only need one worker to run the entire aggregation
         if rank == 0:
-            logging.info(f"Starting aggregation of {len(self.repo_ids)} datasets into {self.aggr_repo_id}")
+            logging.info(
+                f"Starting aggregation of {len(self.repo_ids)} datasets into {self.aggr_repo_id}"
+            )
             aggregate_datasets(self.repo_ids, self.aggr_repo_id)
             logging.info("Aggregation complete!")
         else:
@@ -51,7 +53,15 @@ class AggregateDatasets(PipelineStep):
 
 
 def make_aggregate_executor(
-    repo_ids, repo_id, job_name, logs_dir, workers, partition, cpus_per_task, mem_per_cpu, slurm=True
+    repo_ids,
+    repo_id,
+    job_name,
+    logs_dir,
+    workers,
+    partition,
+    cpus_per_task,
+    mem_per_cpu,
+    slurm=True,
 ):
     kwargs = {
         "pipeline": [
@@ -139,7 +149,10 @@ def main():
     kwargs = vars(args)
     kwargs["slurm"] = kwargs.pop("slurm") == 1
 
-    repo_ids = [f"{args.repo_id}_world_{DROID_SHARDS}_rank_{rank}" for rank in range(DROID_SHARDS)]
+    repo_ids = [
+        f"{args.repo_id}_world_{DROID_SHARDS}_rank_{rank}"
+        for rank in range(DROID_SHARDS)
+    ]
     aggregate_executor = make_aggregate_executor(repo_ids, **kwargs)
     aggregate_executor.run()
 

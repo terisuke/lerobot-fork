@@ -87,7 +87,9 @@ def make_env(
         )
 
     if cfg.gym_id not in gym_registry:
-        print(f"gym id '{cfg.gym_id}' not found, attempting to import '{cfg.package_name}'...")
+        print(
+            f"gym id '{cfg.gym_id}' not found, attempting to import '{cfg.package_name}'..."
+        )
         try:
             importlib.import_module(cfg.package_name)
         except ModuleNotFoundError as e:
@@ -102,9 +104,16 @@ def make_env(
             )
 
     def _make_one():
-        return gym.make(cfg.gym_id, disable_env_checker=cfg.disable_env_checker, **(cfg.gym_kwargs or {}))
+        return gym.make(
+            cfg.gym_id,
+            disable_env_checker=cfg.disable_env_checker,
+            **(cfg.gym_kwargs or {}),
+        )
 
-    vec = env_cls([_make_one for _ in range(n_envs)], autoreset_mode=gym.vector.AutoresetMode.SAME_STEP)
+    vec = env_cls(
+        [_make_one for _ in range(n_envs)],
+        autoreset_mode=gym.vector.AutoresetMode.SAME_STEP,
+    )
 
     # normalize to {suite: {task_id: vec_env}} for consistency
     suite_name = cfg.type  # e.g., "pusht", "aloha"

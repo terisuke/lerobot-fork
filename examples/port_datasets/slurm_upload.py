@@ -45,7 +45,9 @@ class UploadDataset(PipelineStep):
     ):
         super().__init__()
         self.repo_id = repo_id
-        self.distant_repo_id = self.repo_id if distant_repo_id is None else distant_repo_id
+        self.distant_repo_id = (
+            self.repo_id if distant_repo_id is None else distant_repo_id
+        )
         self.branch = branch
         self.tags = tags
         self.license = license
@@ -83,18 +85,32 @@ class UploadDataset(PipelineStep):
             )
 
         if not hub_api.file_exists(
-            self.distant_repo_id, REPOCARD_NAME, repo_type="dataset", revision=self.branch
+            self.distant_repo_id,
+            REPOCARD_NAME,
+            repo_type="dataset",
+            revision=self.branch,
         ):
             card = create_lerobot_dataset_card(
-                tags=self.tags, dataset_info=meta.info, license=self.license, **self.card_kwargs
+                tags=self.tags,
+                dataset_info=meta.info,
+                license=self.license,
+                **self.card_kwargs,
             )
-            card.push_to_hub(repo_id=self.distant_repo_id, repo_type="dataset", revision=self.branch)
+            card.push_to_hub(
+                repo_id=self.distant_repo_id, repo_type="dataset", revision=self.branch
+            )
 
-            hub_api.create_tag(self.distant_repo_id, tag=CODEBASE_VERSION, repo_type="dataset")
+            hub_api.create_tag(
+                self.distant_repo_id, tag=CODEBASE_VERSION, repo_type="dataset"
+            )
 
         def list_files_recursively(directory):
             base_path = Path(directory)
-            return [str(file.relative_to(base_path)) for file in base_path.rglob("*") if file.is_file()]
+            return [
+                str(file.relative_to(base_path))
+                for file in base_path.rglob("*")
+                if file.is_file()
+            ]
 
         logging.info(f"Listing all local files from {self.repo_id}...")
         self.file_paths = list_files_recursively(meta.root)
@@ -104,7 +120,10 @@ class UploadDataset(PipelineStep):
         from itertools import islice
 
         it = iter(lst)
-        return [list(islice(it, size)) for size in [len(lst) // n + (i < len(lst) % n) for i in range(n)]]
+        return [
+            list(islice(it, size))
+            for size in [len(lst) // n + (i < len(lst) % n) for i in range(n)]
+        ]
 
     def create_commits(self, additions):
         import logging
@@ -141,7 +160,9 @@ class UploadDataset(PipelineStep):
                 except HfHubHTTPError as e:
                     if "A commit has happened since" in e.server_message:
                         if retries >= MAX_RETRIES:
-                            logging.error(f"Failed to create commit after {MAX_RETRIES=}. Giving up.")
+                            logging.error(
+                                f"Failed to create commit after {MAX_RETRIES=}. Giving up."
+                            )
                             raise e
                         logging.info("Commit creation race condition issue. Waiting...")
                         time.sleep(BASE_DELAY * 2**retries + random.uniform(0, 2))
@@ -173,10 +194,14 @@ class UploadDataset(PipelineStep):
 
         meta = LeRobotDatasetMetadata(self.repo_id)
         additions = [
-            CommitOperationAdd(path_in_repo=path, path_or_fileobj=meta.root / path) for path in file_paths
+            CommitOperationAdd(path_in_repo=path, path_or_fileobj=meta.root / path)
+            for path in file_paths
         ]
         preupload_lfs_files(
-            repo_id=self.distant_repo_id, repo_type="dataset", additions=additions, revision=self.branch
+            repo_id=self.distant_repo_id,
+            repo_type="dataset",
+            additions=additions,
+            revision=self.branch,
         )
 
         logging.info("Creating commits...")
@@ -185,7 +210,14 @@ class UploadDataset(PipelineStep):
 
 
 def make_upload_executor(
-    repo_id, job_name, logs_dir, workers, partition, cpus_per_task, mem_per_cpu, slurm=True
+    repo_id,
+    job_name,
+    logs_dir,
+    workers,
+    partition,
+    cpus_per_task,
+    mem_per_cpu,
+    slurm=True,
 ):
     kwargs = {
         "pipeline": [

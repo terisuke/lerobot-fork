@@ -53,10 +53,8 @@ def test_async_inference_e2e(monkeypatch):
     from lerobot.async_inference.policy_server import PolicyServer
     from lerobot.async_inference.robot_client import RobotClient
     from lerobot.robots.utils import make_robot_from_config
-    from lerobot.transport import (
-        services_pb2,  # type: ignore
-        services_pb2_grpc,  # type: ignore
-    )
+    from lerobot.transport import services_pb2  # type: ignore
+    from lerobot.transport import services_pb2_grpc  # type: ignore
     from tests.mocks.mock_robot import MockRobotConfig
 
     # Create a stub policy similar to test_policy_server.py
@@ -112,16 +110,25 @@ def test_async_inference_e2e(monkeypatch):
 
         return torch.zeros(batch_size, actions_per_chunk, action_dim)
 
-    monkeypatch.setattr(PolicyServer, "_get_action_chunk", _fake_get_action_chunk, raising=True)
+    monkeypatch.setattr(
+        PolicyServer, "_get_action_chunk", _fake_get_action_chunk, raising=True
+    )
 
     # Bypass potentially heavy model loading inside SendPolicyInstructions
     def _fake_send_policy_instructions(self, request, context):  # noqa: N802
         return services_pb2.Empty()
 
-    monkeypatch.setattr(PolicyServer, "SendPolicyInstructions", _fake_send_policy_instructions, raising=True)
+    monkeypatch.setattr(
+        PolicyServer,
+        "SendPolicyInstructions",
+        _fake_send_policy_instructions,
+        raising=True,
+    )
 
     # Build gRPC server running a PolicyServer
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="policy_server"))
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="policy_server")
+    )
     services_pb2_grpc.add_AsyncInferenceServicer_to_server(policy_server, server)
 
     # Use the host/port specified in the fixture's config
@@ -156,7 +163,9 @@ def test_async_inference_e2e(monkeypatch):
 
     # Start client threads
     action_thread = threading.Thread(target=client.receive_actions, daemon=True)
-    control_thread = threading.Thread(target=client.control_loop, args=({"task": ""}), daemon=True)
+    control_thread = threading.Thread(
+        target=client.control_loop, args=({"task": ""}), daemon=True
+    )
     action_thread.start()
     control_thread.start()
 
@@ -166,8 +175,12 @@ def test_async_inference_e2e(monkeypatch):
     # Wait for 5 seconds
     server.wait_for_termination(timeout=5)
 
-    assert action_chunks_received["count"] > 0, "Client did not receive any action chunks"
-    assert len(policy_server._predicted_timesteps) > 0, "Server did not record any predicted timesteps"
+    assert (
+        action_chunks_received["count"] > 0
+    ), "Client did not receive any action chunks"
+    assert (
+        len(policy_server._predicted_timesteps) > 0
+    ), "Server did not record any predicted timesteps"
 
     # ------------------------------------------------------------------
     # 4. Stop the system

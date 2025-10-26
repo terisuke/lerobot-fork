@@ -38,9 +38,11 @@ def main():
     device = (
         torch.device("cuda")
         if torch.cuda.is_available()
-        else torch.device("mps")
-        if torch.backends.mps.is_available()
-        else torch.device("cpu")
+        else (
+            torch.device("mps")
+            if torch.backends.mps.is_available()
+            else torch.device("cpu")
+        )
     )
     print(f"Using device: {device}")
 
@@ -50,15 +52,21 @@ def main():
     dataset_id = "lerobot/droid_1.0.1"  # 26M frames! Would require 4TB of disk space if installed locally (:
     dataset_metadata = LeRobotDatasetMetadata(dataset_id)
     features = dataset_to_policy_features(dataset_metadata.features)
-    output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
-    input_features = {key: ft for key, ft in features.items() if key not in output_features}
+    output_features = {
+        key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION
+    }
+    input_features = {
+        key: ft for key, ft in features.items() if key not in output_features
+    }
 
     # We can now instantiate our policy with this config and the dataset stats.
     cfg = ACTConfig(input_features=input_features, output_features=output_features)
     policy = ACTPolicy(cfg)
     policy.train()
     policy.to(device)
-    preprocessor, postprocessor = make_pre_post_processors(cfg, dataset_stats=dataset_metadata.stats)
+    preprocessor, postprocessor = make_pre_post_processors(
+        cfg, dataset_stats=dataset_metadata.stats
+    )
 
     # Delta timestamps are used to (1) augment frames used during training and (2) supervise the policy.
     # Here, we use delta-timestamps to only provide ground truth actions for supervision
@@ -68,7 +76,9 @@ def main():
 
     # Instantiating the training dataset in streaming mode allows to not consume up memory as the data is fetched
     # iteratively rather than being load into memory all at once. Retrieved frames are shuffled across epochs
-    dataset = StreamingLeRobotDataset(dataset_id, delta_timestamps=delta_timestamps, tolerance_s=1e-3)
+    dataset = StreamingLeRobotDataset(
+        dataset_id, delta_timestamps=delta_timestamps, tolerance_s=1e-3
+    )
 
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
     dataloader = torch.utils.data.DataLoader(

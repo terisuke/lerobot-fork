@@ -43,11 +43,15 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset
 def main():
     dataset = LeRobotDataset("lerobot/pusht")
 
-    print(f"Original dataset: {dataset.meta.total_episodes} episodes, {dataset.meta.total_frames} frames")
+    print(
+        f"Original dataset: {dataset.meta.total_episodes} episodes, {dataset.meta.total_frames} frames"
+    )
     print(f"Features: {list(dataset.meta.features.keys())}")
 
     print("\n1. Deleting episodes 0 and 2...")
-    filtered_dataset = delete_episodes(dataset, episode_indices=[0, 2], repo_id="lerobot/pusht_filtered")
+    filtered_dataset = delete_episodes(
+        dataset, episode_indices=[0, 2], repo_id="lerobot/pusht_filtered"
+    )
     print(f"Filtered dataset: {filtered_dataset.meta.total_episodes} episodes")
 
     print("\n2. Splitting dataset into train/val...")
@@ -104,7 +108,9 @@ def main():
     print(f"Modified features: {list(dataset_modified.meta.features.keys())}")
 
     print("\n6. Merging train and val splits back together...")
-    merged = merge_datasets([splits["train"], splits["val"]], output_repo_id="lerobot/pusht_merged")
+    merged = merge_datasets(
+        [splits["train"], splits["val"]], output_repo_id="lerobot/pusht_merged"
+    )
     print(f"Merged dataset: {merged.meta.total_episodes} episodes")
 
     print("\n7. Complex workflow example...")

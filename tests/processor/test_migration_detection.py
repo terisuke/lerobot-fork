@@ -39,9 +39,9 @@ def test_is_processor_config_valid_configs():
     ]
 
     for i, config in enumerate(valid_configs):
-        assert DataProcessorPipeline._is_processor_config(config), (
-            f"Valid config {i} should be detected as processor config: {config}"
-        )
+        assert DataProcessorPipeline._is_processor_config(
+            config
+        ), f"Valid config {i} should be detected as processor config: {config}"
 
 
 def test_is_processor_config_invalid_configs():
@@ -56,9 +56,9 @@ def test_is_processor_config_invalid_configs():
     ]
 
     for i, config in enumerate(invalid_configs):
-        assert not DataProcessorPipeline._is_processor_config(config), (
-            f"Invalid config {i} should not be detected as processor config: {config}"
-        )
+        assert not DataProcessorPipeline._is_processor_config(
+            config
+        ), f"Invalid config {i} should not be detected as processor config: {config}"
 
 
 def test_should_suggest_migration_with_processor_config():
@@ -166,7 +166,10 @@ def test_should_suggest_migration_mixed_configs():
         tmp_path = Path(tmp_dir)
 
         # Create both a processor config and a model config
-        processor_config = {"name": "TestProcessor", "steps": [{"registry_name": "normalize_step"}]}
+        processor_config = {
+            "name": "TestProcessor",
+            "steps": [{"registry_name": "normalize_step"}],
+        }
 
         model_config = {"type": "diffusion", "hidden_dim": 512}
 
@@ -217,7 +220,9 @@ def test_from_pretrained_multiple_json_files_migration_error():
 
         # Should raise ProcessorMigrationError
         with pytest.raises(ProcessorMigrationError) as exc_info:
-            DataProcessorPipeline.from_pretrained(tmp_path, config_filename="config.json")
+            DataProcessorPipeline.from_pretrained(
+                tmp_path, config_filename="config.json"
+            )
 
         # Check the error details
         error = exc_info.value
@@ -239,7 +244,9 @@ def test_from_pretrained_no_processor_config_migration_error():
 
         # Should raise ProcessorMigrationError
         with pytest.raises(ProcessorMigrationError) as exc_info:
-            DataProcessorPipeline.from_pretrained(tmp_path, config_filename="config.json")
+            DataProcessorPipeline.from_pretrained(
+                tmp_path, config_filename="config.json"
+            )
 
         # Check the error details
         error = exc_info.value
@@ -263,7 +270,9 @@ def test_from_pretrained_valid_processor_no_migration_error():
             json.dump(processor_config, f)
 
         # Should succeed and create pipeline
-        pipeline = DataProcessorPipeline.from_pretrained(tmp_path, config_filename="processor.json")
+        pipeline = DataProcessorPipeline.from_pretrained(
+            tmp_path, config_filename="processor.json"
+        )
         assert pipeline is not None
         assert pipeline.name == "TestProcessor"
         assert len(pipeline) == 0
@@ -280,7 +289,9 @@ def test_from_pretrained_no_json_files_no_migration_error():
 
         # Should raise FileNotFoundError (config file not found)
         with pytest.raises(FileNotFoundError, match="not found in directory"):
-            DataProcessorPipeline.from_pretrained(tmp_path, config_filename="processor.json")
+            DataProcessorPipeline.from_pretrained(
+                tmp_path, config_filename="processor.json"
+            )
 
 
 def test_processor_migration_error_creation():
@@ -339,4 +350,6 @@ def test_migration_error_always_raised_for_invalid_configs():
 
         # Should always raise ProcessorMigrationError
         with pytest.raises(ProcessorMigrationError):
-            DataProcessorPipeline.from_pretrained(tmp_path, config_filename="config.json")
+            DataProcessorPipeline.from_pretrained(
+                tmp_path, config_filename="config.json"
+            )

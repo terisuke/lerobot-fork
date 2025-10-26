@@ -71,8 +71,12 @@ def test_record_and_resume(tmp_path):
     cfg.resume = True
     # Mock the revision to prevent Hub calls during resume
     with (
-        patch("lerobot.datasets.lerobot_dataset.get_safe_version") as mock_get_safe_version,
-        patch("lerobot.datasets.lerobot_dataset.snapshot_download") as mock_snapshot_download,
+        patch(
+            "lerobot.datasets.lerobot_dataset.get_safe_version"
+        ) as mock_get_safe_version,
+        patch(
+            "lerobot.datasets.lerobot_dataset.snapshot_download"
+        ) as mock_snapshot_download,
     ):
         mock_get_safe_version.return_value = "v3.0"
         mock_snapshot_download.return_value = str(tmp_path / "record")
@@ -115,8 +119,12 @@ def test_record_and_replay(tmp_path):
 
     # Mock the revision to prevent Hub calls during replay
     with (
-        patch("lerobot.datasets.lerobot_dataset.get_safe_version") as mock_get_safe_version,
-        patch("lerobot.datasets.lerobot_dataset.snapshot_download") as mock_snapshot_download,
+        patch(
+            "lerobot.datasets.lerobot_dataset.get_safe_version"
+        ) as mock_get_safe_version,
+        patch(
+            "lerobot.datasets.lerobot_dataset.snapshot_download"
+        ) as mock_snapshot_download,
     ):
         mock_get_safe_version.return_value = "v3.0"
         mock_snapshot_download.return_value = str(tmp_path / "record_and_replay")

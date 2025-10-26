@@ -44,7 +44,12 @@ class EpisodeAwareSampler:
             zip(dataset_from_indices, dataset_to_indices, strict=True)
         ):
             if episode_indices_to_use is None or episode_idx in episode_indices_to_use:
-                indices.extend(range(start_index + drop_n_first_frames, end_index - drop_n_last_frames))
+                indices.extend(
+                    range(
+                        start_index + drop_n_first_frames,
+                        end_index - drop_n_last_frames,
+                    )
+                )
 
         self.indices = indices
         self.shuffle = shuffle

@@ -62,12 +62,26 @@ def dummy_dataset_metadata(lerobot_dataset_metadata_factory, info_factory, tmp_p
         ACTION: {
             "dtype": "float32",
             "shape": (6,),
-            "names": ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"],
+            "names": [
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow_flex",
+                "wrist_flex",
+                "wrist_roll",
+                "gripper",
+            ],
         },
         OBS_STATE: {
             "dtype": "float32",
             "shape": (6,),
-            "names": ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"],
+            "names": [
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow_flex",
+                "wrist_flex",
+                "wrist_roll",
+                "gripper",
+            ],
         },
     }
     info = info_factory(
@@ -88,7 +102,8 @@ def test_get_policy_and_config_classes(policy_name: str):
     policy_cfg = make_policy_config(policy_name)
     assert policy_cls.name == policy_name
     assert issubclass(
-        policy_cfg.__class__, inspect.signature(policy_cls.__init__).parameters["config"].annotation
+        policy_cfg.__class__,
+        inspect.signature(policy_cls.__init__).parameters["config"].annotation,
     )
 
 
@@ -98,7 +113,13 @@ def test_get_policy_and_config_classes(policy_name: str):
         ("lerobot/pusht", "pusht", {}, "diffusion", {}),
         ("lerobot/pusht", "pusht", {}, "vqbet", {}),
         ("lerobot/pusht", "pusht", {}, "act", {}),
-        ("lerobot/aloha_sim_insertion_human", "aloha", {"task": "AlohaInsertion-v0"}, "act", {}),
+        (
+            "lerobot/aloha_sim_insertion_human",
+            "aloha",
+            {"task": "AlohaInsertion-v0"},
+            "act",
+            {},
+        ),
         (
             "lerobot/aloha_sim_insertion_scripted",
             "aloha",
@@ -179,9 +200,15 @@ def test_policy(ds_repo_id, env_name, env_kwargs, policy_name, policy_kwargs):
     # Test updating the policy (and test that it does not mutate the batch)
     batch_ = deepcopy(batch)
     policy.forward(batch)
-    assert set(batch) == set(batch_), "Batch keys are not the same after a forward pass."
+    assert set(batch) == set(
+        batch_
+    ), "Batch keys are not the same after a forward pass."
     assert all(
-        torch.equal(batch[k], batch_[k]) if isinstance(batch[k], torch.Tensor) else batch[k] == batch_[k]
+        (
+            torch.equal(batch[k], batch_[k])
+            if isinstance(batch[k], torch.Tensor)
+            else batch[k] == batch_[k]
+        )
         for k in batch
     ), "Batch values are not the same after a forward pass."
 
@@ -199,18 +226,20 @@ def test_policy(ds_repo_id, env_name, env_kwargs, policy_name, policy_kwargs):
     observation = preprocess_observation(observation)
 
     # send observation to device/gpu
-    observation = {key: observation[key].to(DEVICE, non_blocking=True) for key in observation}
+    observation = {
+        key: observation[key].to(DEVICE, non_blocking=True) for key in observation
+    }
 
     # get the next action for the environment (also check that the observation batch is not modified)
     observation_ = deepcopy(observation)
     with torch.inference_mode():
         action = policy.select_action(observation).cpu().numpy()
-    assert set(observation) == set(observation_), (
-        "Observation batch keys are not the same after a forward pass."
-    )
-    assert all(torch.equal(observation[k], observation_[k]) for k in observation), (
-        "Observation batch values are not the same after a forward pass."
-    )
+    assert set(observation) == set(
+        observation_
+    ), "Observation batch keys are not the same after a forward pass."
+    assert all(
+        torch.equal(observation[k], observation_[k]) for k in observation
+    ), "Observation batch values are not the same after a forward pass."
 
     # Test step through policy
     env.step(action)
@@ -224,8 +253,12 @@ def test_act_backbone_lr():
 
     cfg = TrainPipelineConfig(
         # TODO(rcadene, aliberts): remove dataset download
-        dataset=DatasetConfig(repo_id="lerobot/aloha_sim_insertion_scripted", episodes=[0]),
-        policy=make_policy_config("act", optimizer_lr=0.01, optimizer_lr_backbone=0.001, push_to_hub=False),
+        dataset=DatasetConfig(
+            repo_id="lerobot/aloha_sim_insertion_scripted", episodes=[0]
+        ),
+        policy=make_policy_config(
+            "act", optimizer_lr=0.01, optimizer_lr_backbone=0.001, push_to_hub=False
+        ),
     )
     cfg.validate()  # Needed for auto-setting some parameters
 
@@ -249,7 +282,9 @@ def test_policy_defaults(dummy_dataset_metadata, policy_name: str):
     policy_cls = get_policy_class(policy_name)
     policy_cfg = make_policy_config(policy_name)
     features = dataset_to_policy_features(dummy_dataset_metadata.features)
-    policy_cfg.output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
+    policy_cfg.output_features = {
+        key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION
+    }
     policy_cfg.input_features = {
         key: ft for key, ft in features.items() if key not in policy_cfg.output_features
     }
@@ -261,7 +296,9 @@ def test_save_and_load_pretrained(dummy_dataset_metadata, tmp_path, policy_name:
     policy_cls = get_policy_class(policy_name)
     policy_cfg = make_policy_config(policy_name)
     features = dataset_to_policy_features(dummy_dataset_metadata.features)
-    policy_cfg.output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
+    policy_cfg.output_features = {
+        key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION
+    }
     policy_cfg.input_features = {
         key: ft for key, ft in features.items() if key not in policy_cfg.output_features
     }
@@ -270,7 +307,9 @@ def test_save_and_load_pretrained(dummy_dataset_metadata, tmp_path, policy_name:
     save_dir = tmp_path / f"test_save_and_load_pretrained_{policy_cls.__name__}"
     policy.save_pretrained(save_dir)
     loaded_policy = policy_cls.from_pretrained(save_dir, config=policy_cfg)
-    torch.testing.assert_close(list(policy.parameters()), list(loaded_policy.parameters()), rtol=0, atol=0)
+    torch.testing.assert_close(
+        list(policy.parameters()), list(loaded_policy.parameters()), rtol=0, atol=0
+    )
 
 
 @pytest.mark.parametrize("multikey", [True, False])
@@ -296,13 +335,21 @@ def test_multikey_construction(multikey: bool):
         """Simulates the complete state/action is constructed from more granular multiple
         keys, of the same type as the overall state/action"""
         input_features = {}
-        input_features[f"{OBS_STATE}.subset1"] = PolicyFeature(type=FeatureType.STATE, shape=(5,))
-        input_features[f"{OBS_STATE}.subset2"] = PolicyFeature(type=FeatureType.STATE, shape=(5,))
+        input_features[f"{OBS_STATE}.subset1"] = PolicyFeature(
+            type=FeatureType.STATE, shape=(5,)
+        )
+        input_features[f"{OBS_STATE}.subset2"] = PolicyFeature(
+            type=FeatureType.STATE, shape=(5,)
+        )
         input_features[OBS_STATE] = PolicyFeature(type=FeatureType.STATE, shape=(10,))
 
         output_features = {}
-        output_features["action.first_three_motors"] = PolicyFeature(type=FeatureType.ACTION, shape=(3,))
-        output_features["action.last_two_motors"] = PolicyFeature(type=FeatureType.ACTION, shape=(2,))
+        output_features["action.first_three_motors"] = PolicyFeature(
+            type=FeatureType.ACTION, shape=(3,)
+        )
+        output_features["action.last_two_motors"] = PolicyFeature(
+            type=FeatureType.ACTION, shape=(2,)
+        )
         output_features[ACTION] = PolicyFeature(
             type=FeatureType.ACTION,
             shape=(5,),
@@ -313,12 +360,12 @@ def test_multikey_construction(multikey: bool):
     state_condition = config.robot_state_feature == input_features[OBS_STATE]
     action_condition = config.action_feature == output_features[ACTION]
 
-    assert state_condition, (
-        f"Discrepancy detected. Robot state feature is {config.robot_state_feature} but policy expects {input_features[OBS_STATE]}"
-    )
-    assert action_condition, (
-        f"Discrepancy detected. Action feature is {config.action_feature} but policy expects {output_features[ACTION]}"
-    )
+    assert (
+        state_condition
+    ), f"Discrepancy detected. Robot state feature is {config.robot_state_feature} but policy expects {input_features[OBS_STATE]}"
+    assert (
+        action_condition
+    ), f"Discrepancy detected. Action feature is {config.action_feature} but policy expects {output_features[ACTION]}"
 
 
 @pytest.mark.parametrize(
@@ -354,7 +401,9 @@ def test_multikey_construction(multikey: bool):
 # pass if it's run on another platform due to floating point errors
 @require_x86_64_kernel
 @require_cpu
-def test_backward_compatibility(ds_repo_id: str, policy_name: str, policy_kwargs: dict, file_name_extra: str):
+def test_backward_compatibility(
+    ds_repo_id: str, policy_name: str, policy_kwargs: dict, file_name_extra: str
+):
     """
     NOTE: If this test does not pass, and you have intentionally changed something in the policy:
         1. Inspect the differences in policy outputs and make sure you can account for them. Your PR should
@@ -376,17 +425,25 @@ def test_backward_compatibility(ds_repo_id: str, policy_name: str, policy_kwargs
     """
 
     # NOTE: ACT policy has different randomness, after PyTorch 2.7.0
-    if policy_name == "act" and version.parse(torch.__version__) < version.parse("2.7.0"):
-        pytest.skip(f"Skipping act policy test with PyTorch {torch.__version__}. Requires PyTorch >= 2.7.0")
+    if policy_name == "act" and version.parse(torch.__version__) < version.parse(
+        "2.7.0"
+    ):
+        pytest.skip(
+            f"Skipping act policy test with PyTorch {torch.__version__}. Requires PyTorch >= 2.7.0"
+        )
 
     ds_name = ds_repo_id.split("/")[-1]
-    artifact_dir = Path("tests/artifacts/policies") / f"{ds_name}_{policy_name}_{file_name_extra}"
+    artifact_dir = (
+        Path("tests/artifacts/policies") / f"{ds_name}_{policy_name}_{file_name_extra}"
+    )
     saved_output_dict = load_file(artifact_dir / "output_dict.safetensors")
     saved_grad_stats = load_file(artifact_dir / "grad_stats.safetensors")
     saved_param_stats = load_file(artifact_dir / "param_stats.safetensors")
     saved_actions = load_file(artifact_dir / "actions.safetensors")
 
-    output_dict, grad_stats, param_stats, actions = get_policy_stats(ds_repo_id, policy_name, policy_kwargs)
+    output_dict, grad_stats, param_stats, actions = get_policy_stats(
+        ds_repo_id, policy_name, policy_kwargs
+    )
 
     for key in saved_output_dict:
         torch.testing.assert_close(output_dict[key], saved_output_dict[key])
@@ -395,8 +452,12 @@ def test_backward_compatibility(ds_repo_id: str, policy_name: str, policy_kwargs
     for key in saved_param_stats:
         torch.testing.assert_close(param_stats[key], saved_param_stats[key])
     for key in saved_actions:
-        rtol, atol = (2e-3, 5e-6) if policy_name == "diffusion" else (None, None)  # HACK
-        torch.testing.assert_close(actions[key], saved_actions[key], rtol=rtol, atol=atol)
+        rtol, atol = (
+            (2e-3, 5e-6) if policy_name == "diffusion" else (None, None)
+        )  # HACK
+        torch.testing.assert_close(
+            actions[key], saved_actions[key], rtol=rtol, atol=atol
+        )
 
 
 def test_act_temporal_ensembler():
@@ -418,11 +479,15 @@ def test_act_temporal_ensembler():
                 torch.rand(episode_length, chunk_size) * 0.2 + 0.3,
             ],
             dim=0,
-        ).unsqueeze(-1)  # unsqueeze for action dim
+        ).unsqueeze(
+            -1
+        )  # unsqueeze for action dim
     batch_size = batch_seq.shape[0]
     # Exponential weighting (normalized). Unsqueeze once to match the position of the `episode_length`
     # dimension of `batch_seq`.
-    weights = torch.exp(-temporal_ensemble_coeff * torch.arange(chunk_size)).unsqueeze(-1)
+    weights = torch.exp(-temporal_ensemble_coeff * torch.arange(chunk_size)).unsqueeze(
+        -1
+    )
 
     # Simulate stepping through a rollout and computing a batch of actions with model on each step.
     for i in range(episode_length):
@@ -445,7 +510,8 @@ def test_act_temporal_ensembler():
         episode_step_indices = torch.arange(i + 1)[-len(chunk_indices) :]
         seq_slice = batch_seq[:, episode_step_indices, chunk_indices]
         offline_avg = (
-            einops.reduce(seq_slice * weights[: i + 1], "b s 1 -> b 1", "sum") / weights[: i + 1].sum()
+            einops.reduce(seq_slice * weights[: i + 1], "b s 1 -> b 1", "sum")
+            / weights[: i + 1].sum()
         )
         # Sanity check. The average should be between the extrema.
         assert torch.all(einops.reduce(seq_slice, "b s 1 -> b 1", "min") <= offline_avg)

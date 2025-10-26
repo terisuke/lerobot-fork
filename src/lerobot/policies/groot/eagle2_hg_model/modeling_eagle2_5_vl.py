@@ -88,7 +88,9 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         patch_size = config.vision_config.patch_size
         self.patch_size = patch_size
         if config.use_pixel_shuffle:
-            self.num_image_token = int((image_size // patch_size) ** 2 * (config.downsample_ratio**2))
+            self.num_image_token = int(
+                (image_size // patch_size) ** 2 * (config.downsample_ratio**2)
+            )
         else:
             self.num_image_token = int((image_size // patch_size) ** 2)
 
@@ -107,7 +109,9 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
                 config.vision_config._attn_implementation = "flash_attention_2"
                 self.vision_model = SiglipVisionModel(config.vision_config)
             else:
-                raise NotImplementedError(f"{config.vision_config.model_type} is not implemented.")
+                raise NotImplementedError(
+                    f"{config.vision_config.model_type} is not implemented."
+                )
 
         if language_model is not None:
             self.language_model = language_model
@@ -118,14 +122,16 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
                 raise NotImplementedError("Phi3 is not implemented.")
                 # self.language_model = Phi3ForCausalLM(config.text_config)
             elif config.text_config.architectures[0] == "Qwen2ForCausalLM":
-                assert config.text_config._attn_implementation == "flash_attention_2", (
-                    f"Qwen2 must use flash_attention_2 but got {config.text_config._attn_implementation}"
-                )
+                assert (
+                    config.text_config._attn_implementation == "flash_attention_2"
+                ), f"Qwen2 must use flash_attention_2 but got {config.text_config._attn_implementation}"
                 self.language_model = Qwen2ForCausalLM(config.text_config)
             elif config.text_config.architectures[0] == "Qwen3ForCausalLM":
                 self.language_model = Qwen3ForCausalLM(config.text_config)
             else:
-                raise NotImplementedError(f"{config.text_config.architectures[0]} is not implemented.")
+                raise NotImplementedError(
+                    f"{config.text_config.architectures[0]} is not implemented."
+                )
 
         vit_hidden_size = config.vision_config.hidden_size
         llm_hidden_size = config.text_config.hidden_size
@@ -133,30 +139,42 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         if config.mlp_connector_layers == 2:
             self.mlp1 = nn.Sequential(
                 nn.LayerNorm(vit_hidden_size * int(1 / self.downsample_ratio) ** 2),
-                nn.Linear(vit_hidden_size * int(1 / self.downsample_ratio) ** 2, llm_hidden_size),
+                nn.Linear(
+                    vit_hidden_size * int(1 / self.downsample_ratio) ** 2,
+                    llm_hidden_size,
+                ),
                 nn.GELU(),
                 nn.Linear(llm_hidden_size, llm_hidden_size),
             )
         elif config.mlp_connector_layers == 1 and config.use_pixel_shuffle:
             self.mlp1 = nn.Sequential(
-                nn.Linear(vit_hidden_size * int(1 / self.downsample_ratio) ** 2, llm_hidden_size),
+                nn.Linear(
+                    vit_hidden_size * int(1 / self.downsample_ratio) ** 2,
+                    llm_hidden_size,
+                ),
             )
         elif config.mlp_connector_layers == 1 and not config.use_pixel_shuffle:
             self.mlp1 = nn.Sequential(
                 nn.Linear(vit_hidden_size, llm_hidden_size),
             )
         else:
-            raise NotImplementedError(f"{config.mlp_connector_layers} is not implemented.")
+            raise NotImplementedError(
+                f"{config.mlp_connector_layers} is not implemented."
+            )
 
         self.image_token_index = config.image_token_index
         self.neftune_alpha = None
 
         if config.use_backbone_lora:
-            self.wrap_backbone_lora(r=config.use_backbone_lora, lora_alpha=2 * config.use_backbone_lora)
+            self.wrap_backbone_lora(
+                r=config.use_backbone_lora, lora_alpha=2 * config.use_backbone_lora
+            )
 
         self.use_llm_lora = config.use_llm_lora
         if config.use_llm_lora:
-            self.wrap_llm_lora(r=config.use_llm_lora, lora_alpha=2 * config.use_llm_lora)
+            self.wrap_llm_lora(
+                r=config.use_llm_lora, lora_alpha=2 * config.use_llm_lora
+            )
 
         self.check_forward_kwargs()
 
@@ -165,7 +183,9 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         # has special handling for functions with **kwargs parameters that would affect
         # how our model is processed during training and inference.
         forward_params = inspect.signature(self.forward).parameters
-        assert not any(k.kind == inspect.Parameter.VAR_KEYWORD for k in forward_params.values())
+        assert not any(
+            k.kind == inspect.Parameter.VAR_KEYWORD for k in forward_params.values()
+        )
 
     def wrap_backbone_lora(self, r=128, lora_alpha=256, lora_dropout=0.05):
         lora_config = LoraConfig(
@@ -220,7 +240,9 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         return_dict: bool | None = None,
         num_tiles_list: list[torch.Tensor] | None = None,
     ) -> tuple | CausalLMOutputWithPast:
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         input_embeds = self.language_model.get_input_embeddings()(input_ids)
 
@@ -236,7 +258,9 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         input_ids = input_ids.reshape(b * n)
         selected = input_ids == self.image_token_index
         try:
-            input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds.reshape(-1, c)
+            input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds.reshape(
+                -1, c
+            )
         except Exception as e:
             vit_embeds = vit_embeds.reshape(-1, c)
             print(
@@ -291,7 +315,12 @@ class Eagle25VLForConditionalGeneration(Eagle25VLPreTrainedModel, GenerationMixi
         # N, W, H * scale, C // scale --> N, H * scale, W, C // scale
         x = x.permute(0, 2, 1, 3).contiguous()
         # N, H * scale, W, C // scale --> N, H * scale, W * scale, C // (scale ** 2)
-        x = x.view(n, int(h * scale_factor), int(w * scale_factor), int(c / (scale_factor * scale_factor)))
+        x = x.view(
+            n,
+            int(h * scale_factor),
+            int(w * scale_factor),
+            int(c / (scale_factor * scale_factor)),
+        )
 
         x = x.permute(0, 2, 1, 3).contiguous()
         return x

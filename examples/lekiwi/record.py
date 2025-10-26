@@ -36,7 +36,9 @@ HF_REPO_ID = "<hf_username>/<dataset_repo_id>"
 
 # Create the robot and teleoperator configurations
 robot_config = LeKiwiClientConfig(remote_ip="172.18.134.136", id="lekiwi")
-leader_arm_config = SO100LeaderConfig(port="/dev/tty.usbmodem585A0077581", id="my_awesome_leader_arm")
+leader_arm_config = SO100LeaderConfig(
+    port="/dev/tty.usbmodem585A0077581", id="my_awesome_leader_arm"
+)
 keyboard_config = KeyboardTeleopConfig()
 
 # Initialize the robot and teleoperator
@@ -45,7 +47,9 @@ leader_arm = SO100Leader(leader_arm_config)
 keyboard = KeyboardTeleop(keyboard_config)
 
 # TODO(Steven): Update this example to use pipelines
-teleop_action_processor, robot_action_processor, robot_observation_processor = make_default_processors()
+teleop_action_processor, robot_action_processor, robot_observation_processor = (
+    make_default_processors()
+)
 
 # Configure the dataset features
 action_features = hw_to_dataset_features(robot.action_features, ACTION)

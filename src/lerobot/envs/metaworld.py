@@ -132,7 +132,9 @@ class MetaworldEnv(gym.Env):
                 }
             )
 
-        self.action_space = spaces.Box(low=-1, high=1, shape=(ACTION_DIM,), dtype=np.float32)
+        self.action_space = spaces.Box(
+            low=-1, high=1, shape=(ACTION_DIM,), dtype=np.float32
+        )
 
     def render(self) -> np.ndarray:
         """
@@ -149,7 +151,9 @@ class MetaworldEnv(gym.Env):
 
     def _make_envs_task(self, env_name: str):
         mt1 = metaworld.MT1(env_name, seed=42)
-        env = mt1.train_classes[env_name](render_mode="rgb_array", camera_name=self.camera_name)
+        env = mt1.train_classes[env_name](
+            render_mode="rgb_array", camera_name=self.camera_name
+        )
         env.set_task(mt1.train_tasks[0])
         if self.camera_name == "corner2":
             env.model.cam_pos[2] = [
@@ -216,7 +220,9 @@ class MetaworldEnv(gym.Env):
         info = {"is_success": False}
         return observation, info
 
-    def step(self, action: np.ndarray) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
+    def step(
+        self, action: np.ndarray
+    ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         """
         Perform one environment step.
 
@@ -284,16 +290,22 @@ def create_metaworld_envs(
         - If a task name is not in DIFFICULTY_TO_TASKS, we treat it as a single custom task.
     """
     if env_cls is None or not callable(env_cls):
-        raise ValueError("env_cls must be a callable that wraps a list of environment factory callables.")
+        raise ValueError(
+            "env_cls must be a callable that wraps a list of environment factory callables."
+        )
     if not isinstance(n_envs, int) or n_envs <= 0:
         raise ValueError(f"n_envs must be a positive int; got {n_envs}.")
 
     gym_kwargs = dict(gym_kwargs or {})
     task_groups = [t.strip() for t in task.split(",") if t.strip()]
     if not task_groups:
-        raise ValueError("`task` must contain at least one Meta-World task or difficulty group.")
+        raise ValueError(
+            "`task` must contain at least one Meta-World task or difficulty group."
+        )
 
-    print(f"Creating Meta-World envs | task_groups={task_groups} | n_envs(per task)={n_envs}")
+    print(
+        f"Creating Meta-World envs | task_groups={task_groups} | n_envs(per task)={n_envs}"
+    )
 
     out: dict[str, dict[int, Any]] = defaultdict(dict)
 
@@ -302,10 +314,15 @@ def create_metaworld_envs(
         tasks = DIFFICULTY_TO_TASKS.get(group, [group])
 
         for tid, task_name in enumerate(tasks):
-            print(f"Building vec env | group={group} | task_id={tid} | task={task_name}")
+            print(
+                f"Building vec env | group={group} | task_id={tid} | task={task_name}"
+            )
 
             # build n_envs factories
-            fns = [(lambda tn=task_name: MetaworldEnv(task=tn, **gym_kwargs)) for _ in range(n_envs)]
+            fns = [
+                (lambda tn=task_name: MetaworldEnv(task=tn, **gym_kwargs))
+                for _ in range(n_envs)
+            ]
 
             out[group][tid] = env_cls(fns)
 

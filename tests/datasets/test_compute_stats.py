@@ -33,7 +33,11 @@ from lerobot.utils.constants import OBS_IMAGE, OBS_STATE
 
 
 def mock_load_image_as_numpy(path, dtype, channel_first):
-    return np.ones((3, 32, 32), dtype=dtype) if channel_first else np.ones((32, 32, 3), dtype=dtype)
+    return (
+        np.ones((3, 32, 32), dtype=dtype)
+        if channel_first
+        else np.ones((32, 32, 3), dtype=dtype)
+    )
 
 
 @pytest.fixture
@@ -63,7 +67,10 @@ def test_sample_indices():
     assert len(indices) == estimate_num_samples(10)
 
 
-@patch("lerobot.datasets.compute_stats.load_image_as_numpy", side_effect=mock_load_image_as_numpy)
+@patch(
+    "lerobot.datasets.compute_stats.load_image_as_numpy",
+    side_effect=mock_load_image_as_numpy,
+)
 def test_sample_images(mock_load):
     image_paths = [f"image_{i}.jpg" for i in range(100)]
     images = sample_images(image_paths)
@@ -76,9 +83,20 @@ def test_sample_images(mock_load):
 def test_get_feature_stats_images():
     data = np.random.rand(100, 3, 32, 32)
     stats = get_feature_stats(data, axis=(0, 2, 3), keepdims=True)
-    assert "min" in stats and "max" in stats and "mean" in stats and "std" in stats and "count" in stats
+    assert (
+        "min" in stats
+        and "max" in stats
+        and "mean" in stats
+        and "std" in stats
+        and "count" in stats
+    )
     np.testing.assert_equal(stats["count"], np.array([100]))
-    assert stats["min"].shape == stats["max"].shape == stats["mean"].shape == stats["std"].shape
+    assert (
+        stats["min"].shape
+        == stats["max"].shape
+        == stats["mean"].shape
+        == stats["std"].shape
+    )
 
 
 def test_get_feature_stats_axis_0_keepdims(sample_array):
@@ -152,7 +170,10 @@ def test_compute_episode_stats():
         OBS_STATE: {"dtype": "numeric"},
     }
 
-    with patch("lerobot.datasets.compute_stats.load_image_as_numpy", side_effect=mock_load_image_as_numpy):
+    with patch(
+        "lerobot.datasets.compute_stats.load_image_as_numpy",
+        side_effect=mock_load_image_as_numpy,
+    ):
         stats = compute_episode_stats(episode_data, features)
 
     assert OBS_IMAGE in stats and OBS_STATE in stats
@@ -290,31 +311,50 @@ def test_aggregate_stats():
     for ep_stats in all_stats:
         for fkey, stats in ep_stats.items():
             for k in stats:
-                stats[k] = np.array(stats[k], dtype=np.int64 if k == "count" else np.float32)
+                stats[k] = np.array(
+                    stats[k], dtype=np.int64 if k == "count" else np.float32
+                )
                 if fkey == OBS_IMAGE and k != "count":
-                    stats[k] = stats[k].reshape(3, 1, 1)  # for normalization on image channels
+                    stats[k] = stats[k].reshape(
+                        3, 1, 1
+                    )  # for normalization on image channels
                 else:
                     stats[k] = stats[k].reshape(1)
 
     # cast to numpy
     for fkey, stats in expected_agg_stats.items():
         for k in stats:
-            stats[k] = np.array(stats[k], dtype=np.int64 if k == "count" else np.float32)
+            stats[k] = np.array(
+                stats[k], dtype=np.int64 if k == "count" else np.float32
+            )
             if fkey == OBS_IMAGE and k != "count":
-                stats[k] = stats[k].reshape(3, 1, 1)  # for normalization on image channels
+                stats[k] = stats[k].reshape(
+                    3, 1, 1
+                )  # for normalization on image channels
             else:
                 stats[k] = stats[k].reshape(1)
 
     results = aggregate_stats(all_stats)
 
     for fkey in expected_agg_stats:
-        np.testing.assert_allclose(results[fkey]["min"], expected_agg_stats[fkey]["min"])
-        np.testing.assert_allclose(results[fkey]["max"], expected_agg_stats[fkey]["max"])
-        np.testing.assert_allclose(results[fkey]["mean"], expected_agg_stats[fkey]["mean"])
         np.testing.assert_allclose(
-            results[fkey]["std"], expected_agg_stats[fkey]["std"], atol=1e-04, rtol=1e-04
+            results[fkey]["min"], expected_agg_stats[fkey]["min"]
         )
-        np.testing.assert_allclose(results[fkey]["count"], expected_agg_stats[fkey]["count"])
+        np.testing.assert_allclose(
+            results[fkey]["max"], expected_agg_stats[fkey]["max"]
+        )
+        np.testing.assert_allclose(
+            results[fkey]["mean"], expected_agg_stats[fkey]["mean"]
+        )
+        np.testing.assert_allclose(
+            results[fkey]["std"],
+            expected_agg_stats[fkey]["std"],
+            atol=1e-04,
+            rtol=1e-04,
+        )
+        np.testing.assert_allclose(
+            results[fkey]["count"], expected_agg_stats[fkey]["count"]
+        )
 
 
 def test_running_quantile_stats_initialization():
@@ -395,7 +435,18 @@ def test_running_quantile_stats_get_statistics_with_quantiles():
     stats = running_stats.get_statistics()
 
     # Should have basic stats plus quantiles
-    expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+    expected_keys = {
+        "min",
+        "max",
+        "mean",
+        "std",
+        "count",
+        "q01",
+        "q10",
+        "q50",
+        "q90",
+        "q99",
+    }
     assert expected_keys.issubset(set(stats.keys()))
 
     # Verify quantile values are reasonable
@@ -445,12 +496,16 @@ def test_running_quantile_stats_insufficient_data_error():
     """Test error when trying to get stats with insufficient data."""
     running_stats = RunningQuantileStats()
 
-    with pytest.raises(ValueError, match="Cannot compute statistics for less than 2 vectors"):
+    with pytest.raises(
+        ValueError, match="Cannot compute statistics for less than 2 vectors"
+    ):
         running_stats.get_statistics()
 
     # Single vector should also fail
     running_stats.update(np.array([[1.0]]))
-    with pytest.raises(ValueError, match="Cannot compute statistics for less than 2 vectors"):
+    with pytest.raises(
+        ValueError, match="Cannot compute statistics for less than 2 vectors"
+    ):
         running_stats.get_statistics()
 
 
@@ -488,7 +543,18 @@ def test_get_feature_stats_quantiles_enabled_by_default():
     data = np.random.normal(0, 1, (100, 5))
     stats = get_feature_stats(data, axis=0, keepdims=False)
 
-    expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+    expected_keys = {
+        "min",
+        "max",
+        "mean",
+        "std",
+        "count",
+        "q01",
+        "q10",
+        "q50",
+        "q90",
+        "q99",
+    }
     assert set(stats.keys()) == expected_keys
 
 
@@ -499,7 +565,18 @@ def test_get_feature_stats_quantiles_with_vector_data():
 
     stats = get_feature_stats(data, axis=0, keepdims=False)
 
-    expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+    expected_keys = {
+        "min",
+        "max",
+        "mean",
+        "std",
+        "count",
+        "q01",
+        "q10",
+        "q50",
+        "q90",
+        "q99",
+    }
     assert set(stats.keys()) == expected_keys
 
     # Verify shapes
@@ -517,7 +594,18 @@ def test_get_feature_stats_quantiles_with_image_data():
 
     stats = get_feature_stats(data, axis=(0, 2, 3), keepdims=True)
 
-    expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+    expected_keys = {
+        "min",
+        "max",
+        "mean",
+        "std",
+        "count",
+        "q01",
+        "q10",
+        "q50",
+        "q90",
+        "q99",
+    }
     assert set(stats.keys()) == expected_keys
 
     # Verify shapes for images (should be (1, channels, 1, 1))
@@ -562,7 +650,18 @@ def test_compute_episode_stats_backward_compatibility():
     stats = compute_episode_stats(episode_data, features)
 
     for key in ["action", "observation.state"]:
-        expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+        expected_keys = {
+            "min",
+            "max",
+            "mean",
+            "std",
+            "count",
+            "q01",
+            "q10",
+            "q50",
+            "q90",
+            "q99",
+        }
         assert set(stats[key].keys()) == expected_keys
 
 
@@ -582,7 +681,18 @@ def test_compute_episode_stats_with_custom_quantiles():
 
     # Should have quantiles
     for key in ["action", "observation.state"]:
-        expected_keys = {"min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"}
+        expected_keys = {
+            "min",
+            "max",
+            "mean",
+            "std",
+            "count",
+            "q01",
+            "q10",
+            "q50",
+            "q90",
+            "q99",
+        }
         assert set(stats[key].keys()) == expected_keys
 
         # Verify shapes
@@ -602,7 +712,10 @@ def test_compute_episode_stats_with_image_data():
         "action": {"dtype": "float32", "shape": (5,)},
     }
 
-    with patch("lerobot.datasets.compute_stats.load_image_as_numpy", side_effect=mock_load_image_as_numpy):
+    with patch(
+        "lerobot.datasets.compute_stats.load_image_as_numpy",
+        side_effect=mock_load_image_as_numpy,
+    ):
         stats = compute_episode_stats(episode_data, features)
 
     # Image quantiles should be normalized and have correct shape
@@ -783,7 +896,9 @@ def test_quantile_integration_large_dataset_quantiles():
     np.random.seed(42)
     large_data = np.random.normal(0, 1, (10000, 5))
 
-    running_stats = RunningQuantileStats(num_quantile_bins=1000)  # Reduced bins for speed
+    running_stats = RunningQuantileStats(
+        num_quantile_bins=1000
+    )  # Reduced bins for speed
     running_stats.update(large_data)
 
     stats = running_stats.get_statistics()

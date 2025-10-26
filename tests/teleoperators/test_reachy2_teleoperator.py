@@ -126,16 +126,27 @@ def test_get_action(reachy2):
 
     for motor in reachy2.joints_dict:
         if reachy2.config.use_present_position:
-            assert action[motor] == reachy2.reachy.joints[REACHY2_JOINTS[motor]].present_position
+            assert (
+                action[motor]
+                == reachy2.reachy.joints[REACHY2_JOINTS[motor]].present_position
+            )
         else:
-            assert action[motor] == reachy2.reachy.joints[REACHY2_JOINTS[motor]].goal_position
+            assert (
+                action[motor]
+                == reachy2.reachy.joints[REACHY2_JOINTS[motor]].goal_position
+            )
     if reachy2.config.with_mobile_base:
         if reachy2.config.use_present_position:
             for vel in REACHY2_VEL:
-                assert action[vel] == reachy2.reachy.mobile_base.odometry[REACHY2_VEL[vel]]
+                assert (
+                    action[vel] == reachy2.reachy.mobile_base.odometry[REACHY2_VEL[vel]]
+                )
         else:
             for vel in REACHY2_VEL:
-                assert action[vel] == reachy2.reachy.mobile_base.last_cmd_vel[REACHY2_VEL[vel]]
+                assert (
+                    action[vel]
+                    == reachy2.reachy.mobile_base.last_cmd_vel[REACHY2_VEL[vel]]
+                )
 
 
 def test_no_part_declared():

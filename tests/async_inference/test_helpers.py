@@ -153,7 +153,9 @@ def test_timed_data_deserialization_data_getters():
     # TimedObservation
     # ------------------------------------------------------------------
     obs_dict = {OBS_STATE: torch.arange(4).float()}
-    to_in = TimedObservation(timestamp=ts, observation=obs_dict, timestep=7, must_go=True)
+    to_in = TimedObservation(
+        timestamp=ts, observation=obs_dict, timestep=7, must_go=True
+    )
 
     to_bytes = pickle.dumps(to_in)  # nosec
     to_out: TimedObservation = pickle.loads(to_bytes)  # nosec B301
@@ -304,7 +306,9 @@ def test_prepare_raw_observation():
     lerobot_features = _create_mock_lerobot_features()
     policy_image_features = _create_mock_policy_image_features()
 
-    prepared = prepare_raw_observation(robot_obs, lerobot_features, policy_image_features)
+    prepared = prepare_raw_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Check that state is properly extracted and batched
     assert OBS_STATE in prepared
@@ -334,7 +338,9 @@ def test_raw_observation_to_observation_basic():
     lerobot_features = _create_mock_lerobot_features()
     policy_image_features = _create_mock_policy_image_features()
 
-    observation = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
+    observation = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Check that all expected keys are present
     assert OBS_STATE in observation
@@ -369,7 +375,9 @@ def test_raw_observation_to_observation_with_non_tensor_data():
     lerobot_features = _create_mock_lerobot_features()
     policy_image_features = _create_mock_policy_image_features()
 
-    observation = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
+    observation = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Check that task string is preserved
     assert "task" in observation
@@ -384,12 +392,19 @@ def test_raw_observation_to_observation_device_handling():
     lerobot_features = _create_mock_lerobot_features()
     policy_image_features = _create_mock_policy_image_features()
 
-    observation = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
+    observation = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Check that all expected keys produce tensors (device placement handled by preprocessor later)
     for key, value in observation.items():
         if isinstance(value, torch.Tensor):
-            assert value.device.type in ["cpu", "cuda", "mps", "xpu"], f"Tensor {key} on unexpected device"
+            assert value.device.type in [
+                "cpu",
+                "cuda",
+                "mps",
+                "xpu",
+            ], f"Tensor {key} on unexpected device"
 
 
 def test_raw_observation_to_observation_deterministic():
@@ -399,8 +414,12 @@ def test_raw_observation_to_observation_deterministic():
     policy_image_features = _create_mock_policy_image_features()
 
     # Run twice with same input
-    obs1 = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
-    obs2 = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
+    obs1 = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
+    obs2 = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Results should be identical
     assert set(obs1.keys()) == set(obs2.keys())
@@ -418,7 +437,13 @@ def test_image_processing_pipeline_preserves_content():
     original_img = np.zeros((100, 100, 3), dtype=np.uint8)
     original_img[25:75, 25:75, :] = 255  # White square in center
 
-    robot_obs = {"shoulder": 1.0, "elbow": 1.0, "wrist": 1.0, "gripper": 1.0, "laptop": original_img}
+    robot_obs = {
+        "shoulder": 1.0,
+        "elbow": 1.0,
+        "wrist": 1.0,
+        "gripper": 1.0,
+        "laptop": original_img,
+    }
     lerobot_features = {
         OBS_STATE: {
             "dtype": "float32",
@@ -438,7 +463,9 @@ def test_image_processing_pipeline_preserves_content():
         )
     }
 
-    observation = raw_observation_to_observation(robot_obs, lerobot_features, policy_image_features)
+    observation = raw_observation_to_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     processed_img = observation[f"{OBS_IMAGES}.laptop"].squeeze(0)  # Remove batch dim
 
@@ -447,4 +474,6 @@ def test_image_processing_pipeline_preserves_content():
     center_val = processed_img[:, 25, 25].mean()  # Center of 50x50 image
     corner_val = processed_img[:, 5, 5].mean()  # Corner
 
-    assert center_val > corner_val, "Image processing should preserve recognizable patterns"
+    assert (
+        center_val > corner_val
+    ), "Image processing should preserve recognizable patterns"

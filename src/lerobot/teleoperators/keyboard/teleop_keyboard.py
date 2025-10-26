@@ -25,7 +25,10 @@ from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnected
 
 from ..teleoperator import Teleoperator
 from ..utils import TeleopEvents
-from .configuration_keyboard import KeyboardEndEffectorTeleopConfig, KeyboardTeleopConfig
+from .configuration_keyboard import (
+    KeyboardEndEffectorTeleopConfig,
+    KeyboardTeleopConfig,
+)
 
 PYNPUT_AVAILABLE = True
 try:
@@ -75,7 +78,11 @@ class KeyboardTeleop(Teleoperator):
 
     @property
     def is_connected(self) -> bool:
-        return PYNPUT_AVAILABLE and isinstance(self.listener, keyboard.Listener) and self.listener.is_alive()
+        return (
+            PYNPUT_AVAILABLE
+            and isinstance(self.listener, keyboard.Listener)
+            and self.listener.is_alive()
+        )
 
     @property
     def is_calibrated(self) -> bool:
@@ -264,7 +271,9 @@ class KeyboardEndEffectorTeleop(KeyboardTeleop):
             keyboard.Key.ctrl_r,
             keyboard.Key.ctrl_l,
         ]
-        is_intervention = any(self.current_pressed.get(key, False) for key in movement_keys)
+        is_intervention = any(
+            self.current_pressed.get(key, False) for key in movement_keys
+        )
 
         # Check for episode control commands from misc_keys_queue
         terminate_episode = False

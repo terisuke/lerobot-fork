@@ -181,7 +181,9 @@ def test_integration_with_robot_processor():
     rename_processor = RenameObservationsProcessorStep(rename_map=rename_map)
 
     pipeline = DataProcessorPipeline(
-        [rename_processor], to_transition=identity_transition, to_output=identity_transition
+        [rename_processor],
+        to_transition=identity_transition,
+        to_output=identity_transition,
     )
 
     observation = {
@@ -190,7 +192,12 @@ def test_integration_with_robot_processor():
         "other_data": "preserve_me",
     }
     transition = create_transition(
-        observation=observation, reward=0.5, done=False, truncated=False, info={}, complementary_data={}
+        observation=observation,
+        reward=0.5,
+        done=False,
+        truncated=False,
+        info={},
+        complementary_data={},
     )
 
     result = pipeline(transition)
@@ -289,7 +296,9 @@ def test_registry_based_save_load():
         # Verify config uses registry name
         import json
 
-        with open(Path(tmp_dir) / "dataprocessorpipeline.json") as f:  # Default name is "RobotProcessor"
+        with open(
+            Path(tmp_dir) / "dataprocessorpipeline.json"
+        ) as f:  # Default name is "RobotProcessor"
             config = json.load(f)
 
         assert "registry_name" in config["steps"][0]
@@ -324,7 +333,9 @@ def test_chained_rename_processors():
     )
 
     pipeline = DataProcessorPipeline(
-        [processor1, processor2], to_transition=identity_transition, to_output=identity_transition
+        [processor1, processor2],
+        to_transition=identity_transition,
+        to_output=identity_transition,
     )
 
     observation = {
@@ -390,7 +401,11 @@ def test_nested_observation_rename():
 
 def test_value_types_preserved():
     """Test that various value types are preserved during renaming."""
-    rename_map = {"old_tensor": "new_tensor", "old_array": "new_array", "old_scalar": "new_scalar"}
+    rename_map = {
+        "old_tensor": "new_tensor",
+        "old_array": "new_array",
+        "old_scalar": "new_scalar",
+    }
     processor = RenameObservationsProcessorStep(rename_map=rename_map)
 
     tensor_value = torch.randn(3, 3)
@@ -431,9 +446,18 @@ def test_features_basic_renaming(policy_feature_factory):
     out = processor.transform_features(features.copy())
 
     # Values preserved and typed
-    assert out[PipelineFeatureType.OBSERVATION]["x"] == features[PipelineFeatureType.OBSERVATION]["a"]
-    assert out[PipelineFeatureType.OBSERVATION]["y"] == features[PipelineFeatureType.OBSERVATION]["b"]
-    assert out[PipelineFeatureType.OBSERVATION]["c"] == features[PipelineFeatureType.OBSERVATION]["c"]
+    assert (
+        out[PipelineFeatureType.OBSERVATION]["x"]
+        == features[PipelineFeatureType.OBSERVATION]["a"]
+    )
+    assert (
+        out[PipelineFeatureType.OBSERVATION]["y"]
+        == features[PipelineFeatureType.OBSERVATION]["b"]
+    )
+    assert (
+        out[PipelineFeatureType.OBSERVATION]["c"]
+        == features[PipelineFeatureType.OBSERVATION]["c"]
+    )
 
     assert_contract_is_typed(out)
     # Input not mutated
@@ -453,17 +477,21 @@ def test_features_overlapping_keys(policy_feature_factory):
 
     assert set(out[PipelineFeatureType.OBSERVATION]) == {"b", "c"}
     assert (
-        out[PipelineFeatureType.OBSERVATION]["b"] == features[PipelineFeatureType.OBSERVATION]["a"]
+        out[PipelineFeatureType.OBSERVATION]["b"]
+        == features[PipelineFeatureType.OBSERVATION]["a"]
     )  # 'a' renamed to'b'
     assert (
-        out[PipelineFeatureType.OBSERVATION]["c"] == features[PipelineFeatureType.OBSERVATION]["b"]
+        out[PipelineFeatureType.OBSERVATION]["c"]
+        == features[PipelineFeatureType.OBSERVATION]["b"]
     )  # 'b' renamed to 'c'
     assert_contract_is_typed(out)
 
 
 def test_features_chained_processors(policy_feature_factory):
     # Chain two rename processors at the contract level
-    processor1 = RenameObservationsProcessorStep(rename_map={"pos": "agent_position", "img": "camera_image"})
+    processor1 = RenameObservationsProcessorStep(
+        rename_map={"pos": "agent_position", "img": "camera_image"}
+    )
     processor2 = RenameObservationsProcessorStep(
         rename_map={"agent_position": OBS_STATE, "camera_image": OBS_IMAGE}
     )
@@ -479,9 +507,18 @@ def test_features_chained_processors(policy_feature_factory):
     out = pipeline.transform_features(initial_features=spec)
 
     assert set(out[PipelineFeatureType.OBSERVATION]) == {OBS_STATE, OBS_IMAGE, "extra"}
-    assert out[PipelineFeatureType.OBSERVATION][OBS_STATE] == spec[PipelineFeatureType.OBSERVATION]["pos"]
-    assert out[PipelineFeatureType.OBSERVATION][OBS_IMAGE] == spec[PipelineFeatureType.OBSERVATION]["img"]
-    assert out[PipelineFeatureType.OBSERVATION]["extra"] == spec[PipelineFeatureType.OBSERVATION]["extra"]
+    assert (
+        out[PipelineFeatureType.OBSERVATION][OBS_STATE]
+        == spec[PipelineFeatureType.OBSERVATION]["pos"]
+    )
+    assert (
+        out[PipelineFeatureType.OBSERVATION][OBS_IMAGE]
+        == spec[PipelineFeatureType.OBSERVATION]["img"]
+    )
+    assert (
+        out[PipelineFeatureType.OBSERVATION]["extra"]
+        == spec[PipelineFeatureType.OBSERVATION]["extra"]
+    )
     assert_contract_is_typed(out)
 
 

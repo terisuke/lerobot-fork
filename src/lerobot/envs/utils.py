@@ -42,7 +42,10 @@ def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Ten
     return_observations = {}
     if "pixels" in observations:
         if isinstance(observations["pixels"], dict):
-            imgs = {f"{OBS_IMAGES}.{key}": img for key, img in observations["pixels"].items()}
+            imgs = {
+                f"{OBS_IMAGES}.{key}": img
+                for key, img in observations["pixels"].items()
+            }
         else:
             imgs = {OBS_IMAGE: observations["pixels"]}
 
@@ -56,10 +59,14 @@ def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Ten
                 img_tensor = img_tensor.unsqueeze(0)
             # sanity check that images are channel last
             _, h, w, c = img_tensor.shape
-            assert c < h and c < w, f"expect channel last images, but instead got {img_tensor.shape=}"
+            assert (
+                c < h and c < w
+            ), f"expect channel last images, but instead got {img_tensor.shape=}"
 
             # sanity check that images are uint8
-            assert img_tensor.dtype == torch.uint8, f"expect torch.uint8, but instead {img_tensor.dtype=}"
+            assert (
+                img_tensor.dtype == torch.uint8
+            ), f"expect torch.uint8, but instead {img_tensor.dtype=}"
 
             # convert to channel first of type float32 in range [0,1]
             img_tensor = einops.rearrange(img_tensor, "b h w c -> b c h w").contiguous()
@@ -91,7 +98,9 @@ def env_to_policy_features(env_cfg: EnvConfig) -> dict[str, PolicyFeature]:
     for key, ft in env_cfg.features.items():
         if ft.type is FeatureType.VISUAL:
             if len(ft.shape) != 3:
-                raise ValueError(f"Number of dimensions of {key} != 3 (shape={ft.shape})")
+                raise ValueError(
+                    f"Number of dimensions of {key} != 3 (shape={ft.shape})"
+                )
 
             shape = get_channel_first_image_shape(ft.shape)
             feature = PolicyFeature(type=ft.type, shape=shape)
@@ -113,7 +122,9 @@ def check_env_attributes_and_types(env: gym.vector.VectorEnv) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("once", UserWarning)  # Apply filter only in this function
 
-        if not (hasattr(env.envs[0], "task_description") and hasattr(env.envs[0], "task")):
+        if not (
+            hasattr(env.envs[0], "task_description") and hasattr(env.envs[0], "task")
+        ):
             warnings.warn(
                 "The environment does not have 'task_description' and 'task'. Some policies require these features.",
                 UserWarning,
@@ -127,7 +138,9 @@ def check_env_attributes_and_types(env: gym.vector.VectorEnv) -> None:
             )
 
 
-def add_envs_task(env: gym.vector.VectorEnv, observation: dict[str, Any]) -> dict[str, Any]:
+def add_envs_task(
+    env: gym.vector.VectorEnv, observation: dict[str, Any]
+) -> dict[str, Any]:
     """Adds task feature to the observation dict with respect to the first environment attribute."""
     if hasattr(env.envs[0], "task_description"):
         task_result = env.call("task_description")
@@ -136,7 +149,9 @@ def add_envs_task(env: gym.vector.VectorEnv, observation: dict[str, Any]) -> dic
             task_result = list(task_result)
 
         if not isinstance(task_result, list):
-            raise TypeError(f"Expected task_description to return a list, got {type(task_result)}")
+            raise TypeError(
+                f"Expected task_description to return a list, got {type(task_result)}"
+            )
         if not all(isinstance(item, str) for item in task_result):
             raise TypeError("All items in task_description result must be strings")
 
@@ -169,7 +184,9 @@ def _close_single_env(env: Any) -> None:
 @singledispatch
 def close_envs(obj: Any) -> None:
     """Default: raise if the type is not recognized."""
-    raise NotImplementedError(f"close_envs not implemented for type {type(obj).__name__}")
+    raise NotImplementedError(
+        f"close_envs not implemented for type {type(obj).__name__}"
+    )
 
 
 @close_envs.register
@@ -186,7 +203,11 @@ def _(envs: Sequence) -> None:
     if isinstance(envs, (str | bytes)):
         return
     for v in envs:
-        if isinstance(v, Mapping) or isinstance(v, Sequence) and not isinstance(v, (str | bytes)):
+        if (
+            isinstance(v, Mapping)
+            or isinstance(v, Sequence)
+            and not isinstance(v, (str | bytes))
+        ):
             close_envs(v)
         elif hasattr(v, "close"):
             _close_single_env(v)

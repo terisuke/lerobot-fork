@@ -25,10 +25,8 @@ from lerobot.robots import (  # noqa: F401
     make_robot_from_config,
     so100_follower,
 )
-from lerobot.teleoperators import (
-    gamepad,  # noqa: F401
-    so101_leader,  # noqa: F401
-)
+from lerobot.teleoperators import gamepad  # noqa: F401
+from lerobot.teleoperators import so101_leader  # noqa: F401
 
 from .gym_manipulator import make_robot_env
 

@@ -62,7 +62,15 @@ class PortDroidShards(PipelineStep):
 
 
 def make_port_executor(
-    raw_dir, repo_id, job_name, logs_dir, workers, partition, cpus_per_task, mem_per_cpu, slurm=True
+    raw_dir,
+    repo_id,
+    job_name,
+    logs_dir,
+    workers,
+    partition,
+    cpus_per_task,
+    mem_per_cpu,
+    slurm=True,
 ):
     kwargs = {
         "pipeline": [

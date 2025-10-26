@@ -35,7 +35,9 @@ from lerobot.policies.pi0.configuration_pi0 import PI0Config
 from lerobot.policies.pi05.configuration_pi05 import PI05Config
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.policies.sac.configuration_sac import SACConfig
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
 from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
 from lerobot.policies.tdmpc.configuration_tdmpc import TDMPCConfig
 from lerobot.policies.vqbet.configuration_vqbet import VQBeTConfig
@@ -46,7 +48,10 @@ from lerobot.processor.converters import (
     transition_to_batch,
     transition_to_policy_action,
 )
-from lerobot.utils.constants import POLICY_POSTPROCESSOR_DEFAULT_NAME, POLICY_PREPROCESSOR_DEFAULT_NAME
+from lerobot.utils.constants import (
+    POLICY_POSTPROCESSOR_DEFAULT_NAME,
+    POLICY_PREPROCESSOR_DEFAULT_NAME,
+)
 
 
 def get_policy_class(name: str) -> type[PreTrainedPolicy]:
@@ -231,7 +236,8 @@ def make_pre_post_processors(
             PolicyProcessorPipeline.from_pretrained(
                 pretrained_model_name_or_path=pretrained_path,
                 config_filename=kwargs.get(
-                    "preprocessor_config_filename", f"{POLICY_PREPROCESSOR_DEFAULT_NAME}.json"
+                    "preprocessor_config_filename",
+                    f"{POLICY_PREPROCESSOR_DEFAULT_NAME}.json",
                 ),
                 overrides=kwargs.get("preprocessor_overrides", {}),
                 to_transition=batch_to_transition,
@@ -240,7 +246,8 @@ def make_pre_post_processors(
             PolicyProcessorPipeline.from_pretrained(
                 pretrained_model_name_or_path=pretrained_path,
                 config_filename=kwargs.get(
-                    "postprocessor_config_filename", f"{POLICY_POSTPROCESSOR_DEFAULT_NAME}.json"
+                    "postprocessor_config_filename",
+                    f"{POLICY_POSTPROCESSOR_DEFAULT_NAME}.json",
                 ),
                 overrides=kwargs.get("postprocessor_overrides", {}),
                 to_transition=policy_action_to_transition,
@@ -250,7 +257,9 @@ def make_pre_post_processors(
 
     # Create a new processor based on policy type
     if isinstance(policy_cfg, TDMPCConfig):
-        from lerobot.policies.tdmpc.processor_tdmpc import make_tdmpc_pre_post_processors
+        from lerobot.policies.tdmpc.processor_tdmpc import (
+            make_tdmpc_pre_post_processors,
+        )
 
         processors = make_tdmpc_pre_post_processors(
             config=policy_cfg,
@@ -258,7 +267,9 @@ def make_pre_post_processors(
         )
 
     elif isinstance(policy_cfg, DiffusionConfig):
-        from lerobot.policies.diffusion.processor_diffusion import make_diffusion_pre_post_processors
+        from lerobot.policies.diffusion.processor_diffusion import (
+            make_diffusion_pre_post_processors,
+        )
 
         processors = make_diffusion_pre_post_processors(
             config=policy_cfg,
@@ -274,7 +285,9 @@ def make_pre_post_processors(
         )
 
     elif isinstance(policy_cfg, VQBeTConfig):
-        from lerobot.policies.vqbet.processor_vqbet import make_vqbet_pre_post_processors
+        from lerobot.policies.vqbet.processor_vqbet import (
+            make_vqbet_pre_post_processors,
+        )
 
         processors = make_vqbet_pre_post_processors(
             config=policy_cfg,
@@ -306,7 +319,9 @@ def make_pre_post_processors(
         )
 
     elif isinstance(policy_cfg, RewardClassifierConfig):
-        from lerobot.policies.sac.reward_model.processor_classifier import make_classifier_processor
+        from lerobot.policies.sac.reward_model.processor_classifier import (
+            make_classifier_processor,
+        )
 
         processors = make_classifier_processor(
             config=policy_cfg,
@@ -314,7 +329,9 @@ def make_pre_post_processors(
         )
 
     elif isinstance(policy_cfg, SmolVLAConfig):
-        from lerobot.policies.smolvla.processor_smolvla import make_smolvla_pre_post_processors
+        from lerobot.policies.smolvla.processor_smolvla import (
+            make_smolvla_pre_post_processors,
+        )
 
         processors = make_smolvla_pre_post_processors(
             config=policy_cfg,
@@ -322,7 +339,9 @@ def make_pre_post_processors(
         )
 
     elif isinstance(policy_cfg, GrootConfig):
-        from lerobot.policies.groot.processor_groot import make_groot_pre_post_processors
+        from lerobot.policies.groot.processor_groot import (
+            make_groot_pre_post_processors,
+        )
 
         processors = make_groot_pre_post_processors(
             config=policy_cfg,
@@ -330,7 +349,9 @@ def make_pre_post_processors(
         )
 
     else:
-        raise NotImplementedError(f"Processor for policy type '{policy_cfg.type}' is not implemented.")
+        raise NotImplementedError(
+            f"Processor for policy type '{policy_cfg.type}' is not implemented."
+        )
 
     return processors
 
@@ -368,7 +389,9 @@ def make_policy(
                              combination (e.g., VQBeT with 'mps').
     """
     if bool(ds_meta) == bool(env_cfg):
-        raise ValueError("Either one of a dataset metadata or a sim env must be provided.")
+        raise ValueError(
+            "Either one of a dataset metadata or a sim env must be provided."
+        )
 
     # NOTE: Currently, if you try to run vqbet with mps backend, you'll get this error.
     # TODO(aliberts, rcadene): Implement a check_backend_compatibility in policies?
@@ -400,9 +423,13 @@ def make_policy(
         features = env_to_policy_features(env_cfg)
 
     if not cfg.output_features:
-        cfg.output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
+        cfg.output_features = {
+            key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION
+        }
     if not cfg.input_features:
-        cfg.input_features = {key: ft for key, ft in features.items() if key not in cfg.output_features}
+        cfg.input_features = {
+            key: ft for key, ft in features.items() if key not in cfg.output_features
+        }
     kwargs["config"] = cfg
 
     if cfg.pretrained_path:
@@ -420,7 +447,9 @@ def make_policy(
     # policy = torch.compile(policy, mode="reduce-overhead")
 
     if not rename_map:
-        expected_features = set(cfg.input_features.keys()) | set(cfg.output_features.keys())
+        expected_features = set(cfg.input_features.keys()) | set(
+            cfg.output_features.keys()
+        )
         provided_features = set(features.keys())
         if expected_features and provided_features != expected_features:
             missing = expected_features - provided_features

@@ -24,7 +24,9 @@ from typing import Any
 
 import cv2  # type: ignore  # TODO: add type stubs for OpenCV
 import numpy as np  # type: ignore  # TODO: add type stubs for numpy
-from numpy.typing import NDArray  # type: ignore  # TODO: add type stubs for numpy.typing
+from numpy.typing import (
+    NDArray,  # type: ignore  # TODO: add type stubs for numpy.typing
+)
 
 try:
     import pyrealsense2 as rs  # type: ignore  # TODO: add type stubs for pyrealsense2
@@ -121,7 +123,9 @@ class RealSenseCamera(Camera):
         if config.serial_number_or_name.isdigit():
             self.serial_number = config.serial_number_or_name
         else:
-            self.serial_number = self._find_serial_number_from_name(config.serial_number_or_name)
+            self.serial_number = self._find_serial_number_from_name(
+                config.serial_number_or_name
+            )
 
         self.fps = config.fps
         self.color_mode = config.color_mode
@@ -141,7 +145,10 @@ class RealSenseCamera(Camera):
 
         if self.height and self.width:
             self.capture_width, self.capture_height = self.width, self.height
-            if self.rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE]:
+            if self.rotation in [
+                cv2.ROTATE_90_CLOCKWISE,
+                cv2.ROTATE_90_COUNTERCLOCKWISE,
+            ]:
                 self.capture_width, self.capture_height = self.height, self.width
 
     def __str__(self) -> str:
@@ -181,8 +188,12 @@ class RealSenseCamera(Camera):
             if "failed to set power state" in error_msg:
                 # Check if running in CI environment
                 if os.getenv("CI"):
-                    logger.info("⚠️  RealSense power error in CI - skipping hardware test")
-                    logger.info("✅ CI environment detected - connection marked as successful")
+                    logger.info(
+                        "⚠️  RealSense power error in CI - skipping hardware test"
+                    )
+                    logger.info(
+                        "✅ CI environment detected - connection marked as successful"
+                    )
                     return  # Mark as successful in CI
                 raise ConnectionError(
                     f"❌ RealSense USB power error: {self}\n"
@@ -232,7 +243,9 @@ class RealSenseCamera(Camera):
                 "type": "RealSense",
                 "id": device.get_info(rs.camera_info.serial_number),
                 "firmware_version": device.get_info(rs.camera_info.firmware_version),
-                "usb_type_descriptor": device.get_info(rs.camera_info.usb_type_descriptor),
+                "usb_type_descriptor": device.get_info(
+                    rs.camera_info.usb_type_descriptor
+                ),
                 "physical_port": device.get_info(rs.camera_info.physical_port),
                 "product_id": device.get_info(rs.camera_info.product_id),
                 "product_line": device.get_info(rs.camera_info.product_line),
@@ -286,11 +299,19 @@ class RealSenseCamera(Camera):
 
         if self.width and self.height and self.fps:
             rs_config.enable_stream(
-                rs.stream.color, self.capture_width, self.capture_height, rs.format.rgb8, self.fps
+                rs.stream.color,
+                self.capture_width,
+                self.capture_height,
+                rs.format.rgb8,
+                self.fps,
             )
             if self.use_depth:
                 rs_config.enable_stream(
-                    rs.stream.depth, self.capture_width, self.capture_height, rs.format.z16, self.fps
+                    rs.stream.depth,
+                    self.capture_width,
+                    self.capture_height,
+                    rs.format.z16,
+                    self.fps,
                 )
         else:
             rs_config.enable_stream(rs.stream.color)
@@ -307,7 +328,9 @@ class RealSenseCamera(Camera):
             DeviceNotConnectedError: If device is not connected.
         """
         if not self.is_connected:
-            raise DeviceNotConnectedError(f"Cannot validate settings for {self} as it is not connected.")
+            raise DeviceNotConnectedError(
+                f"Cannot validate settings for {self} as it is not connected."
+            )
 
         if self.rs_profile is None:
             raise RuntimeError(f"{self}: rs_profile must be initialized before use.")
@@ -320,7 +343,10 @@ class RealSenseCamera(Camera):
         if self.width is None or self.height is None:
             actual_width = int(round(stream.width()))
             actual_height = int(round(stream.height()))
-            if self.rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE]:
+            if self.rotation in [
+                cv2.ROTATE_90_CLOCKWISE,
+                cv2.ROTATE_90_COUNTERCLOCKWISE,
+            ]:
                 self.width, self.height = actual_height, actual_width
                 self.capture_width, self.capture_height = actual_width, actual_height
             else:
@@ -373,7 +399,9 @@ class RealSenseCamera(Camera):
 
         return depth_map_processed
 
-    def read(self, color_mode: ColorMode | None = None, timeout_ms: int = 200) -> NDArray[Any]:
+    def read(
+        self, color_mode: ColorMode | None = None, timeout_ms: int = 200
+    ) -> NDArray[Any]:
         """
         Reads a single frame (color) synchronously from the camera.
 
@@ -417,7 +445,10 @@ class RealSenseCamera(Camera):
         return color_image_processed
 
     def _postprocess_image(
-        self, image: NDArray[Any], color_mode: ColorMode | None = None, depth_frame: bool = False
+        self,
+        image: NDArray[Any],
+        color_mode: ColorMode | None = None,
+        depth_frame: bool = False,
     ) -> NDArray[Any]:
         """
         Applies color conversion, dimension validation, and rotation to a raw color frame.
@@ -447,7 +478,9 @@ class RealSenseCamera(Camera):
             h, w, c = image.shape
 
             if c != 3:
-                raise RuntimeError(f"{self} frame channels={c} do not match expected 3 channels (RGB/BGR).")
+                raise RuntimeError(
+                    f"{self} frame channels={c} do not match expected 3 channels (RGB/BGR)."
+                )
 
         if h != self.capture_height or w != self.capture_width:
             raise RuntimeError(
@@ -458,7 +491,11 @@ class RealSenseCamera(Camera):
         if self.color_mode == ColorMode.BGR:
             processed_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        if self.rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE, cv2.ROTATE_180]:
+        if self.rotation in [
+            cv2.ROTATE_90_CLOCKWISE,
+            cv2.ROTATE_90_COUNTERCLOCKWISE,
+            cv2.ROTATE_180,
+        ]:
             processed_image = cv2.rotate(processed_image, self.rotation)
 
         return processed_image
@@ -475,7 +512,9 @@ class RealSenseCamera(Camera):
         Stops on DeviceNotConnectedError, logs other errors and continues.
         """
         if self.stop_event is None:
-            raise RuntimeError(f"{self}: stop_event is not initialized before starting read loop.")
+            raise RuntimeError(
+                f"{self}: stop_event is not initialized before starting read loop."
+            )
 
         while not self.stop_event.is_set():
             try:
@@ -488,7 +527,9 @@ class RealSenseCamera(Camera):
             except DeviceNotConnectedError:
                 break
             except Exception as e:
-                logger.warning(f"Error reading frame in background thread for {self}: {e}")
+                logger.warning(
+                    f"Error reading frame in background thread for {self}: {e}"
+                )
 
     def _start_read_thread(self) -> None:
         """Starts or restarts the background read thread if it's not running."""
@@ -553,7 +594,9 @@ class RealSenseCamera(Camera):
             self.new_frame_event.clear()
 
         if frame is None:
-            raise RuntimeError(f"Internal error: Event set but no frame available for {self}.")
+            raise RuntimeError(
+                f"Internal error: Event set but no frame available for {self}."
+            )
 
         return frame
 

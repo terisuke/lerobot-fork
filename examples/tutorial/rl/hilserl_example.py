@@ -55,7 +55,9 @@ def run_learner(
                 online_buffer.add(**transition)
 
                 # HIL-SERL: Add ONLY human intervention transitions to offline buffer
-                is_intervention = transition.get("complementary_info", {}).get("is_intervention", False)
+                is_intervention = transition.get("complementary_info", {}).get(
+                    "is_intervention", False
+                )
                 if is_intervention:
                     offline_buffer.add(**transition)
                     print(
@@ -77,7 +79,9 @@ def run_learner(
             batch = {}
             for key in online_batch:
                 if key in offline_batch:
-                    batch[key] = torch.cat([online_batch[key], offline_batch[key]], dim=0)
+                    batch[key] = torch.cat(
+                        [online_batch[key], offline_batch[key]], dim=0
+                    )
                 else:
                     batch[key] = online_batch[key]
 
@@ -97,7 +101,9 @@ def run_learner(
             # Send updated parameters to actor every 10 training steps
             if training_step % SEND_EVERY == 0:
                 try:
-                    state_dict = {k: v.cpu() for k, v in policy_learner.state_dict().items()}
+                    state_dict = {
+                        k: v.cpu() for k, v in policy_learner.state_dict().items()
+                    }
                     parameters_queue.put_nowait(state_dict)
                     print("[LEARNER] Sent updated parameters to actor")
                 except Full:
@@ -118,7 +124,8 @@ def run_actor(
     output_directory: Path | None = None,
 ):
     """The actor process - interacts with environment and collects data.
-    The policy is frozen and only the parameters are updated, popping the most recent ones from a queue."""
+    The policy is frozen and only the parameters are updated, popping the most recent ones from a queue.
+    """
     policy_actor.eval()
     policy_actor.to(device)
 
@@ -145,12 +152,16 @@ def run_actor(
                     new_params = parameters_queue.get_nowait()
                     policy_actor.load_state_dict(new_params)
                     print("[ACTOR] Updated policy parameters from learner")
-                except Empty:  # No new updated parameters available from learner, waiting
+                except (
+                    Empty
+                ):  # No new updated parameters available from learner, waiting
                     pass
 
                 # Get action from policy
                 policy_obs = make_policy_obs(obs, device=device)
-                action_tensor = policy_actor.select_action(policy_obs)  # predicts a single action
+                action_tensor = policy_actor.select_action(
+                    policy_obs
+                )  # predicts a single action
                 action = action_tensor.squeeze(0).cpu().numpy()
 
                 # Step environment
@@ -170,7 +181,9 @@ def run_actor(
                 if hasattr(teleop_device, "get_teleop_events"):
                     # Real intervention detection from teleop device
                     teleop_events = teleop_device.get_teleop_events()
-                    is_intervention = teleop_events.get(TeleopEvents.IS_INTERVENTION, False)
+                    is_intervention = teleop_events.get(
+                        TeleopEvents.IS_INTERVENTION, False
+                    )
 
                 # Store transition with intervention metadata
                 transition = {
@@ -215,9 +228,15 @@ def run_actor(
 
 def make_policy_obs(obs, device: torch.device = "cpu"):
     return {
-        "observation.state": torch.from_numpy(obs["agent_pos"]).float().unsqueeze(0).to(device),
+        "observation.state": torch.from_numpy(obs["agent_pos"])
+        .float()
+        .unsqueeze(0)
+        .to(device),
         **{
-            f"observation.image.{k}": torch.from_numpy(obs["pixels"][k]).float().unsqueeze(0).to(device)
+            f"observation.image.{k}": torch.from_numpy(obs["pixels"][k])
+            .float()
+            .unsqueeze(0)
+            .to(device)
             for k in obs["pixels"]
         },
     }
@@ -252,7 +271,9 @@ robot_cfg = SO100FollowerConfig(port=follower_port, id=follower_id)
 teleop_cfg = SO100LeaderConfig(port=leader_port, id=leader_id)
 processor_cfg = HILSerlProcessorConfig(control_mode="leader")
 
-env_cfg = HILSerlRobotEnvConfig(robot=robot_cfg, teleop=teleop_cfg, processor=processor_cfg)
+env_cfg = HILSerlRobotEnvConfig(
+    robot=robot_cfg, teleop=teleop_cfg, processor=processor_cfg
+)
 
 # Create robot environment
 env, teleop_device = make_robot_env(env_cfg)
@@ -320,7 +341,9 @@ actor_process = mp.Process(
         env_cfg,
         output_directory,
     ),
-    kwargs={"device": "cpu"},  # actor is frozen, can run on CPU or accelerate for inference
+    kwargs={
+        "device": "cpu"
+    },  # actor is frozen, can run on CPU or accelerate for inference
 )
 
 learner_process.start()

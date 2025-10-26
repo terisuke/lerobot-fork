@@ -33,14 +33,18 @@ pytestmark = pytest.mark.skipif(
     reason="This test requires local OpenPI installation and is not meant for CI",
 )
 
-from openpi.models_pytorch import preprocessing_pytorch as openpi_preprocessing  # noqa: E402
+from openpi.models_pytorch import (  # noqa: E402
+    preprocessing_pytorch as openpi_preprocessing,
+)
 
 # NOTE: Assumes PYTHONPATH is set to include OpenPI src as per instructions.
 from openpi.models_pytorch.pi0_pytorch import PI0Pytorch  # noqa: E402
 from transformers import AutoTokenizer  # noqa: E402
 
 from lerobot.policies.pi0 import PI0Config, PI0Policy  # noqa: E402
-from lerobot.policies.pi0.processor_pi0 import make_pi0_pre_post_processors  # noqa: E402
+from lerobot.policies.pi0.processor_pi0 import (  # noqa: E402
+    make_pi0_pre_post_processors,
+)
 from lerobot.processor import PolicyAction, PolicyProcessorPipeline  # noqa: E402
 
 # TODO: ADDING DEFAULT IMAGES_FEATURES TO CONFIG
@@ -105,9 +109,15 @@ def instantiate_lerobot_pi0(
 ]:
     if from_pretrained:
         # Load the policy first
-        policy = PI0Policy.from_pretrained(pretrained_name_or_path="lerobot/pi0_base", strict=True)
+        policy = PI0Policy.from_pretrained(
+            pretrained_name_or_path="lerobot/pi0_base", strict=True
+        )
     else:
-        config = PI0Config(max_action_dim=DUMMY_ACTION_DIM, max_state_dim=DUMMY_STATE_DIM, dtype="float32")
+        config = PI0Config(
+            max_action_dim=DUMMY_ACTION_DIM,
+            max_state_dim=DUMMY_STATE_DIM,
+            dtype="float32",
+        )
         policy = PI0Policy(config)
 
     policy.to(DEVICE)
@@ -124,7 +134,9 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
 
     if from_pretrained:
         try:
-            print("Loading converted PyTorch weights from HuggingFace Hub (lerobot/pi0_base)...")
+            print(
+                "Loading converted PyTorch weights from HuggingFace Hub (lerobot/pi0_base)..."
+            )
 
             # Download the model from HuggingFace Hub
             import safetensors.torch
@@ -135,7 +147,9 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
                 cache_dir = model_path
                 print(f"Using cached model from: {cache_dir}")
             else:
-                cache_dir = snapshot_download(repo_id="lerobot/pi0_base", repo_type="model")
+                cache_dir = snapshot_download(
+                    repo_id="lerobot/pi0_base", repo_type="model"
+                )
                 print(f"Downloaded model to: {cache_dir}")
 
             # Try to load safetensors format first
@@ -147,7 +161,9 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
                 raise FileNotFoundError(f"No safetensors file found in {cache_dir}")
 
             # Load the state dict into the model
-            missing_keys, unexpected_keys = policy.load_state_dict(state_dict, strict=False)
+            missing_keys, unexpected_keys = policy.load_state_dict(
+                state_dict, strict=False
+            )
 
             if missing_keys:
                 print(f"Missing keys: {len(missing_keys)}")
@@ -172,7 +188,9 @@ def instantiate_original_pi0(from_pretrained: bool = False, model_path: str = No
             if not missing_keys and not unexpected_keys:
                 print("All pretrained weights loaded successfully!")
             else:
-                print("Pretrained weights loaded with some missing/unexpected keys (this may be normal)")
+                print(
+                    "Pretrained weights loaded with some missing/unexpected keys (this may be normal)"
+                )
 
         except Exception as e:
             print(f"Failed to load pretrained weights: {e}")
@@ -193,9 +211,15 @@ def create_dummy_data():
     prompt = "Pick up the red block and place it in the bin"
 
     batch = {
-        "observation.state": torch.randn(batch_size, DUMMY_STATE_DIM, dtype=torch.float32, device=device),
+        "observation.state": torch.randn(
+            batch_size, DUMMY_STATE_DIM, dtype=torch.float32, device=device
+        ),
         "action": torch.randn(
-            batch_size, DUMMY_ACTION_HORIZON, DUMMY_ACTION_DIM, dtype=torch.float32, device=device
+            batch_size,
+            DUMMY_ACTION_HORIZON,
+            DUMMY_ACTION_DIM,
+            dtype=torch.float32,
+            device=device,
         ),
         # Create images in [0, 1] range as expected by LeRobot (will be converted to [-1, 1] internally)
         "observation.images.base_0_rgb": torch.rand(
@@ -273,7 +297,9 @@ def create_original_observation_with_openpi_preprocessing(batch):
                 # Expand to batch size
                 tasks = tasks * batch_size
                 if len(tasks) != batch_size:
-                    raise ValueError(f"Expected batch size {batch_size}, got {len(tasks)}")
+                    raise ValueError(
+                        f"Expected batch size {batch_size}, got {len(tasks)}"
+                    )
         # If task is neither string nor list of strings, leave unchanged
     else:
         # Default task if not provided
@@ -320,7 +346,9 @@ def create_original_observation_with_openpi_preprocessing(batch):
     )
 
     # Now use OpenPI's preprocessing
-    processed_obs = openpi_preprocessing.preprocess_observation_pytorch(raw_observation, train=False)
+    processed_obs = openpi_preprocessing.preprocess_observation_pytorch(
+        raw_observation, train=False
+    )
 
     return processed_obs
 
@@ -381,7 +409,9 @@ def test_pi0_original_vs_lerobot():
 
     print(f"Task prompt: '{batch['task'][0]}'")
     print(f"OpenPI tokenized prompt shape: {pi0_obs_openpi.tokenized_prompt.shape}")
-    print(f"OpenPI image shapes: {[img.shape for img in pi0_obs_openpi.images.values()]}")
+    print(
+        f"OpenPI image shapes: {[img.shape for img in pi0_obs_openpi.images.values()]}"
+    )
     print(f"OpenPI state shape: {pi0_obs_openpi.state.shape}")
 
     print("Testing OpenPI with own preprocessing...")
@@ -398,7 +428,9 @@ def test_pi0_original_vs_lerobot():
         openpi_actions_unit = openpi_actions[:, 0, :]
     print(f"OpenPI (own preprocessing) Actions shape: {openpi_actions.shape}")
     print(f"OpenPI (own preprocessing) Actions unit shape: {openpi_actions_unit.shape}")
-    print(f"OpenPI (own preprocessing) Actions mean: {openpi_actions.mean().item():.6f}")
+    print(
+        f"OpenPI (own preprocessing) Actions mean: {openpi_actions.mean().item():.6f}"
+    )
     print(f"OpenPI (own preprocessing) Actions std: {openpi_actions.std().item():.6f}")
 
     print("Testing LeRobot with own preprocessing...")
@@ -412,14 +444,26 @@ def test_pi0_original_vs_lerobot():
         )  # batch_size, n_action_steps, action_dim
         lerobot_actions_unit = lerobot_actions_own[:, 0, :]
     print(f"LeRobot (own preprocessing) Actions shape: {lerobot_actions_own.shape}")
-    print(f"LeRobot (own preprocessing) Actions unit shape: {lerobot_actions_unit.shape}")
-    print(f"LeRobot (own preprocessing) Actions mean: {lerobot_actions_own.mean().item():.6f}")
-    print(f"LeRobot (own preprocessing) Actions std: {lerobot_actions_own.std().item():.6f}")
+    print(
+        f"LeRobot (own preprocessing) Actions unit shape: {lerobot_actions_unit.shape}"
+    )
+    print(
+        f"LeRobot (own preprocessing) Actions mean: {lerobot_actions_own.mean().item():.6f}"
+    )
+    print(
+        f"LeRobot (own preprocessing) Actions std: {lerobot_actions_own.std().item():.6f}"
+    )
 
     print("\nComparing end-to-end implementations:")
-    print(f"Actions close (atol=1e-4): {torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-4)}")
-    print(f"Actions close (atol=1e-2): {torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-2)}")
-    print(f"Max absolute difference: {torch.abs(lerobot_actions_own - openpi_actions).max().item():.6f}")
+    print(
+        f"Actions close (atol=1e-4): {torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-4)}"
+    )
+    print(
+        f"Actions close (atol=1e-2): {torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-2)}"
+    )
+    print(
+        f"Max absolute difference: {torch.abs(lerobot_actions_own - openpi_actions).max().item():.6f}"
+    )
 
     assert torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-4)
     assert torch.allclose(lerobot_actions_own, openpi_actions, atol=1e-2)

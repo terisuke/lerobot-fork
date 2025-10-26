@@ -229,7 +229,9 @@ def test_vqbet_processor_without_stats():
     """Test VQBeT processor creation without dataset statistics."""
     config = create_default_config()
 
-    preprocessor, postprocessor = make_vqbet_pre_post_processors(config, dataset_stats=None)
+    preprocessor, postprocessor = make_vqbet_pre_post_processors(
+        config, dataset_stats=None
+    )
 
     # Should still create processors
     assert preprocessor is not None
@@ -300,7 +302,9 @@ def test_vqbet_processor_mixed_precision():
     modified_steps = []
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
-            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="float16"))
+            modified_steps.append(
+                DeviceProcessorStep(device=config.device, float_dtype="float16")
+            )
         elif isinstance(step, NormalizerProcessorStep):
             # Update normalizer to use the same device as the device processor
             modified_steps.append(
@@ -416,7 +420,9 @@ def test_vqbet_processor_bfloat16_device_float32_normalizer():
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
             # Device processor converts to bfloat16
-            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="bfloat16"))
+            modified_steps.append(
+                DeviceProcessorStep(device=config.device, float_dtype="bfloat16")
+            )
         elif isinstance(step, NormalizerProcessorStep):
             # Normalizer stays configured as float32 (will auto-adapt to bfloat16)
             modified_steps.append(
@@ -451,7 +457,9 @@ def test_vqbet_processor_bfloat16_device_float32_normalizer():
 
     # Verify: DeviceProcessor → bfloat16, NormalizerProcessor adapts → final output is bfloat16
     assert processed[OBS_STATE].dtype == torch.bfloat16
-    assert processed[OBS_IMAGE].dtype == torch.bfloat16  # IDENTITY normalization still gets dtype conversion
+    assert (
+        processed[OBS_IMAGE].dtype == torch.bfloat16
+    )  # IDENTITY normalization still gets dtype conversion
     assert processed[TransitionKey.ACTION.value].dtype == torch.bfloat16
 
     # Verify normalizer automatically adapted its internal state

@@ -196,7 +196,10 @@ class MotorCurrentProcessorStep(ObservationProcessorStep):
         Returns:
             The updated policy features dictionary.
         """
-        if OBS_STATE in features[PipelineFeatureType.OBSERVATION] and self.robot is not None:
+        if (
+            OBS_STATE in features[PipelineFeatureType.OBSERVATION]
+            and self.robot is not None
+        ):
             original_feature = features[PipelineFeatureType.OBSERVATION][OBS_STATE]
             # Add motor current dimensions to the original state shape
             num_motors = 0
@@ -204,7 +207,9 @@ class MotorCurrentProcessorStep(ObservationProcessorStep):
                 num_motors = len(self.robot.bus.motors)  # type: ignore[attr-defined]
 
             if num_motors > 0:
-                new_shape = (original_feature.shape[0] + num_motors,) + original_feature.shape[1:]
+                new_shape = (
+                    original_feature.shape[0] + num_motors,
+                ) + original_feature.shape[1:]
                 features[PipelineFeatureType.OBSERVATION][OBS_STATE] = PolicyFeature(
                     type=original_feature.type, shape=new_shape
                 )

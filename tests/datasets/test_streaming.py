@@ -48,7 +48,9 @@ def get_frames_expected_order(streaming_ds: StreamingLeRobotDataset) -> list[int
             break
 
         # Call _infinite_generator_over_elements with current available shards (key difference!)
-        shard_key = next(streaming_ds._infinite_generator_over_elements(rng, available_shard_keys))
+        shard_key = next(
+            streaming_ds._infinite_generator_over_elements(rng, available_shard_keys)
+        )
 
         try:
             frame_index = next(shard_iterators[shard_key])
@@ -85,7 +87,11 @@ def test_single_frame_consistency(tmp_path, lerobot_dataset_factory):
         total_frames=ds_num_frames,
     )
 
-    streaming_ds = iter(StreamingLeRobotDataset(repo_id=repo_id, root=local_path, buffer_size=buffer_size))
+    streaming_ds = iter(
+        StreamingLeRobotDataset(
+            repo_id=repo_id, root=local_path, buffer_size=buffer_size
+        )
+    )
 
     key_checks = []
     for _ in range(ds_num_frames):
@@ -108,9 +114,9 @@ def test_single_frame_consistency(tmp_path, lerobot_dataset_factory):
 
             key_checks.append((key, check))
 
-        assert all(t[1] for t in key_checks), (
-            f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (frame_idx: {frame_idx})"
-        )
+        assert all(
+            t[1] for t in key_checks
+        ), f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (frame_idx: {frame_idx})"
 
 
 @pytest.mark.parametrize(
@@ -136,19 +142,28 @@ def test_frames_order_over_epochs(tmp_path, lerobot_dataset_factory, shuffle):
     )
 
     streaming_ds = StreamingLeRobotDataset(
-        repo_id=repo_id, root=local_path, buffer_size=buffer_size, seed=seed, shuffle=shuffle
+        repo_id=repo_id,
+        root=local_path,
+        buffer_size=buffer_size,
+        seed=seed,
+        shuffle=shuffle,
     )
 
     first_epoch_indices = [frame["index"] for frame in streaming_ds]
     expected_indices = get_frames_expected_order(streaming_ds)
 
-    assert first_epoch_indices == expected_indices, "First epoch indices do not match expected indices"
+    assert (
+        first_epoch_indices == expected_indices
+    ), "First epoch indices do not match expected indices"
 
     expected_indices = get_frames_expected_order(streaming_ds)
     for _ in range(n_epochs):
         streaming_indices = [frame["index"] for frame in streaming_ds]
         frames_match = all(
-            s_index == e_index for s_index, e_index in zip(streaming_indices, expected_indices, strict=True)
+            s_index == e_index
+            for s_index, e_index in zip(
+                streaming_indices, expected_indices, strict=True
+            )
         )
 
         if shuffle:
@@ -197,14 +212,19 @@ def test_frames_order_with_shards(tmp_path, lerobot_dataset_factory, shuffle):
     first_epoch_indices = [frame["index"] for frame in streaming_ds]
     expected_indices = get_frames_expected_order(streaming_ds)
 
-    assert first_epoch_indices == expected_indices, "First epoch indices do not match expected indices"
+    assert (
+        first_epoch_indices == expected_indices
+    ), "First epoch indices do not match expected indices"
 
     for _ in range(n_epochs):
         streaming_indices = [
             frame["index"] for frame in streaming_ds
         ]  # NOTE: this is the same as first_epoch_indices
         frames_match = all(
-            s_index == e_index for s_index, e_index in zip(streaming_indices, expected_indices, strict=True)
+            s_index == e_index
+            for s_index, e_index in zip(
+                streaming_indices, expected_indices, strict=True
+            )
         )
         if shuffle:
             assert not frames_match
@@ -221,7 +241,9 @@ def test_frames_order_with_shards(tmp_path, lerobot_dataset_factory, shuffle):
         ([-2, -1, -0.5, 0], [-1.5, -1, -0.5, -0.20, -0.10, 0]),
     ],
 )
-def test_frames_with_delta_consistency(tmp_path, lerobot_dataset_factory, state_deltas, action_deltas):
+def test_frames_with_delta_consistency(
+    tmp_path, lerobot_dataset_factory, state_deltas, action_deltas
+):
     ds_num_frames = 500
     ds_num_episodes = 10
     buffer_size = 100
@@ -262,9 +284,9 @@ def test_frames_with_delta_consistency(tmp_path, lerobot_dataset_factory, state_
         frame_idx = streaming_frame["index"]
         target_frame = ds[frame_idx]
 
-        assert set(streaming_frame.keys()) == set(target_frame.keys()), (
-            f"Keys differ between streaming frame and target one. Differ at: {set(streaming_frame.keys()) - set(target_frame.keys())}"
-        )
+        assert set(streaming_frame.keys()) == set(
+            target_frame.keys()
+        ), f"Keys differ between streaming frame and target one. Differ at: {set(streaming_frame.keys()) - set(target_frame.keys())}"
 
         key_checks = []
         for key in streaming_frame:
@@ -288,9 +310,9 @@ def test_frames_with_delta_consistency(tmp_path, lerobot_dataset_factory, state_
 
             key_checks.append((key, check))
 
-        assert all(t[1] for t in key_checks), (
-            f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (i: {i}, frame_idx: {frame_idx})"
-        )
+        assert all(
+            t[1] for t in key_checks
+        ), f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (i: {i}, frame_idx: {frame_idx})"
 
 
 @pytest.mark.parametrize(
@@ -358,9 +380,9 @@ def test_frames_with_delta_consistency_with_shards(
         frame_idx = streaming_frame["index"]
         target_frame = ds[frame_idx]
 
-        assert set(streaming_frame.keys()) == set(target_frame.keys()), (
-            f"Keys differ between streaming frame and target one. Differ at: {set(streaming_frame.keys()) - set(target_frame.keys())}"
-        )
+        assert set(streaming_frame.keys()) == set(
+            target_frame.keys()
+        ), f"Keys differ between streaming frame and target one. Differ at: {set(streaming_frame.keys()) - set(target_frame.keys())}"
 
         key_checks = []
         for key in streaming_frame:
@@ -387,6 +409,6 @@ def test_frames_with_delta_consistency_with_shards(
 
             key_checks.append((key, check))
 
-        assert all(t[1] for t in key_checks), (
-            f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (i: {i}, frame_idx: {frame_idx})"
-        )
+        assert all(
+            t[1] for t in key_checks
+        ), f"Checking {list(filter(lambda t: not t[1], key_checks))[0][0]} left and right were found different (i: {i}, frame_idx: {frame_idx})"

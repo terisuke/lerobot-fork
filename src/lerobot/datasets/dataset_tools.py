@@ -67,7 +67,9 @@ def _load_episode_with_stats(src_dataset: LeRobotDataset, episode_idx: int) -> d
     chunk_idx = ep_meta["meta/episodes/chunk_index"]
     file_idx = ep_meta["meta/episodes/file_index"]
 
-    parquet_path = src_dataset.root / DEFAULT_EPISODES_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+    parquet_path = src_dataset.root / DEFAULT_EPISODES_PATH.format(
+        chunk_index=chunk_idx, file_index=file_idx
+    )
     df = pd.read_parquet(parquet_path)
 
     episode_row = df[df["episode_index"] == episode_idx].iloc[0]
@@ -101,9 +103,13 @@ def delete_episodes(
 
     if repo_id is None:
         repo_id = f"{dataset.repo_id}_modified"
-    output_dir = Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / repo_id
+    output_dir = (
+        Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / repo_id
+    )
 
-    episodes_to_keep = [i for i in range(dataset.meta.total_episodes) if i not in episode_indices]
+    episodes_to_keep = [
+        i for i in range(dataset.meta.total_episodes) if i not in episode_indices
+    ]
     if not episodes_to_keep:
         raise ValueError("Cannot delete all episodes from dataset")
 
@@ -116,7 +122,9 @@ def delete_episodes(
         use_videos=len(dataset.meta.video_keys) > 0,
     )
 
-    episode_mapping = {old_idx: new_idx for new_idx, old_idx in enumerate(episodes_to_keep)}
+    episode_mapping = {
+        old_idx: new_idx for new_idx, old_idx in enumerate(episodes_to_keep)
+    }
 
     video_metadata = None
     if dataset.meta.video_keys:
@@ -124,7 +132,9 @@ def delete_episodes(
 
     data_metadata = _copy_and_reindex_data(dataset, new_meta, episode_mapping)
 
-    _copy_and_reindex_episodes_metadata(dataset, new_meta, episode_mapping, data_metadata, video_metadata)
+    _copy_and_reindex_episodes_metadata(
+        dataset, new_meta, episode_mapping, data_metadata, video_metadata
+    )
 
     new_dataset = LeRobotDataset(
         repo_id=repo_id,
@@ -191,10 +201,14 @@ def split_dataset(
         split_repo_id = f"{dataset.repo_id}_{split_name}"
 
         split_output_dir = (
-            output_dir / split_name if output_dir is not None else HF_LEROBOT_HOME / split_repo_id
+            output_dir / split_name
+            if output_dir is not None
+            else HF_LEROBOT_HOME / split_repo_id
         )
 
-        episode_mapping = {old_idx: new_idx for new_idx, old_idx in enumerate(sorted(episodes))}
+        episode_mapping = {
+            old_idx: new_idx for new_idx, old_idx in enumerate(sorted(episodes))
+        }
 
         new_meta = LeRobotDatasetMetadata.create(
             repo_id=split_repo_id,
@@ -210,11 +224,15 @@ def split_dataset(
 
         video_metadata = None
         if dataset.meta.video_keys:
-            video_metadata = _copy_and_reindex_videos(dataset, new_meta, episode_mapping)
+            video_metadata = _copy_and_reindex_videos(
+                dataset, new_meta, episode_mapping
+            )
 
         data_metadata = _copy_and_reindex_data(dataset, new_meta, episode_mapping)
 
-        _copy_and_reindex_episodes_metadata(dataset, new_meta, episode_mapping, data_metadata, video_metadata)
+        _copy_and_reindex_episodes_metadata(
+            dataset, new_meta, episode_mapping, data_metadata, video_metadata
+        )
 
         new_dataset = LeRobotDataset(
             repo_id=split_repo_id,
@@ -246,7 +264,9 @@ def merge_datasets(
     if not datasets:
         raise ValueError("No datasets to merge")
 
-    output_dir = Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / output_repo_id
+    output_dir = (
+        Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / output_repo_id
+    )
 
     repo_ids = [ds.repo_id for ds in datasets]
     roots = [ds.root for ds in datasets]
@@ -271,7 +291,9 @@ def merge_datasets(
 
 def modify_features(
     dataset: LeRobotDataset,
-    add_features: dict[str, tuple[np.ndarray | torch.Tensor | Callable, dict]] | None = None,
+    add_features: (
+        dict[str, tuple[np.ndarray | torch.Tensor | Callable, dict]] | None
+    ) = None,
     remove_features: str | list[str] | None = None,
     output_dir: str | Path | None = None,
     repo_id: str | None = None,
@@ -306,7 +328,9 @@ def modify_features(
 
     remove_features_list: list[str] = []
     if remove_features is not None:
-        remove_features_list = [remove_features] if isinstance(remove_features, str) else remove_features
+        remove_features_list = (
+            [remove_features] if isinstance(remove_features, str) else remove_features
+        )
 
     if add_features:
         required_keys = {"dtype", "shape"}
@@ -315,20 +339,30 @@ def modify_features(
                 raise ValueError(f"Feature '{feature_name}' already exists in dataset")
 
             if not required_keys.issubset(feature_info.keys()):
-                raise ValueError(f"feature_info for '{feature_name}' must contain keys: {required_keys}")
+                raise ValueError(
+                    f"feature_info for '{feature_name}' must contain keys: {required_keys}"
+                )
 
     if remove_features_list:
         for name in remove_features_list:
             if name not in dataset.meta.features:
                 raise ValueError(f"Feature '{name}' not found in dataset")
 
-        required_features = {"timestamp", "frame_index", "episode_index", "index", "task_index"}
+        required_features = {
+            "timestamp",
+            "frame_index",
+            "episode_index",
+            "index",
+            "task_index",
+        }
         if any(name in required_features for name in remove_features_list):
             raise ValueError(f"Cannot remove required features: {required_features}")
 
     if repo_id is None:
         repo_id = f"{dataset.repo_id}_modified"
-    output_dir = Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / repo_id
+    output_dir = (
+        Path(output_dir) if output_dir is not None else HF_LEROBOT_HOME / repo_id
+    )
 
     new_features = dataset.meta.features.copy()
 
@@ -340,8 +374,12 @@ def modify_features(
         for feature_name, (_, feature_info) in add_features.items():
             new_features[feature_name] = feature_info
 
-    video_keys_to_remove = [name for name in remove_features_list if name in dataset.meta.video_keys]
-    remaining_video_keys = [k for k in dataset.meta.video_keys if k not in video_keys_to_remove]
+    video_keys_to_remove = [
+        name for name in remove_features_list if name in dataset.meta.video_keys
+    ]
+    remaining_video_keys = [
+        k for k in dataset.meta.video_keys if k not in video_keys_to_remove
+    ]
 
     new_meta = LeRobotDatasetMetadata.create(
         repo_id=repo_id,
@@ -360,7 +398,11 @@ def modify_features(
     )
 
     if new_meta.video_keys:
-        _copy_videos(dataset, new_meta, exclude_keys=video_keys_to_remove if video_keys_to_remove else None)
+        _copy_videos(
+            dataset,
+            new_meta,
+            exclude_keys=video_keys_to_remove if video_keys_to_remove else None,
+        )
 
     new_dataset = LeRobotDataset(
         repo_id=repo_id,
@@ -541,7 +583,9 @@ def _copy_and_reindex_data(
             chunk_idx = src_ep["data/chunk_index"]
             file_idx = src_ep["data/file_index"]
 
-        dst_path = dst_meta.root / DEFAULT_DATA_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+        dst_path = dst_meta.root / DEFAULT_DATA_PATH.format(
+            chunk_index=chunk_idx, file_index=file_idx
+        )
         dst_path.parent.mkdir(parents=True, exist_ok=True)
 
         _write_parquet(df, dst_path, dst_meta)
@@ -632,11 +676,15 @@ def _keep_episodes_from_video_with_av(
                 continue
 
             # Get frame timestamp.
-            frame_time = float(frame.pts * frame.time_base) if frame.pts is not None else 0.0
+            frame_time = (
+                float(frame.pts * frame.time_base) if frame.pts is not None else 0.0
+            )
 
             # Check if frame is in any of our desired time ranges.
             # Skip ranges that have already passed.
-            while range_idx < len(time_ranges) and frame_time >= time_ranges[range_idx][1]:
+            while (
+                range_idx < len(time_ranges) and frame_time >= time_ranges[range_idx][1]
+            ):
                 range_idx += 1
 
             # If we've passed all ranges, stop processing.
@@ -650,7 +698,9 @@ def _keep_episodes_from_video_with_av(
 
             # Frame is in range - create a new frame with reset timestamps.
             # We need to create a copy to avoid modifying the original.
-            new_frame = frame.reformat(width=v_out.width, height=v_out.height, format=v_out.pix_fmt)
+            new_frame = frame.reformat(
+                width=v_out.width, height=v_out.height, format=v_out.pix_fmt
+            )
             new_frame.pts = frame_count
             new_frame.time_base = Fraction(1, int(fps))
 
@@ -692,7 +742,9 @@ def _copy_and_reindex_videos(
     if src_dataset.meta.episodes is None:
         src_dataset.meta.episodes = load_episodes(src_dataset.meta.root)
 
-    episodes_video_metadata: dict[int, dict] = {new_idx: {} for new_idx in episode_mapping.values()}
+    episodes_video_metadata: dict[int, dict] = {
+        new_idx: {} for new_idx in episode_mapping.values()
+    }
 
     for video_key in src_dataset.meta.video_keys:
         logging.info(f"Processing videos for {video_key}")
@@ -716,8 +768,14 @@ def _copy_and_reindex_videos(
             all_episodes_in_file = [
                 ep_idx
                 for ep_idx in range(src_dataset.meta.total_episodes)
-                if src_dataset.meta.episodes[ep_idx].get(f"videos/{video_key}/chunk_index") == src_chunk_idx
-                and src_dataset.meta.episodes[ep_idx].get(f"videos/{video_key}/file_index") == src_file_idx
+                if src_dataset.meta.episodes[ep_idx].get(
+                    f"videos/{video_key}/chunk_index"
+                )
+                == src_chunk_idx
+                and src_dataset.meta.episodes[ep_idx].get(
+                    f"videos/{video_key}/file_index"
+                )
+                == src_file_idx
             ]
 
             episodes_to_keep_set = set(episodes_in_file)
@@ -726,10 +784,14 @@ def _copy_and_reindex_videos(
             if all_in_file_set == episodes_to_keep_set:
                 assert src_dataset.meta.video_path is not None
                 src_video_path = src_dataset.root / src_dataset.meta.video_path.format(
-                    video_key=video_key, chunk_index=src_chunk_idx, file_index=src_file_idx
+                    video_key=video_key,
+                    chunk_index=src_chunk_idx,
+                    file_index=src_file_idx,
                 )
                 dst_video_path = dst_meta.root / dst_meta.video_path.format(
-                    video_key=video_key, chunk_index=src_chunk_idx, file_index=src_file_idx
+                    video_key=video_key,
+                    chunk_index=src_chunk_idx,
+                    file_index=src_file_idx,
                 )
                 dst_video_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(src_video_path, dst_video_path)
@@ -737,17 +799,23 @@ def _copy_and_reindex_videos(
                 for old_idx in episodes_in_file:
                     new_idx = episode_mapping[old_idx]
                     src_ep = src_dataset.meta.episodes[old_idx]
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/chunk_index"] = src_chunk_idx
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/file_index"] = src_file_idx
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/from_timestamp"] = src_ep[
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/chunk_index"
+                    ] = src_chunk_idx
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/file_index"
+                    ] = src_file_idx
+                    episodes_video_metadata[new_idx][
                         f"videos/{video_key}/from_timestamp"
-                    ]
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/to_timestamp"] = src_ep[
+                    ] = src_ep[f"videos/{video_key}/from_timestamp"]
+                    episodes_video_metadata[new_idx][
                         f"videos/{video_key}/to_timestamp"
-                    ]
+                    ] = src_ep[f"videos/{video_key}/to_timestamp"]
             else:
                 # Build list of time ranges to keep, in sorted order.
-                sorted_keep_episodes = sorted(episodes_in_file, key=lambda x: episode_mapping[x])
+                sorted_keep_episodes = sorted(
+                    episodes_in_file, key=lambda x: episode_mapping[x]
+                )
                 episodes_to_keep_ranges: list[tuple[float, float]] = []
 
                 for old_idx in sorted_keep_episodes:
@@ -759,10 +827,14 @@ def _copy_and_reindex_videos(
                 # Use PyAV filters to efficiently re-encode only the desired segments.
                 assert src_dataset.meta.video_path is not None
                 src_video_path = src_dataset.root / src_dataset.meta.video_path.format(
-                    video_key=video_key, chunk_index=src_chunk_idx, file_index=src_file_idx
+                    video_key=video_key,
+                    chunk_index=src_chunk_idx,
+                    file_index=src_file_idx,
                 )
                 dst_video_path = dst_meta.root / dst_meta.video_path.format(
-                    video_key=video_key, chunk_index=src_chunk_idx, file_index=src_file_idx
+                    video_key=video_key,
+                    chunk_index=src_chunk_idx,
+                    file_index=src_file_idx,
                 )
                 dst_video_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -786,12 +858,18 @@ def _copy_and_reindex_videos(
                     ep_length = src_ep["length"]
                     ep_duration = ep_length / src_dataset.meta.fps
 
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/chunk_index"] = src_chunk_idx
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/file_index"] = src_file_idx
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/from_timestamp"] = cumulative_ts
-                    episodes_video_metadata[new_idx][f"videos/{video_key}/to_timestamp"] = (
-                        cumulative_ts + ep_duration
-                    )
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/chunk_index"
+                    ] = src_chunk_idx
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/file_index"
+                    ] = src_file_idx
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/from_timestamp"
+                    ] = cumulative_ts
+                    episodes_video_metadata[new_idx][
+                        f"videos/{video_key}/to_timestamp"
+                    ] = (cumulative_ts + ep_duration)
 
                     cumulative_ts += ep_duration
 
@@ -823,7 +901,8 @@ def _copy_and_reindex_episodes_metadata(
     total_frames = 0
 
     for old_idx, new_idx in tqdm(
-        sorted(episode_mapping.items(), key=lambda x: x[1]), desc="Processing episodes metadata"
+        sorted(episode_mapping.items(), key=lambda x: x[1]),
+        desc="Processing episodes metadata",
     ):
         src_episode_full = _load_episode_with_stats(src_dataset, old_idx)
 
@@ -861,7 +940,9 @@ def _copy_and_reindex_episodes_metadata(
                                     while isinstance(item, np.ndarray):
                                         item = item.flatten()[0]
                                     flat_values.append(item)
-                                value = np.array(flat_values, dtype=np.float64).reshape(3, 1, 1)
+                                value = np.array(flat_values, dtype=np.float64).reshape(
+                                    3, 1, 1
+                                )
                             elif isinstance(value, np.ndarray) and value.shape == (3,):
                                 value = value.reshape(3, 1, 1)
 
@@ -898,7 +979,9 @@ def _copy_and_reindex_episodes_metadata(
 
     logging.info(f"Aggregating statistics for {len(all_stats)} episodes")
     aggregated_stats = aggregate_stats(all_stats)
-    filtered_stats = {k: v for k, v in aggregated_stats.items() if k in dst_meta.features}
+    filtered_stats = {
+        k: v for k, v in aggregated_stats.items() if k in dst_meta.features
+    }
     write_stats(filtered_stats, dst_meta.root)
 
 
@@ -910,13 +993,17 @@ def _write_parquet(df: pd.DataFrame, path: Path, meta: LeRobotDatasetMetadata) -
     from lerobot.datasets.utils import embed_images, get_hf_features_from_features
 
     hf_features = get_hf_features_from_features(meta.features)
-    ep_dataset = datasets.Dataset.from_dict(df.to_dict(orient="list"), features=hf_features, split="train")
+    ep_dataset = datasets.Dataset.from_dict(
+        df.to_dict(orient="list"), features=hf_features, split="train"
+    )
 
     if len(meta.image_keys) > 0:
         ep_dataset = embed_images(ep_dataset)
 
     table = ep_dataset.with_format("arrow")[:]
-    writer = pq.ParquetWriter(path, schema=table.schema, compression="snappy", use_dictionary=True)
+    writer = pq.ParquetWriter(
+        path, schema=table.schema, compression="snappy", use_dictionary=True
+    )
     writer.write_table(table)
     writer.close()
 
@@ -933,7 +1020,9 @@ def _save_data_chunk(
         tuple: (next_chunk_idx, next_file_idx, episode_metadata_dict)
             where episode_metadata_dict maps episode_index to its data file metadata
     """
-    path = meta.root / DEFAULT_DATA_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+    path = meta.root / DEFAULT_DATA_PATH.format(
+        chunk_index=chunk_idx, file_index=file_idx
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
 
     _write_parquet(df, path, meta)
@@ -950,7 +1039,9 @@ def _save_data_chunk(
 
     file_size = get_parquet_file_size_in_mb(path)
     if file_size >= DEFAULT_DATA_FILE_SIZE_IN_MB * 0.9:
-        chunk_idx, file_idx = update_chunk_file_indices(chunk_idx, file_idx, DEFAULT_CHUNK_SIZE)
+        chunk_idx, file_idx = update_chunk_file_indices(
+            chunk_idx, file_idx, DEFAULT_CHUNK_SIZE
+        )
 
     return chunk_idx, file_idx, episode_metadata
 
@@ -1010,7 +1101,9 @@ def _copy_data_with_feature_changes(
             frame_idx = end_idx
 
         # Write using the preserved chunk_idx and file_idx from source
-        dst_path = new_meta.root / DEFAULT_DATA_PATH.format(chunk_index=chunk_idx, file_index=file_idx)
+        dst_path = new_meta.root / DEFAULT_DATA_PATH.format(
+            chunk_index=chunk_idx, file_index=file_idx
+        )
         dst_path.parent.mkdir(parents=True, exist_ok=True)
 
         _write_parquet(df, dst_path, new_meta)
@@ -1063,16 +1156,18 @@ def _copy_episodes_metadata_and_stats(
             "total_episodes": src_dataset.meta.total_episodes,
             "total_frames": src_dataset.meta.total_frames,
             "total_tasks": src_dataset.meta.total_tasks,
-            "splits": src_dataset.meta.info.get("splits", {"train": f"0:{src_dataset.meta.total_episodes}"}),
+            "splits": src_dataset.meta.info.get(
+                "splits", {"train": f"0:{src_dataset.meta.total_episodes}"}
+            ),
         }
     )
 
     if dst_meta.video_keys and src_dataset.meta.video_keys:
         for key in dst_meta.video_keys:
             if key in src_dataset.meta.features:
-                dst_meta.info["features"][key]["info"] = src_dataset.meta.info["features"][key].get(
-                    "info", {}
-                )
+                dst_meta.info["features"][key]["info"] = src_dataset.meta.info[
+                    "features"
+                ][key].get("info", {})
 
     write_info(dst_meta.info, dst_meta.root)
 

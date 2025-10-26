@@ -34,11 +34,17 @@ follower_id = ...  # something like "follower_so100"
 # You can check the camera keys expected by a model in the info.json card on the model card on the Hub
 camera_config = {
     "base_0_rgb": OpenCVCameraConfig(index_or_path=0, width=640, height=480, fps=30),
-    "left_wrist_0_rgb": OpenCVCameraConfig(index_or_path=1, width=640, height=480, fps=30),
-    "right_wrist_0_rgb": OpenCVCameraConfig(index_or_path=2, width=640, height=480, fps=30),
+    "left_wrist_0_rgb": OpenCVCameraConfig(
+        index_or_path=1, width=640, height=480, fps=30
+    ),
+    "right_wrist_0_rgb": OpenCVCameraConfig(
+        index_or_path=2, width=640, height=480, fps=30
+    ),
 }
 
-robot_cfg = SO100FollowerConfig(port=follower_port, id=follower_id, cameras=camera_config)
+robot_cfg = SO100FollowerConfig(
+    port=follower_port, id=follower_id, cameras=camera_config
+)
 robot = SO100Follower(robot_cfg)
 robot.connect()
 
@@ -54,7 +60,11 @@ for _ in range(MAX_EPISODES):
     for _ in range(MAX_STEPS_PER_EPISODE):
         obs = robot.get_observation()
         obs_frame = build_inference_frame(
-            observation=obs, ds_features=dataset_features, device=device, task=task, robot_type=robot_type
+            observation=obs,
+            ds_features=dataset_features,
+            device=device,
+            task=task,
+            robot_type=robot_type,
         )
 
         obs = preprocess(obs_frame)

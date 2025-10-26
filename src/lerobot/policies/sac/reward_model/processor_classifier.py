@@ -18,7 +18,9 @@ from typing import Any
 
 import torch
 
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
 from lerobot.processor import (
     DeviceProcessorStep,
     IdentityProcessorStep,
@@ -26,7 +28,10 @@ from lerobot.processor import (
     PolicyAction,
     PolicyProcessorPipeline,
 )
-from lerobot.processor.converters import policy_action_to_transition, transition_to_policy_action
+from lerobot.processor.converters import (
+    policy_action_to_transition,
+    transition_to_policy_action,
+)
 
 
 def make_classifier_processor(
@@ -59,10 +64,14 @@ def make_classifier_processor(
 
     input_steps = [
         NormalizerProcessorStep(
-            features=config.input_features, norm_map=config.normalization_mapping, stats=dataset_stats
+            features=config.input_features,
+            norm_map=config.normalization_mapping,
+            stats=dataset_stats,
         ),
         NormalizerProcessorStep(
-            features=config.output_features, norm_map=config.normalization_mapping, stats=dataset_stats
+            features=config.output_features,
+            norm_map=config.normalization_mapping,
+            stats=dataset_stats,
         ),
         DeviceProcessorStep(device=config.device),
     ]

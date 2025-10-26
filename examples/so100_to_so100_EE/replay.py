@@ -52,7 +52,9 @@ kinematics_solver = RobotKinematics(
 )
 
 # Build pipeline to convert EE action to joints action
-robot_ee_to_joints_processor = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
+robot_ee_to_joints_processor = RobotProcessorPipeline[
+    tuple[RobotAction, RobotObservation], RobotAction
+](
     steps=[
         InverseKinematicsEEToJoints(
             kinematics=kinematics_solver,
@@ -83,7 +85,8 @@ for idx in range(len(episode_frames)):
 
     # Get recorded action from dataset
     ee_action = {
-        name: float(actions[idx][ACTION][i]) for i, name in enumerate(dataset.features[ACTION]["names"])
+        name: float(actions[idx][ACTION][i])
+        for i, name in enumerate(dataset.features[ACTION]["names"])
     }
 
     # Get robot observation

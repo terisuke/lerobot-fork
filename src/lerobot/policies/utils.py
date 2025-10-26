@@ -28,7 +28,9 @@ from lerobot.utils.constants import ACTION, OBS_STR
 
 
 def populate_queues(
-    queues: dict[str, deque], batch: dict[str, torch.Tensor], exclude_keys: list[str] | None = None
+    queues: dict[str, deque],
+    batch: dict[str, torch.Tensor],
+    exclude_keys: list[str] | None = None,
 ):
     if exclude_keys is None:
         exclude_keys = []
@@ -166,12 +168,16 @@ def build_inference_frame(
     observation = build_dataset_frame(ds_features, observation, prefix=OBS_STR)
 
     # Performs the necessary conversions to the observation
-    observation = prepare_observation_for_inference(observation, device, task, robot_type)
+    observation = prepare_observation_for_inference(
+        observation, device, task, robot_type
+    )
 
     return observation
 
 
-def make_robot_action(action_tensor: PolicyAction, ds_features: dict[str, dict]) -> RobotAction:
+def make_robot_action(
+    action_tensor: PolicyAction, ds_features: dict[str, dict]
+) -> RobotAction:
     """Converts a policy's output tensor into a dictionary of named actions.
 
     This function translates the numerical output from a policy model into a

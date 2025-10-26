@@ -30,10 +30,10 @@ pytestmark = pytest.mark.skipif(
 )
 
 from lerobot.policies.factory import make_policy_config  # noqa: E402
+from lerobot.policies.pi05 import make_pi05_pre_post_processors  # noqa: E402
 from lerobot.policies.pi05 import (  # noqa: E402
     PI05Config,
     PI05Policy,
-    make_pi05_pre_post_processors,  # noqa: E402
 )
 from tests.utils import require_cuda  # noqa: E402
 
@@ -65,9 +65,9 @@ def test_policy_instantiation():
         ),
     }
 
-    assert config.tokenizer_max_length == 200, (
-        f"Expected tokenizer_max_length=200 for pi05, got {config.tokenizer_max_length}"
-    )
+    assert (
+        config.tokenizer_max_length == 200
+    ), f"Expected tokenizer_max_length=200 for pi05, got {config.tokenizer_max_length}"
 
     # Create dummy dataset stats
     dataset_stats = {
@@ -99,11 +99,17 @@ def test_policy_instantiation():
     policy = PI05Policy(config)
     # Test forward pass with dummy data
     batch_size = 1
-    preprocessor, postprocessor = make_pi05_pre_post_processors(config=config, dataset_stats=dataset_stats)
+    preprocessor, postprocessor = make_pi05_pre_post_processors(
+        config=config, dataset_stats=dataset_stats
+    )
     device = config.device
     batch = {
-        "observation.state": torch.randn(batch_size, 14, dtype=torch.float32, device=device),
-        "action": torch.randn(batch_size, config.chunk_size, 7, dtype=torch.float32, device=device),
+        "observation.state": torch.randn(
+            batch_size, 14, dtype=torch.float32, device=device
+        ),
+        "action": torch.randn(
+            batch_size, config.chunk_size, 7, dtype=torch.float32, device=device
+        ),
         "observation.images.base_0_rgb": torch.rand(
             batch_size, 3, 224, 224, dtype=torch.float32, device=device
         ),  # Use rand for [0,1] range
@@ -132,20 +138,32 @@ def test_policy_instantiation():
     assert hasattr(policy.model, "time_mlp_out"), "Missing time_mlp_out layer for pi05"
 
     # Check that action_time_mlp layers don't exist (pi0 only)
-    assert not hasattr(policy.model, "action_time_mlp_in"), "action_time_mlp_in should not exist in pi05 mode"
-    assert not hasattr(policy.model, "action_time_mlp_out"), (
-        "action_time_mlp_out should not exist in pi05 mode"
-    )
+    assert not hasattr(
+        policy.model, "action_time_mlp_in"
+    ), "action_time_mlp_in should not exist in pi05 mode"
+    assert not hasattr(
+        policy.model, "action_time_mlp_out"
+    ), "action_time_mlp_out should not exist in pi05 mode"
 
     # Check that state_proj doesn't exist in pi05 mode
-    assert not hasattr(policy.model, "state_proj"), "state_proj should not exist in pi05 mode"
+    assert not hasattr(
+        policy.model, "state_proj"
+    ), "state_proj should not exist in pi05 mode"
 
     # Check AdaRMS configuration in the underlying model
-    adarms_config = policy.model.paligemma_with_expert.paligemma.config.text_config.use_adarms
-    assert adarms_config == False, f"PaliGemma should not use AdaRMS, got {adarms_config}"  # noqa: E712
+    adarms_config = (
+        policy.model.paligemma_with_expert.paligemma.config.text_config.use_adarms
+    )
+    assert (
+        adarms_config == False
+    ), f"PaliGemma should not use AdaRMS, got {adarms_config}"  # noqa: E712
 
-    adarms_expert_config = policy.model.paligemma_with_expert.gemma_expert.config.use_adarms
-    assert adarms_expert_config == True, (  # noqa: E712
+    adarms_expert_config = (
+        policy.model.paligemma_with_expert.gemma_expert.config.use_adarms
+    )
+    assert (
+        adarms_expert_config == True
+    ), (  # noqa: E712
         f"Action expert should use AdaRMS in pi05, got {adarms_expert_config}"
     )
 

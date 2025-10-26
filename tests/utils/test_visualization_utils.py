@@ -142,7 +142,9 @@ def test_log_rerun_data_envtransition_scalars_and_image(mock_rerun):
     img_obj = _obj_for(calls, "observation.camera")
     assert type(img_obj).__name__ == "DummyImage"
     assert img_obj.arr.shape == (10, 20, 3)  # transposed
-    assert _kwargs_for(calls, "observation.camera").get("static", False) is True  # static=True for images
+    assert (
+        _kwargs_for(calls, "observation.camera").get("static", False) is True
+    )  # static=True for images
 
 
 def test_log_rerun_data_plain_list_ordering_and_prefixes(mock_rerun):
@@ -203,7 +205,10 @@ def test_log_rerun_data_kwargs_only(mock_rerun):
     vu, calls = mock_rerun
 
     vu.log_rerun_data(
-        observation={"observation.temp": 10.0, "observation.gray": np.zeros((8, 8, 1), dtype=np.uint8)},
+        observation={
+            "observation.temp": 10.0,
+            "observation.gray": np.zeros((8, 8, 1), dtype=np.uint8),
+        },
         action={"action.a": 1.0},
     )
 

@@ -136,7 +136,9 @@ class DeviceProcessorStep(ProcessorStep):
         action = new_transition.get(TransitionKey.ACTION)
 
         if action is not None and not isinstance(action, PolicyAction):
-            raise ValueError(f"If action is not None should be a PolicyAction type got {type(action)}")
+            raise ValueError(
+                f"If action is not None should be a PolicyAction type got {type(action)}"
+            )
 
         simple_tensor_keys = [
             TransitionKey.ACTION,

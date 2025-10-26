@@ -94,7 +94,9 @@ class HopeJrHand(Robot):
             protocol_version=1,
         )
         self.cameras = make_cameras_from_configs(config.cameras)
-        self.inverted_motors = RIGHT_HAND_INVERSIONS if config.side == "right" else LEFT_HAND_INVERSIONS
+        self.inverted_motors = (
+            RIGHT_HAND_INVERSIONS if config.side == "right" else LEFT_HAND_INVERSIONS
+        )
 
     @property
     def _motors_ft(self) -> dict[str, type]:
@@ -103,7 +105,8 @@ class HopeJrHand(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3) for cam in self.cameras
+            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            for cam in self.cameras
         }
 
     @cached_property
@@ -116,7 +119,9 @@ class HopeJrHand(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus.is_connected and all(cam.is_connected for cam in self.cameras.values())
+        return self.bus.is_connected and all(
+            cam.is_connected for cam in self.cameras.values()
+        )
 
     def connect(self, calibrate: bool = True) -> None:
         if self.is_connected:
@@ -140,7 +145,9 @@ class HopeJrHand(Robot):
     def calibrate(self) -> None:
         fingers = {}
         for finger in ["thumb", "index", "middle", "ring", "pinky"]:
-            fingers[finger] = [motor for motor in self.bus.motors if motor.startswith(finger)]
+            fingers[finger] = [
+                motor for motor in self.bus.motors if motor.startswith(finger)
+            ]
 
         self.calibration = RangeFinderGUI(self.bus, fingers).run()
         for motor in self.inverted_motors:
@@ -155,7 +162,9 @@ class HopeJrHand(Robot):
     def setup_motors(self) -> None:
         # TODO: add docstring
         for motor in self.bus.motors:
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 
@@ -185,7 +194,11 @@ class HopeJrHand(Robot):
         if not self.is_connected:
             raise DeviceNotConnectedError(f"{self} is not connected.")
 
-        goal_pos = {key.removesuffix(".pos"): val for key, val in action.items() if key.endswith(".pos")}
+        goal_pos = {
+            key.removesuffix(".pos"): val
+            for key, val in action.items()
+            if key.endswith(".pos")
+        }
         self.bus.sync_write("Goal_Position", goal_pos)
         return action
 

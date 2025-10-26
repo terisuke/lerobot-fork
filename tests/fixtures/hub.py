@@ -60,7 +60,9 @@ def mock_snapshot_download_factory(
         chunks_size: int = DEFAULT_CHUNK_SIZE,
     ):
         if info is None:
-            info = info_factory(data_files_size_in_mb=data_files_size_in_mb, chunks_size=chunks_size)
+            info = info_factory(
+                data_files_size_in_mb=data_files_size_in_mb, chunks_size=chunks_size
+            )
         if stats is None:
             stats = stats_factory(features=info["features"])
         if tasks is None:
@@ -74,7 +76,9 @@ def mock_snapshot_download_factory(
                 tasks=tasks,
             )
         if hf_dataset is None:
-            hf_dataset = hf_dataset_factory(tasks=tasks, episodes=episodes, fps=info["fps"])
+            hf_dataset = hf_dataset_factory(
+                tasks=tasks, episodes=episodes, fps=info["fps"]
+            )
 
         def _mock_snapshot_download(
             repo_id: str,  # TODO(rcadene): repo_id should be used no?
@@ -97,12 +101,22 @@ def mock_snapshot_download_factory(
                 DEFAULT_DATA_PATH.format(chunk_index=0, file_index=0),
             ]
 
-            video_keys = [key for key, feats in info["features"].items() if feats["dtype"] == "video"]
+            video_keys = [
+                key
+                for key, feats in info["features"].items()
+                if feats["dtype"] == "video"
+            ]
             for key in video_keys:
-                all_files.append(DEFAULT_VIDEO_PATH.format(video_key=key, chunk_index=0, file_index=0))
+                all_files.append(
+                    DEFAULT_VIDEO_PATH.format(
+                        video_key=key, chunk_index=0, file_index=0
+                    )
+                )
 
             allowed_files = filter_repo_objects(
-                all_files, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns
+                all_files,
+                allow_patterns=allow_patterns,
+                ignore_patterns=ignore_patterns,
             )
 
             request_info = False
@@ -136,7 +150,9 @@ def mock_snapshot_download_factory(
             if request_episodes:
                 create_episodes(local_dir, episodes)
             if request_data:
-                create_hf_dataset(local_dir, hf_dataset, data_files_size_in_mb, chunks_size)
+                create_hf_dataset(
+                    local_dir, hf_dataset, data_files_size_in_mb, chunks_size
+                )
             if request_videos:
                 create_videos(root=local_dir, info=info)
 

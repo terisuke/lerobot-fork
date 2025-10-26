@@ -94,7 +94,9 @@ def find_joint_and_ee_bounds(cfg: FindJointLimitsConfig):
         robot.send_action(action)
 
         observation = robot.get_observation()
-        joint_positions = np.array([observation[f"{key}.pos"] for key in robot.bus.motors])
+        joint_positions = np.array(
+            [observation[f"{key}.pos"] for key in robot.bus.motors]
+        )
         ee_pos = kinematics.forward_kinematics(joint_positions)[:3, 3]
 
         # Skip initial warmup period

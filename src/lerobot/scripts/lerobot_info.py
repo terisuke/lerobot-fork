@@ -88,7 +88,9 @@ def format_dict_for_markdown(d: dict) -> str:
 
 def main():
     system_info = get_sys_info()
-    print("\nCopy-and-paste the text below in your GitHub issue and FILL OUT the last point.\n")
+    print(
+        "\nCopy-and-paste the text below in your GitHub issue and FILL OUT the last point.\n"
+    )
     print(format_dict_for_markdown(system_info))
 
 

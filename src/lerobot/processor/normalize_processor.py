@@ -24,7 +24,12 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from lerobot.configs.types import FeatureType, NormalizationMode, PipelineFeatureType, PolicyFeature
+from lerobot.configs.types import (
+    FeatureType,
+    NormalizationMode,
+    PipelineFeatureType,
+    PolicyFeature,
+)
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.utils.constants import ACTION
 
@@ -94,7 +99,9 @@ class _NormalizationMixin:
     eps: float = 1e-8
     normalize_observation_keys: set[str] | None = None
 
-    _tensor_stats: dict[str, dict[str, Tensor]] = field(default_factory=dict, init=False, repr=False)
+    _tensor_stats: dict[str, dict[str, Tensor]] = field(
+        default_factory=dict, init=False, repr=False
+    )
     _stats_explicitly_provided: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self):
@@ -123,7 +130,9 @@ class _NormalizationMixin:
         if self.norm_map and all(isinstance(k, str) for k in self.norm_map):
             reconstructed = {}
             for ft_type_str, norm_mode_str in self.norm_map.items():
-                reconstructed[FeatureType(ft_type_str)] = NormalizationMode(norm_mode_str)
+                reconstructed[FeatureType(ft_type_str)] = NormalizationMode(
+                    norm_mode_str
+                )
             self.norm_map = reconstructed
 
         # Convert stats to tensors and move to the target device once during initialization.
@@ -231,15 +240,23 @@ class _NormalizationMixin:
         config = {
             "eps": self.eps,
             "features": {
-                key: {"type": ft.type.value, "shape": ft.shape} for key, ft in self.features.items()
+                key: {"type": ft.type.value, "shape": ft.shape}
+                for key, ft in self.features.items()
             },
-            "norm_map": {ft_type.value: norm_mode.value for ft_type, norm_mode in self.norm_map.items()},
+            "norm_map": {
+                ft_type.value: norm_mode.value
+                for ft_type, norm_mode in self.norm_map.items()
+            },
         }
         if self.normalize_observation_keys is not None:
-            config["normalize_observation_keys"] = sorted(self.normalize_observation_keys)
+            config["normalize_observation_keys"] = sorted(
+                self.normalize_observation_keys
+            )
         return config
 
-    def _normalize_observation(self, observation: dict[str, Any], inverse: bool) -> dict[str, Tensor]:
+    def _normalize_observation(
+        self, observation: dict[str, Any], inverse: bool
+    ) -> dict[str, Tensor]:
         """
         Applies (un)normalization to all relevant features in an observation dictionary.
 
@@ -252,12 +269,17 @@ class _NormalizationMixin:
         """
         new_observation = dict(observation)
         for key, feature in self.features.items():
-            if self.normalize_observation_keys is not None and key not in self.normalize_observation_keys:
+            if (
+                self.normalize_observation_keys is not None
+                and key not in self.normalize_observation_keys
+            ):
                 continue
             if feature.type != FeatureType.ACTION and key in new_observation:
                 # Convert to tensor but preserve original dtype for adaptation logic
                 tensor = torch.as_tensor(new_observation[key])
-                new_observation[key] = self._apply_transform(tensor, key, feature.type, inverse=inverse)
+                new_observation[key] = self._apply_transform(
+                    tensor, key, feature.type, inverse=inverse
+                )
         return new_observation
 
     def _normalize_action(self, action: Tensor, inverse: bool) -> Tensor:
@@ -272,11 +294,18 @@ class _NormalizationMixin:
         Returns:
             The transformed action tensor.
         """
-        processed_action = self._apply_transform(action, ACTION, FeatureType.ACTION, inverse=inverse)
+        processed_action = self._apply_transform(
+            action, ACTION, FeatureType.ACTION, inverse=inverse
+        )
         return processed_action
 
     def _apply_transform(
-        self, tensor: Tensor, key: str, feature_type: FeatureType, *, inverse: bool = False
+        self,
+        tensor: Tensor,
+        key: str,
+        feature_type: FeatureType,
+        *,
+        inverse: bool = False,
     ) -> Tensor:
         """
         Core logic to apply a normalization or unnormalization transformation to a tensor.
@@ -351,7 +380,9 @@ class _NormalizationMixin:
             # to prevent division by zero. This consistently maps an input equal to
             # min_val to -1, ensuring a stable transformation.
             denom = torch.where(
-                denom == 0, torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype), denom
+                denom == 0,
+                torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype),
+                denom,
             )
             if inverse:
                 # Map from [-1, 1] back to [min, max]
@@ -370,7 +401,9 @@ class _NormalizationMixin:
             denom = q99 - q01
             # Avoid division by zero by adding epsilon when quantiles are identical
             denom = torch.where(
-                denom == 0, torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype), denom
+                denom == 0,
+                torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype),
+                denom,
             )
             if inverse:
                 return (tensor + 1.0) * denom / 2.0 + q01
@@ -387,7 +420,9 @@ class _NormalizationMixin:
             denom = q90 - q10
             # Avoid division by zero by adding epsilon when quantiles are identical
             denom = torch.where(
-                denom == 0, torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype), denom
+                denom == 0,
+                torch.tensor(self.eps, device=tensor.device, dtype=tensor.dtype),
+                denom,
             )
             if inverse:
                 return (tensor + 1.0) * denom / 2.0 + q10
@@ -461,7 +496,9 @@ class NormalizerProcessorStep(_NormalizationMixin, ProcessorStep):
         if not isinstance(action, PolicyAction):
             raise ValueError(f"Action should be a PolicyAction type got {type(action)}")
 
-        new_transition[TransitionKey.ACTION] = self._normalize_action(action, inverse=False)
+        new_transition[TransitionKey.ACTION] = self._normalize_action(
+            action, inverse=False
+        )
 
         return new_transition
 
@@ -504,7 +541,12 @@ class UnnormalizerProcessorStep(_NormalizationMixin, ProcessorStep):
         Returns:
             A new instance of `UnnormalizerProcessorStep`.
         """
-        return cls(features=features, norm_map=norm_map, stats=dataset.meta.stats, device=device)
+        return cls(
+            features=features,
+            norm_map=norm_map,
+            stats=dataset.meta.stats,
+            device=device,
+        )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:
         new_transition = transition.copy()
@@ -512,7 +554,9 @@ class UnnormalizerProcessorStep(_NormalizationMixin, ProcessorStep):
         # Handle observation unnormalization.
         observation = new_transition.get(TransitionKey.OBSERVATION)
         if observation is not None:
-            new_transition[TransitionKey.OBSERVATION] = self._normalize_observation(observation, inverse=True)
+            new_transition[TransitionKey.OBSERVATION] = self._normalize_observation(
+                observation, inverse=True
+            )
 
         # Handle action unnormalization.
         action = new_transition.get(TransitionKey.ACTION)
@@ -522,7 +566,9 @@ class UnnormalizerProcessorStep(_NormalizationMixin, ProcessorStep):
         if not isinstance(action, PolicyAction):
             raise ValueError(f"Action should be a PolicyAction type got {type(action)}")
 
-        new_transition[TransitionKey.ACTION] = self._normalize_action(action, inverse=True)
+        new_transition[TransitionKey.ACTION] = self._normalize_action(
+            action, inverse=True
+        )
 
         return new_transition
 

@@ -21,7 +21,13 @@ import draccus
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.robots import RobotConfig
 from lerobot.teleoperators.config import TeleoperatorConfig
-from lerobot.utils.constants import ACTION, OBS_ENV_STATE, OBS_IMAGE, OBS_IMAGES, OBS_STATE
+from lerobot.utils.constants import (
+    ACTION,
+    OBS_ENV_STATE,
+    OBS_IMAGE,
+    OBS_IMAGES,
+    OBS_STATE,
+)
 
 
 @dataclass
@@ -80,12 +86,16 @@ class AlohaEnv(EnvConfig):
     def __post_init__(self):
         if self.obs_type == "pixels":
             self.features["top"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
         elif self.obs_type == "pixels_agent_pos":
-            self.features["agent_pos"] = PolicyFeature(type=FeatureType.STATE, shape=(14,))
+            self.features["agent_pos"] = PolicyFeature(
+                type=FeatureType.STATE, shape=(14,)
+            )
             self.features["pixels/top"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
 
     @property
@@ -127,10 +137,13 @@ class PushtEnv(EnvConfig):
     def __post_init__(self):
         if self.obs_type == "pixels_agent_pos":
             self.features["pixels"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
         elif self.obs_type == "environment_state_agent_pos":
-            self.features["environment_state"] = PolicyFeature(type=FeatureType.ENV, shape=(16,))
+            self.features["environment_state"] = PolicyFeature(
+                type=FeatureType.ENV, shape=(16,)
+            )
 
     @property
     def gym_kwargs(self) -> dict:
@@ -255,18 +268,24 @@ class LiberoEnv(EnvConfig):
     def __post_init__(self):
         if self.obs_type == "pixels":
             self.features["pixels/agentview_image"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
             self.features["pixels/robot0_eye_in_hand_image"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
         elif self.obs_type == "pixels_agent_pos":
-            self.features["agent_pos"] = PolicyFeature(type=FeatureType.STATE, shape=(8,))
+            self.features["agent_pos"] = PolicyFeature(
+                type=FeatureType.STATE, shape=(8,)
+            )
             self.features["pixels/agentview_image"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
             self.features["pixels/robot0_eye_in_hand_image"] = PolicyFeature(
-                type=FeatureType.VISUAL, shape=(self.observation_height, self.observation_width, 3)
+                type=FeatureType.VISUAL,
+                shape=(self.observation_height, self.observation_width, 3),
             )
         else:
             raise ValueError(f"Unsupported obs_type: {self.obs_type}")
@@ -304,11 +323,17 @@ class MetaworldEnv(EnvConfig):
 
     def __post_init__(self):
         if self.obs_type == "pixels":
-            self.features["top"] = PolicyFeature(type=FeatureType.VISUAL, shape=(480, 480, 3))
+            self.features["top"] = PolicyFeature(
+                type=FeatureType.VISUAL, shape=(480, 480, 3)
+            )
 
         elif self.obs_type == "pixels_agent_pos":
-            self.features["agent_pos"] = PolicyFeature(type=FeatureType.STATE, shape=(4,))
-            self.features["pixels/top"] = PolicyFeature(type=FeatureType.VISUAL, shape=(480, 480, 3))
+            self.features["agent_pos"] = PolicyFeature(
+                type=FeatureType.STATE, shape=(4,)
+            )
+            self.features["pixels/top"] = PolicyFeature(
+                type=FeatureType.VISUAL, shape=(480, 480, 3)
+            )
 
         else:
             raise ValueError(f"Unsupported obs_type: {self.obs_type}")

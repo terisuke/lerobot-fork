@@ -81,14 +81,18 @@ def find_all_realsense_cameras() -> list[dict[str, Any]]:
             all_realsense_cameras_info.append(cam_info)
         logger.info(f"Found {len(realsense_cameras)} RealSense cameras.")
     except ImportError:
-        logger.warning("Skipping RealSense camera search: pyrealsense2 library not found or not importable.")
+        logger.warning(
+            "Skipping RealSense camera search: pyrealsense2 library not found or not importable."
+        )
     except Exception as e:
         logger.error(f"Error finding RealSense cameras: {e}")
 
     return all_realsense_cameras_info
 
 
-def find_and_print_cameras(camera_type_filter: str | None = None) -> list[dict[str, Any]]:
+def find_and_print_cameras(
+    camera_type_filter: str | None = None,
+) -> list[dict[str, Any]]:
     """
     Finds available cameras based on an optional filter and prints their information.
 
@@ -150,7 +154,9 @@ def save_image(
         img.save(str(path))
         logger.info(f"Saved image: {path}")
     except Exception as e:
-        logger.error(f"Failed to save image for camera {camera_identifier} (type {camera_type}): {e}")
+        logger.error(
+            f"Failed to save image for camera {camera_identifier} (type {camera_type}): {e}"
+        )
 
 
 def create_camera_instance(cam_meta: dict[str, Any]) -> dict[str, Any] | None:
@@ -175,7 +181,9 @@ def create_camera_instance(cam_meta: dict[str, Any]) -> dict[str, Any] | None:
             )
             instance = RealSenseCamera(rs_config)
         else:
-            logger.warning(f"Unknown camera type: {cam_type} for ID {cam_id}. Skipping.")
+            logger.warning(
+                f"Unknown camera type: {cam_type} for ID {cam_id}. Skipping."
+            )
             return None
 
         if instance:
@@ -224,7 +232,9 @@ def cleanup_cameras(cameras_to_use: list[dict[str, Any]]):
             if cam_dict["instance"] and cam_dict["instance"].is_connected:
                 cam_dict["instance"].disconnect()
         except Exception as e:
-            logger.error(f"Error disconnecting camera {cam_dict['meta'].get('id')}: {e}")
+            logger.error(
+                f"Error disconnecting camera {cam_dict['meta'].get('id')}: {e}"
+            )
 
 
 def save_images_from_all_cameras(
@@ -260,17 +270,23 @@ def save_images_from_all_cameras(
         logger.warning("No cameras could be connected. Aborting image save.")
         return
 
-    logger.info(f"Starting image capture for {record_time_s} seconds from {len(cameras_to_use)} cameras.")
+    logger.info(
+        f"Starting image capture for {record_time_s} seconds from {len(cameras_to_use)} cameras."
+    )
     start_time = time.perf_counter()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cameras_to_use) * 2) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(cameras_to_use) * 2
+    ) as executor:
         try:
             while time.perf_counter() - start_time < record_time_s:
                 futures = []
                 current_capture_time = time.perf_counter()
 
                 for cam_dict in cameras_to_use:
-                    future = process_camera_image(cam_dict, output_dir, current_capture_time)
+                    future = process_camera_image(
+                        cam_dict, output_dir, current_capture_time
+                    )
                     if future:
                         futures.append(future)
 

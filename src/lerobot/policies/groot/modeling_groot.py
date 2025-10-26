@@ -80,7 +80,9 @@ class GrootPolicy(PreTrainedPolicy):
             tune_diffusion_model=self.config.tune_diffusion_model,
         )
 
-        model.compute_dtype = "bfloat16" if self.config.use_bf16 else model.compute_dtype
+        model.compute_dtype = (
+            "bfloat16" if self.config.use_bf16 else model.compute_dtype
+        )
         model.config.compute_dtype = model.compute_dtype
 
         return model
@@ -102,7 +104,8 @@ class GrootPolicy(PreTrainedPolicy):
         groot_inputs = {
             k: v
             for k, v in batch.items()
-            if (k in allowed_base or k.startswith("eagle_")) and not (k.startswith("next.") or k == "info")
+            if (k in allowed_base or k.startswith("eagle_"))
+            and not (k.startswith("next.") or k == "info")
         }
 
         # Get device from model parameters
@@ -110,7 +113,9 @@ class GrootPolicy(PreTrainedPolicy):
 
         # Run GR00T forward under bf16 autocast when enabled to reduce activation memory
         # Rationale: Matches original GR00T finetuning (bf16 compute, fp32 params) and avoids fp32 upcasts.
-        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=self.config.use_bf16):
+        with torch.autocast(
+            device_type=device.type, dtype=torch.bfloat16, enabled=self.config.use_bf16
+        ):
             outputs = self._groot_model.forward(groot_inputs)
 
         # Isaac-GR00T returns a BatchFeature; loss key is typically 'loss'
@@ -135,14 +140,17 @@ class GrootPolicy(PreTrainedPolicy):
         groot_inputs = {
             k: v
             for k, v in batch.items()
-            if (k in allowed_base or k.startswith("eagle_")) and not (k.startswith("next.") or k == "info")
+            if (k in allowed_base or k.startswith("eagle_"))
+            and not (k.startswith("next.") or k == "info")
         }
 
         # Get device from model parameters
         device = next(self.parameters()).device
 
         # Use bf16 autocast for inference to keep memory low and match backbone dtype
-        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=self.config.use_bf16):
+        with torch.autocast(
+            device_type=device.type, dtype=torch.bfloat16, enabled=self.config.use_bf16
+        ):
             outputs = self._groot_model.get_action(groot_inputs)
 
         actions = outputs.get("action_pred")
@@ -188,8 +196,12 @@ class GrootPolicy(PreTrainedPolicy):
         except Exception as e:
             if "undefined symbol" in str(e):
                 print(f"[GROOT] Flash Attention compatibility issue detected: {e}")
-                print("[GROOT] This is likely due to PyTorch/Flash Attention version mismatch")
-                print("[GROOT] Consider reinstalling Flash Attention with compatible version:")
+                print(
+                    "[GROOT] This is likely due to PyTorch/Flash Attention version mismatch"
+                )
+                print(
+                    "[GROOT] Consider reinstalling Flash Attention with compatible version:"
+                )
                 print("  pip uninstall flash-attn")
                 print("  pip install --no-build-isolation flash-attn==2.6.3")
                 print("[GROOT] Continuing with fallback attention mechanism")

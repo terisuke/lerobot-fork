@@ -30,7 +30,9 @@ class RunningQuantileStats:
     which adapt dynamically if the observed data range expands.
     """
 
-    def __init__(self, quantile_list: list[float] | None = None, num_quantile_bins: int = 5000):
+    def __init__(
+        self, quantile_list: list[float] | None = None, num_quantile_bins: int = 5000
+    ):
         self._count = 0
         self._mean = None
         self._mean_of_squares = None
@@ -59,14 +61,22 @@ class RunningQuantileStats:
             self._mean_of_squares = np.mean(batch**2, axis=0)
             self._min = np.min(batch, axis=0)
             self._max = np.max(batch, axis=0)
-            self._histograms = [np.zeros(self._num_quantile_bins) for _ in range(vector_length)]
+            self._histograms = [
+                np.zeros(self._num_quantile_bins) for _ in range(vector_length)
+            ]
             self._bin_edges = [
-                np.linspace(self._min[i] - 1e-10, self._max[i] + 1e-10, self._num_quantile_bins + 1)
+                np.linspace(
+                    self._min[i] - 1e-10,
+                    self._max[i] + 1e-10,
+                    self._num_quantile_bins + 1,
+                )
                 for i in range(vector_length)
             ]
         else:
             if vector_length != self._mean.size:
-                raise ValueError("The length of new vectors does not match the initialized vector length.")
+                raise ValueError(
+                    "The length of new vectors does not match the initialized vector length."
+                )
 
             new_max = np.max(batch, axis=0)
             new_min = np.min(batch, axis=0)
@@ -130,7 +140,9 @@ class RunningQuantileStats:
             # Create new edges with small padding to ensure range coverage
             padding = (self._max[i] - self._min[i]) * 1e-10
             new_edges = np.linspace(
-                self._min[i] - padding, self._max[i] + padding, self._num_quantile_bins + 1
+                self._min[i] - padding,
+                self._max[i] + padding,
+                self._num_quantile_bins + 1,
             )
 
             # Redistribute existing histogram counts to new bins
@@ -168,7 +180,9 @@ class RunningQuantileStats:
             results.append(np.array(q_values))
         return results
 
-    def _compute_single_quantile(self, hist: np.ndarray, edges: np.ndarray, target_count: float) -> float:
+    def _compute_single_quantile(
+        self, hist: np.ndarray, edges: np.ndarray, target_count: float
+    ) -> float:
         """Compute a single quantile value from histogram and bin edges."""
         cumsum = np.cumsum(hist)
         idx = np.searchsorted(cumsum, target_count)
@@ -192,7 +206,10 @@ class RunningQuantileStats:
 
 
 def estimate_num_samples(
-    dataset_len: int, min_num_samples: int = 100, max_num_samples: int = 10_000, power: float = 0.75
+    dataset_len: int,
+    min_num_samples: int = 100,
+    max_num_samples: int = 10_000,
+    power: float = 0.75,
 ) -> int:
     """Heuristic to estimate the number of samples based on dataset size.
     The power controls the sample growth relative to dataset size.
@@ -216,14 +233,18 @@ def sample_indices(data_len: int) -> list[int]:
     return np.round(np.linspace(0, data_len - 1, num_samples)).astype(int).tolist()
 
 
-def auto_downsample_height_width(img: np.ndarray, target_size: int = 150, max_size_threshold: int = 300):
+def auto_downsample_height_width(
+    img: np.ndarray, target_size: int = 150, max_size_threshold: int = 300
+):
     _, height, width = img.shape
 
     if max(width, height) < max_size_threshold:
         # no downsampling needed
         return img
 
-    downsample_factor = int(width / target_size) if width > height else int(height / target_size)
+    downsample_factor = (
+        int(width / target_size) if width > height else int(height / target_size)
+    )
     return img[:, ::downsample_factor, ::downsample_factor]
 
 
@@ -328,7 +349,10 @@ def _reshape_for_global_stats(
 
 
 def _reshape_single_stat(
-    value: np.ndarray, axis: int | tuple[int, ...] | None, keepdims: bool, original_shape: tuple[int, ...]
+    value: np.ndarray,
+    axis: int | tuple[int, ...] | None,
+    keepdims: bool,
+    original_shape: tuple[int, ...],
 ) -> np.ndarray | float:
     """Apply appropriate reshaping to a single statistic array.
 
@@ -360,7 +384,9 @@ def _reshape_single_stat(
     return value
 
 
-def _prepare_array_for_stats(array: np.ndarray, axis: int | tuple[int, ...] | None) -> tuple[np.ndarray, int]:
+def _prepare_array_for_stats(
+    array: np.ndarray, axis: int | tuple[int, ...] | None
+) -> tuple[np.ndarray, int]:
     """Prepare array for statistics computation by reshaping according to axis.
 
     Args:
@@ -518,12 +544,16 @@ def compute_episode_stats(
             keepdims = data.ndim == 1
 
         ep_stats[key] = get_feature_stats(
-            ep_ft_array, axis=axes_to_reduce, keepdims=keepdims, quantile_list=quantile_list
+            ep_ft_array,
+            axis=axes_to_reduce,
+            keepdims=keepdims,
+            quantile_list=quantile_list,
         )
 
         if features[key]["dtype"] in ["image", "video"]:
             ep_stats[key] = {
-                k: v if k == "count" else np.squeeze(v / 255.0, axis=0) for k, v in ep_stats[key].items()
+                k: v if k == "count" else np.squeeze(v / 255.0, axis=0)
+                for k, v in ep_stats[key].items()
             }
 
     return ep_stats
@@ -544,7 +574,9 @@ def _validate_stat_value(value: np.ndarray, key: str, feature_key: str) -> None:
         raise ValueError(f"Shape of 'count' must be (1), but is {value.shape} instead.")
 
     if "image" in feature_key and key != "count" and value.shape != (3, 1, 1):
-        raise ValueError(f"Shape of quantile '{key}' must be (3,1,1), but is {value.shape} instead.")
+        raise ValueError(
+            f"Shape of quantile '{key}' must be (3,1,1), but is {value.shape} instead."
+        )
 
 
 def _assert_type_and_shape(stats_list: list[dict[str, dict]]):
@@ -562,7 +594,9 @@ def _assert_type_and_shape(stats_list: list[dict[str, dict]]):
                 _validate_stat_value(stat_value, stat_key, feature_key)
 
 
-def aggregate_feature_stats(stats_ft_list: list[dict[str, dict]]) -> dict[str, dict[str, np.ndarray]]:
+def aggregate_feature_stats(
+    stats_ft_list: list[dict[str, dict]],
+) -> dict[str, dict[str, np.ndarray]]:
     """Aggregates stats for a single feature."""
     means = np.stack([s["mean"] for s in stats_ft_list])
     variances = np.stack([s["std"] ** 2 for s in stats_ft_list])
@@ -591,7 +625,9 @@ def aggregate_feature_stats(stats_ft_list: list[dict[str, dict]]) -> dict[str, d
     }
 
     if stats_ft_list:
-        quantile_keys = [k for k in stats_ft_list[0] if k.startswith("q") and k[1:].isdigit()]
+        quantile_keys = [
+            k for k in stats_ft_list[0] if k.startswith("q") and k[1:].isdigit()
+        ]
 
         for q_key in quantile_keys:
             if all(q_key in s for s in stats_ft_list):
@@ -602,7 +638,9 @@ def aggregate_feature_stats(stats_ft_list: list[dict[str, dict]]) -> dict[str, d
     return aggregated
 
 
-def aggregate_stats(stats_list: list[dict[str, dict]]) -> dict[str, dict[str, np.ndarray]]:
+def aggregate_stats(
+    stats_list: list[dict[str, dict]],
+) -> dict[str, dict[str, np.ndarray]]:
     """Aggregate stats from multiple compute_stats outputs into a single set of stats.
 
     The final stats will have the union of all data keys from each of the stats dicts.

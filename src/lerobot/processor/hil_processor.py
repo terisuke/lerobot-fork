@@ -356,9 +356,9 @@ class GripperPenaltyProcessorStep(ComplementaryDataProcessorStep):
         gripper_state_normalized = current_gripper_pos / self.max_gripper_pos
 
         # Calculate penalty boolean as in original
-        gripper_penalty_bool = (gripper_state_normalized < 0.5 and gripper_action_normalized > 0.5) or (
-            gripper_state_normalized > 0.75 and gripper_action_normalized < 0.5
-        )
+        gripper_penalty_bool = (
+            gripper_state_normalized < 0.5 and gripper_action_normalized > 0.5
+        ) or (gripper_state_normalized > 0.75 and gripper_action_normalized < 0.5)
 
         gripper_penalty = self.penalty * int(gripper_penalty_bool)
 
@@ -451,7 +451,9 @@ class InterventionActionProcessorStep(ProcessorStep):
             else:
                 action_list = teleop_action
 
-            teleop_action_tensor = torch.tensor(action_list, dtype=action.dtype, device=action.device)
+            teleop_action_tensor = torch.tensor(
+                action_list, dtype=action.dtype, device=action.device
+            )
             new_transition[TransitionKey.ACTION] = teleop_action_tensor
 
         # Handle episode termination
@@ -552,7 +554,9 @@ class RewardClassifierProcessorStep(ProcessorStep):
         # Run reward classifier
         start_time = time.perf_counter()
         with torch.inference_mode():
-            success = self.reward_classifier.predict_reward(images, threshold=self.success_threshold)
+            success = self.reward_classifier.predict_reward(
+                images, threshold=self.success_threshold
+            )
 
         classifier_frequency = 1 / (time.perf_counter() - start_time)
 

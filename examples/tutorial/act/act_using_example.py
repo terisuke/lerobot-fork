@@ -15,7 +15,9 @@ model = ACTPolicy.from_pretrained(model_id)
 dataset_id = "lerobot/svla_so101_pickplace"
 # This only downloads the metadata for the dataset, ~10s of MB even for large-scale datasets
 dataset_metadata = LeRobotDatasetMetadata(dataset_id)
-preprocess, postprocess = make_pre_post_processors(model.config, dataset_stats=dataset_metadata.stats)
+preprocess, postprocess = make_pre_post_processors(
+    model.config, dataset_stats=dataset_metadata.stats
+)
 
 # # find ports using lerobot-find-port
 follower_port = ...  # something like "/dev/tty.usbmodem58760431631"
@@ -34,7 +36,9 @@ camera_config = {
     "up": OpenCVCameraConfig(index_or_path=1, width=640, height=480, fps=30),
 }
 
-robot_cfg = SO100FollowerConfig(port=follower_port, id=follower_id, cameras=camera_config)
+robot_cfg = SO100FollowerConfig(
+    port=follower_port, id=follower_id, cameras=camera_config
+)
 robot = SO100Follower(robot_cfg)
 robot.connect()
 

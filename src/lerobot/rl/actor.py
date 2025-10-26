@@ -120,7 +120,9 @@ def actor_cli(cfg: TrainRLServerPipelineConfig):
     logging.info(f"Actor logging initialized, writing to {log_file}")
 
     is_threaded = use_threads(cfg)
-    shutdown_event = ProcessSignalHandler(is_threaded, display_pid=display_pid).shutdown_event
+    shutdown_event = ProcessSignalHandler(
+        is_threaded, display_pid=display_pid
+    ).shutdown_event
 
     learner_client, grpc_channel = learner_service_client(
         host=cfg.policy.actor_learner_config.learner_host,
@@ -238,7 +240,9 @@ def act_with_policy(
     logging.info("make_env online")
 
     online_env, teleop_device = make_robot_env(cfg=cfg.env)
-    env_processor, action_processor = make_processors(online_env, teleop_device, cfg.env, cfg.policy.device)
+    env_processor, action_processor = make_processors(
+        online_env, teleop_device, cfg.env, cfg.policy.device
+    )
 
     set_seed(cfg.seed)
     device = get_safe_torch_device(cfg.policy.device, log=True)
@@ -283,7 +287,9 @@ def act_with_policy(
             return
 
         observation = {
-            k: v for k, v in transition[TransitionKey.OBSERVATION].items() if k in cfg.policy.input_features
+            k: v
+            for k, v in transition[TransitionKey.OBSERVATION].items()
+            if k in cfg.policy.input_features
         }
 
         # Time policy inference and check if it meets FPS requirement
@@ -292,7 +298,9 @@ def act_with_policy(
             action = policy.select_action(batch=observation)
         policy_fps = policy_timer.fps_last
 
-        log_policy_frequency_issue(policy_fps=policy_fps, cfg=cfg, interaction_step=interaction_step)
+        log_policy_frequency_issue(
+            policy_fps=policy_fps, cfg=cfg, interaction_step=interaction_step
+        )
 
         # Use the new step function
         new_transition = step_env_and_process_transition(
@@ -312,7 +320,9 @@ def act_with_policy(
 
         # Teleop action is the action that was executed in the environment
         # It is either the action from the teleop device or the action from the policy
-        executed_action = new_transition[TransitionKey.COMPLEMENTARY_DATA]["teleop_action"]
+        executed_action = new_transition[TransitionKey.COMPLEMENTARY_DATA][
+            "teleop_action"
+        ]
 
         reward = new_transition[TransitionKey.REWARD]
         done = new_transition.get(TransitionKey.DONE, False)
@@ -329,7 +339,11 @@ def act_with_policy(
 
         complementary_info = {
             "discrete_penalty": torch.tensor(
-                [new_transition[TransitionKey.COMPLEMENTARY_DATA].get("discrete_penalty", 0.0)]
+                [
+                    new_transition[TransitionKey.COMPLEMENTARY_DATA].get(
+                        "discrete_penalty", 0.0
+                    )
+                ]
             ),
         }
         # Create transition for learner (convert to old format)
@@ -349,9 +363,13 @@ def act_with_policy(
         transition = new_transition
 
         if done or truncated:
-            logging.info(f"[ACTOR] Global step {interaction_step}: Episode reward: {sum_reward_episode}")
+            logging.info(
+                f"[ACTOR] Global step {interaction_step}: Episode reward: {sum_reward_episode}"
+            )
 
-            update_policy_parameters(policy=policy, parameters_queue=parameters_queue, device=device)
+            update_policy_parameters(
+                policy=policy, parameters_queue=parameters_queue, device=device
+            )
 
             if len(list_transition_to_send_to_learner) > 0:
                 push_transitions_to_transport_queue(
@@ -544,7 +562,9 @@ def send_transitions(
     try:
         learner_client.SendTransitions(
             transitions_stream(
-                shutdown_event, transitions_queue, cfg.policy.actor_learner_config.queue_get_timeout
+                shutdown_event,
+                transitions_queue,
+                cfg.policy.actor_learner_config.queue_get_timeout,
             )
         )
     except grpc.RpcError as e:
@@ -597,7 +617,9 @@ def send_interactions(
     try:
         learner_client.SendInteractions(
             interactions_stream(
-                shutdown_event, interactions_queue, cfg.policy.actor_learner_config.queue_get_timeout
+                shutdown_event,
+                interactions_queue,
+                cfg.policy.actor_learner_config.queue_get_timeout,
             )
         )
     except grpc.RpcError as e:
@@ -666,7 +688,9 @@ def update_policy_parameters(policy: SACPolicy, parameters_queue: Queue, device)
         # - Ensure discrete_critic gets correct encoder state (currently uses encoder_critic)
 
         # Load actor state dict
-        actor_state_dict = move_state_dict_to_device(state_dicts["policy"], device=device)
+        actor_state_dict = move_state_dict_to_device(
+            state_dicts["policy"], device=device
+        )
         policy.actor.load_state_dict(actor_state_dict)
 
         # Load discrete critic if present
@@ -723,7 +747,9 @@ def get_frequency_stats(timer: TimerManager) -> dict[str, float]:
     return stats
 
 
-def log_policy_frequency_issue(policy_fps: float, cfg: TrainRLServerPipelineConfig, interaction_step: int):
+def log_policy_frequency_issue(
+    policy_fps: float, cfg: TrainRLServerPipelineConfig, interaction_step: int
+):
     if policy_fps < cfg.env.fps:
         logging.warning(
             f"[ACTOR] Policy FPS {policy_fps:.1f} below required {cfg.env.fps} at step {interaction_step}"

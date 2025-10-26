@@ -39,18 +39,23 @@ BAG_FILE_PATH = TEST_ARTIFACTS_DIR / "test_rs.bag"
 
 
 def mock_rs_config_enable_device_from_file(rs_config_instance, _sn):
-    return rs_config_instance.enable_device_from_file(str(BAG_FILE_PATH), repeat_playback=True)
+    return rs_config_instance.enable_device_from_file(
+        str(BAG_FILE_PATH), repeat_playback=True
+    )
 
 
 def mock_rs_config_enable_device_bad_file(rs_config_instance, _sn):
-    return rs_config_instance.enable_device_from_file("non_existent_file.bag", repeat_playback=True)
+    return rs_config_instance.enable_device_from_file(
+        "non_existent_file.bag", repeat_playback=True
+    )
 
 
 @pytest.fixture(name="patch_realsense", autouse=True)
 def fixture_patch_realsense():
     """Automatically mock pyrealsense2.config.enable_device for all tests."""
     with patch(
-        "pyrealsense2.config.enable_device", side_effect=mock_rs_config_enable_device_from_file
+        "pyrealsense2.config.enable_device",
+        side_effect=mock_rs_config_enable_device_from_file,
     ) as mock:
         yield mock
 
@@ -88,7 +93,9 @@ def test_connect_invalid_camera_path(patch_realsense):
 
 
 def test_invalid_width_connect():
-    config = RealSenseCameraConfig(serial_number_or_name="042", width=99999, height=480, fps=30)
+    config = RealSenseCameraConfig(
+        serial_number_or_name="042", width=99999, height=480, fps=30
+    )
     camera = RealSenseCamera(config)
 
     with pytest.raises(ConnectionError):
@@ -96,7 +103,9 @@ def test_invalid_width_connect():
 
 
 def test_read():
-    config = RealSenseCameraConfig(serial_number_or_name="042", width=640, height=480, fps=30)
+    config = RealSenseCameraConfig(
+        serial_number_or_name="042", width=640, height=480, fps=30
+    )
     camera = RealSenseCamera(config)
     camera.connect(warmup=False)
 
@@ -107,11 +116,15 @@ def test_read():
 # TODO(Steven): Fix this test for the latest version of pyrealsense2.
 @pytest.mark.skip("Skipping test: pyrealsense2 version > 2.55.1.6486")
 def test_read_depth():
-    config = RealSenseCameraConfig(serial_number_or_name="042", width=640, height=480, fps=30, use_depth=True)
+    config = RealSenseCameraConfig(
+        serial_number_or_name="042", width=640, height=480, fps=30, use_depth=True
+    )
     camera = RealSenseCamera(config)
     camera.connect(warmup=False)
 
-    img = camera.read_depth(timeout_ms=2000)  # NOTE(Steven): Reading depth takes longer in CI environments.
+    img = camera.read_depth(
+        timeout_ms=2000
+    )  # NOTE(Steven): Reading depth takes longer in CI environments.
     assert isinstance(img, np.ndarray)
 
 
@@ -142,7 +155,9 @@ def test_disconnect_before_connect():
 
 
 def test_async_read():
-    config = RealSenseCameraConfig(serial_number_or_name="042", width=640, height=480, fps=30)
+    config = RealSenseCameraConfig(
+        serial_number_or_name="042", width=640, height=480, fps=30
+    )
     camera = RealSenseCamera(config)
     camera.connect(warmup=False)
 
@@ -158,7 +173,9 @@ def test_async_read():
 
 
 def test_async_read_timeout():
-    config = RealSenseCameraConfig(serial_number_or_name="042", width=640, height=480, fps=30)
+    config = RealSenseCameraConfig(
+        serial_number_or_name="042", width=640, height=480, fps=30
+    )
     camera = RealSenseCamera(config)
     camera.connect(warmup=False)
 

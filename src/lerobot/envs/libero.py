@@ -38,7 +38,9 @@ def _parse_camera_names(camera_name: str | Sequence[str]) -> list[str]:
     elif isinstance(camera_name, (list | tuple)):
         cams = [str(c).strip() for c in camera_name if str(c).strip()]
     else:
-        raise TypeError(f"camera_name must be str or sequence[str], got {type(camera_name).__name__}")
+        raise TypeError(
+            f"camera_name must be str or sequence[str], got {type(camera_name).__name__}"
+        )
     if not cams:
         raise ValueError("camera_name resolved to an empty list.")
     return cams
@@ -48,7 +50,9 @@ def _get_suite(name: str) -> benchmark.Benchmark:
     """Instantiate a LIBERO suite by name with clear validation."""
     bench = benchmark.get_benchmark_dict()
     if name not in bench:
-        raise ValueError(f"Unknown LIBERO suite '{name}'. Available: {', '.join(sorted(bench.keys()))}")
+        raise ValueError(
+            f"Unknown LIBERO suite '{name}'. Available: {', '.join(sorted(bench.keys()))}"
+        )
     suite = bench[name]()
     if not getattr(suite, "tasks", None):
         raise ValueError(f"Suite '{name}' has no tasks.")
@@ -143,12 +147,18 @@ class LiberoEnv(gym.Env):
         self.num_steps_wait = num_steps_wait
         self.episode_index = episode_index
         # Load once and keep
-        self._init_states = get_task_init_states(task_suite, self.task_id) if self.init_states else None
-        self._init_state_id = self.episode_index  # tie each sub-env to a fixed init state
+        self._init_states = (
+            get_task_init_states(task_suite, self.task_id) if self.init_states else None
+        )
+        self._init_state_id = (
+            self.episode_index
+        )  # tie each sub-env to a fixed init state
 
         self._env = self._make_envs_task(task_suite, self.task_id)
         default_steps = 500
-        self._max_episode_steps = TASK_SUITE_MAX_STEPS.get(task_suite_name, default_steps)
+        self._max_episode_steps = TASK_SUITE_MAX_STEPS.get(
+            task_suite_name, default_steps
+        )
 
         images = {}
         for cam in self.camera_name:
@@ -197,7 +207,9 @@ class LiberoEnv(gym.Env):
         task = task_suite.get_task(task_id)
         self.task = task.name
         self.task_description = task.language
-        task_bddl_file = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
+        task_bddl_file = os.path.join(
+            get_libero_path("bddl_files"), task.problem_folder, task.bddl_file
+        )
 
         env_args = {
             "bddl_file_name": task_bddl_file,
@@ -250,7 +262,9 @@ class LiberoEnv(gym.Env):
         info = {"is_success": False}
         return observation, info
 
-    def step(self, action: np.ndarray) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
+    def step(
+        self, action: np.ndarray
+    ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if action.ndim != 1:
             raise ValueError(
                 f"Expected action to be 1-D (shape (action_dim,)), "
@@ -336,12 +350,16 @@ def create_libero_envs(
         - You may pass `task_ids` (list[int]) inside `gym_kwargs` to restrict tasks per suite.
     """
     if env_cls is None or not callable(env_cls):
-        raise ValueError("env_cls must be a callable that wraps a list of environment factory callables.")
+        raise ValueError(
+            "env_cls must be a callable that wraps a list of environment factory callables."
+        )
     if not isinstance(n_envs, int) or n_envs <= 0:
         raise ValueError(f"n_envs must be a positive int; got {n_envs}.")
 
     gym_kwargs = dict(gym_kwargs or {})
-    task_ids_filter = gym_kwargs.pop("task_ids", None)  # optional: limit to specific tasks
+    task_ids_filter = gym_kwargs.pop(
+        "task_ids", None
+    )  # optional: limit to specific tasks
 
     camera_names = _parse_camera_names(camera_name)
     suite_names = [s.strip() for s in str(task).split(",") if s.strip()]
@@ -362,7 +380,9 @@ def create_libero_envs(
         selected = _select_task_ids(total, task_ids_filter)
 
         if not selected:
-            raise ValueError(f"No tasks selected for suite '{suite_name}' (available: {total}).")
+            raise ValueError(
+                f"No tasks selected for suite '{suite_name}' (available: {total})."
+            )
 
         for tid in selected:
             fns = _make_env_fns(
@@ -375,7 +395,9 @@ def create_libero_envs(
                 gym_kwargs=gym_kwargs,
             )
             out[suite_name][tid] = env_cls(fns)
-            print(f"Built vec env | suite={suite_name} | task_id={tid} | n_envs={n_envs}")
+            print(
+                f"Built vec env | suite={suite_name} | task_id={tid} | n_envs={n_envs}"
+            )
 
     # return plain dicts for predictability
     return {suite: dict(task_map) for suite, task_map in out.items()}

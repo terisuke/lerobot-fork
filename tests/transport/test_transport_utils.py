@@ -148,7 +148,9 @@ def test_receive_bytes_in_chunks_single_chunk():
 
     data = b"Single chunk data"
     chunks = [
-        services_pb2.InteractionMessage(data=data, transfer_state=services_pb2.TransferState.TRANSFER_END)
+        services_pb2.InteractionMessage(
+            data=data, transfer_state=services_pb2.TransferState.TRANSFER_END
+        )
     ]
 
     receive_bytes_in_chunks(iter(chunks), queue, shutdown_event)
@@ -167,7 +169,9 @@ def test_receive_bytes_in_chunks_single_not_end_chunk():
 
     data = b"Single chunk data"
     chunks = [
-        services_pb2.InteractionMessage(data=data, transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE)
+        services_pb2.InteractionMessage(
+            data=data, transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+        )
     ]
 
     receive_bytes_in_chunks(iter(chunks), queue, shutdown_event)
@@ -190,7 +194,9 @@ def test_receive_bytes_in_chunks_multiple_chunks():
         services_pb2.InteractionMessage(
             data=b"Middle ", transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
         ),
-        services_pb2.InteractionMessage(data=b"Last", transfer_state=services_pb2.TransferState.TRANSFER_END),
+        services_pb2.InteractionMessage(
+            data=b"Last", transfer_state=services_pb2.TransferState.TRANSFER_END
+        ),
     ]
 
     receive_bytes_in_chunks(iter(chunks), queue, shutdown_event)
@@ -219,7 +225,9 @@ def test_receive_bytes_in_chunks_multiple_messages():
         services_pb2.InteractionMessage(
             data=b"Middle2 ", transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
         ),
-        services_pb2.InteractionMessage(data=b"End2", transfer_state=services_pb2.TransferState.TRANSFER_END),
+        services_pb2.InteractionMessage(
+            data=b"End2", transfer_state=services_pb2.TransferState.TRANSFER_END
+        ),
         # Third message - single chunk
         services_pb2.InteractionMessage(
             data=b"Message3", transfer_state=services_pb2.TransferState.TRANSFER_END
@@ -251,7 +259,9 @@ def test_receive_bytes_in_chunks_shutdown_during_receive():
         services_pb2.InteractionMessage(
             data=b"Middle ", transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
         ),
-        services_pb2.InteractionMessage(data=b"Last", transfer_state=services_pb2.TransferState.TRANSFER_END),
+        services_pb2.InteractionMessage(
+            data=b"Last", transfer_state=services_pb2.TransferState.TRANSFER_END
+        ),
     ]
 
     receive_bytes_in_chunks(iter(chunks), queue, shutdown_event)
@@ -292,7 +302,9 @@ def test_receive_bytes_in_chunks_missing_begin():
         services_pb2.InteractionMessage(
             data=b"Middle", transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
         ),
-        services_pb2.InteractionMessage(data=b"End", transfer_state=services_pb2.TransferState.TRANSFER_END),
+        services_pb2.InteractionMessage(
+            data=b"End", transfer_state=services_pb2.TransferState.TRANSFER_END
+        ),
     ]
 
     receive_bytes_in_chunks(iter(chunks), queue, shutdown_event)
@@ -470,7 +482,9 @@ def test_python_object_to_bytes_with_tensors():
     assert torch.allclose(obj["tensor"], reconstructed["tensor"])
     assert reconstructed["list_with_tensor"][0] == 1
     assert reconstructed["list_with_tensor"][3] == "string"
-    assert torch.allclose(obj["list_with_tensor"][2], reconstructed["list_with_tensor"][2])
+    assert torch.allclose(
+        obj["list_with_tensor"][2], reconstructed["list_with_tensor"][2]
+    )
     assert torch.allclose(obj["nested"]["tensor1"], reconstructed["nested"]["tensor1"])
     assert torch.equal(obj["nested"]["tensor2"], reconstructed["nested"]["tensor2"])
 

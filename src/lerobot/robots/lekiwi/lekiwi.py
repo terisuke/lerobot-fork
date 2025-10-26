@@ -51,7 +51,11 @@ class LeKiwi(Robot):
     def __init__(self, config: LeKiwiConfig):
         super().__init__(config)
         self.config = config
-        norm_mode_body = MotorNormMode.DEGREES if config.use_degrees else MotorNormMode.RANGE_M100_100
+        norm_mode_body = (
+            MotorNormMode.DEGREES
+            if config.use_degrees
+            else MotorNormMode.RANGE_M100_100
+        )
         self.bus = FeetechMotorsBus(
             port=self.config.port,
             motors={
@@ -69,8 +73,12 @@ class LeKiwi(Robot):
             },
             calibration=self.calibration,
         )
-        self.arm_motors = [motor for motor in self.bus.motors if motor.startswith("arm")]
-        self.base_motors = [motor for motor in self.bus.motors if motor.startswith("base")]
+        self.arm_motors = [
+            motor for motor in self.bus.motors if motor.startswith("arm")
+        ]
+        self.base_motors = [
+            motor for motor in self.bus.motors if motor.startswith("base")
+        ]
         self.cameras = make_cameras_from_configs(config.cameras)
 
     @property
@@ -93,7 +101,8 @@ class LeKiwi(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3) for cam in self.cameras
+            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            for cam in self.cameras
         }
 
     @cached_property
@@ -106,7 +115,9 @@ class LeKiwi(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus.is_connected and all(cam.is_connected for cam in self.cameras.values())
+        return self.bus.is_connected and all(
+            cam.is_connected for cam in self.cameras.values()
+        )
 
     def connect(self, calibrate: bool = True) -> None:
         if self.is_connected:
@@ -136,7 +147,9 @@ class LeKiwi(Robot):
                 f"Press ENTER to use provided calibration file associated with the id {self.id}, or type 'c' and press ENTER to run calibration: "
             )
             if user_input.strip().lower() != "c":
-                logger.info(f"Writing calibration file associated with the id {self.id} to the motors")
+                logger.info(
+                    f"Writing calibration file associated with the id {self.id} to the motors"
+                )
                 self.bus.write_calibration(self.calibration)
                 return
         logger.info(f"\nRunning calibration of {self}")
@@ -153,9 +166,13 @@ class LeKiwi(Robot):
         homing_offsets.update(dict.fromkeys(self.base_motors, 0))
 
         full_turn_motor = [
-            motor for motor in motors if any(keyword in motor for keyword in ["wheel", "wrist_roll"])
+            motor
+            for motor in motors
+            if any(keyword in motor for keyword in ["wheel", "wrist_roll"])
         ]
-        unknown_range_motors = [motor for motor in motors if motor not in full_turn_motor]
+        unknown_range_motors = [
+            motor for motor in motors if motor not in full_turn_motor
+        ]
 
         print(
             f"Move all arm joints except '{full_turn_motor}' sequentially through their "
@@ -201,7 +218,9 @@ class LeKiwi(Robot):
 
     def setup_motors(self) -> None:
         for motor in chain(reversed(self.arm_motors), reversed(self.base_motors)):
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 
@@ -396,8 +415,12 @@ class LeKiwi(Robot):
         # /!\ Slower fps expected due to reading from the follower.
         if self.config.max_relative_target is not None:
             present_pos = self.bus.sync_read("Present_Position", self.arm_motors)
-            goal_present_pos = {key: (g_pos, present_pos[key]) for key, g_pos in arm_goal_pos.items()}
-            arm_safe_goal_pos = ensure_safe_goal_position(goal_present_pos, self.config.max_relative_target)
+            goal_present_pos = {
+                key: (g_pos, present_pos[key]) for key, g_pos in arm_goal_pos.items()
+            }
+            arm_safe_goal_pos = ensure_safe_goal_position(
+                goal_present_pos, self.config.max_relative_target
+            )
             arm_goal_pos = arm_safe_goal_pos
 
         # Send goal position to the actuators
@@ -408,7 +431,9 @@ class LeKiwi(Robot):
         return {**arm_goal_pos, **base_goal_vel}
 
     def stop_base(self):
-        self.bus.sync_write("Goal_Velocity", dict.fromkeys(self.base_motors, 0), num_retry=5)
+        self.bus.sync_write(
+            "Goal_Velocity", dict.fromkeys(self.base_motors, 0), num_retry=5
+        )
         logger.info("Base motors stopped")
 
     def disconnect(self):

@@ -78,7 +78,9 @@ def replay(cfg: ReplayConfig):
     logging.info(pformat(asdict(cfg)))
 
     robot = make_robot_from_config(cfg.robot)
-    dataset = LeRobotDataset(cfg.dataset.repo_id, root=cfg.dataset.root, episodes=[cfg.dataset.episode])
+    dataset = LeRobotDataset(
+        cfg.dataset.repo_id, root=cfg.dataset.root, episodes=[cfg.dataset.episode]
+    )
     actions = dataset.hf_dataset.select_columns(ACTION)
     robot.connect()
 

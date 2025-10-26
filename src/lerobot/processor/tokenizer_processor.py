@@ -66,7 +66,9 @@ class TokenizerProcessorStep(ObservationProcessorStep):
     """
 
     tokenizer_name: str | None = None
-    tokenizer: Any | None = None  # Use `Any` for compatibility without a hard dependency
+    tokenizer: Any | None = (
+        None  # Use `Any` for compatibility without a hard dependency
+    )
     max_length: int = 512
     task_key: str = "task"
     padding_side: str = "right"
@@ -118,7 +120,9 @@ class TokenizerProcessorStep(ObservationProcessorStep):
         """
         complementary_data = transition.get(TransitionKey.COMPLEMENTARY_DATA)
         if complementary_data is None:
-            raise ValueError("Complementary data is None so no task can be extracted from it")
+            raise ValueError(
+                "Complementary data is None so no task can be extracted from it"
+            )
 
         task = complementary_data[self.task_key]
         if task is None:
@@ -167,7 +171,9 @@ class TokenizerProcessorStep(ObservationProcessorStep):
 
         # Add tokenized data to the observation
         new_observation[OBS_LANGUAGE_TOKENS] = tokenized_prompt["input_ids"]
-        new_observation[OBS_LANGUAGE_ATTENTION_MASK] = tokenized_prompt["attention_mask"].to(dtype=torch.bool)
+        new_observation[OBS_LANGUAGE_ATTENTION_MASK] = tokenized_prompt[
+            "attention_mask"
+        ].to(dtype=torch.bool)
 
         return new_observation
 
@@ -257,14 +263,14 @@ class TokenizerProcessorStep(ObservationProcessorStep):
         """
         # Add a feature for the token IDs if it doesn't already exist
         if OBS_LANGUAGE_TOKENS not in features[PipelineFeatureType.OBSERVATION]:
-            features[PipelineFeatureType.OBSERVATION][OBS_LANGUAGE_TOKENS] = PolicyFeature(
-                type=FeatureType.LANGUAGE, shape=(self.max_length,)
+            features[PipelineFeatureType.OBSERVATION][OBS_LANGUAGE_TOKENS] = (
+                PolicyFeature(type=FeatureType.LANGUAGE, shape=(self.max_length,))
             )
 
         # Add a feature for the attention mask if it doesn't already exist
         if OBS_LANGUAGE_ATTENTION_MASK not in features[PipelineFeatureType.OBSERVATION]:
-            features[PipelineFeatureType.OBSERVATION][OBS_LANGUAGE_ATTENTION_MASK] = PolicyFeature(
-                type=FeatureType.LANGUAGE, shape=(self.max_length,)
+            features[PipelineFeatureType.OBSERVATION][OBS_LANGUAGE_ATTENTION_MASK] = (
+                PolicyFeature(type=FeatureType.LANGUAGE, shape=(self.max_length,))
             )
 
         return features

@@ -99,7 +99,10 @@ class Reachy2Robot(Robot):
 
     @property
     def camera_features(self) -> dict[str, tuple[int | None, int | None, int]]:
-        return {cam: (self.cameras[cam].height, self.cameras[cam].width, 3) for cam in self.cameras}
+        return {
+            cam: (self.cameras[cam].height, self.cameras[cam].width, 3)
+            for cam in self.cameras
+        }
 
     @property
     def motors_features(self) -> dict[str, type]:
@@ -157,10 +160,15 @@ class Reachy2Robot(Robot):
 
     def _get_state(self) -> dict[str, float]:
         if self.reachy is not None:
-            pos_dict = {k: self.reachy.joints[v].present_position for k, v in self.joints_dict.items()}
+            pos_dict = {
+                k: self.reachy.joints[v].present_position
+                for k, v in self.joints_dict.items()
+            }
             if not self.config.with_mobile_base:
                 return pos_dict
-            vel_dict = {k: self.reachy.mobile_base.odometry[v] for k, v in REACHY2_VEL.items()}
+            vel_dict = {
+                k: self.reachy.mobile_base.odometry[v] for k, v in REACHY2_VEL.items()
+            }
             return {**pos_dict, **vel_dict}
         else:
             return {}
@@ -191,16 +199,23 @@ class Reachy2Robot(Robot):
             for key, val in action.items():
                 if key not in self.joints_dict:
                     if key not in REACHY2_VEL:
-                        raise KeyError(f"Key '{key}' is not a valid motor key in Reachy 2.")
+                        raise KeyError(
+                            f"Key '{key}' is not a valid motor key in Reachy 2."
+                        )
                     else:
                         vel[REACHY2_VEL[key]] = float(val)
                 else:
-                    if not self.use_external_commands and self.config.max_relative_target is not None:
+                    if (
+                        not self.use_external_commands
+                        and self.config.max_relative_target is not None
+                    ):
                         goal_pos[key] = float(val)
                         goal_present_pos = {
                             key: (
                                 goal_pos[key],
-                                self.reachy.joints[self.joints_dict[key]].present_position,
+                                self.reachy.joints[
+                                    self.joints_dict[key]
+                                ].present_position,
                             )
                         }
                         safe_goal_pos = ensure_safe_goal_position(
@@ -210,7 +225,9 @@ class Reachy2Robot(Robot):
                     self.reachy.joints[self.joints_dict[key]].goal_position = float(val)
 
             if self.config.with_mobile_base:
-                self.reachy.mobile_base.set_goal_speed(vel["vx"], vel["vy"], vel["vtheta"])
+                self.reachy.mobile_base.set_goal_speed(
+                    vel["vx"], vel["vy"], vel["vtheta"]
+                )
 
             # We don't send the goal positions if we control Reachy 2 externally
             if not self.use_external_commands:

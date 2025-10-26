@@ -5,10 +5,10 @@ This module provides object detection capabilities using RealSense cameras
 and depth information for robotic manipulation tasks.
 """
 
+from .depth_tracker import DepthObjectTracker, DepthTrackedObject
 from .detector import ObjectDetector
 from .tracker import ObjectTracker
-from .depth_tracker import DepthObjectTracker, DepthTrackedObject
-from .utils import DepthProcessor, ColorProcessor
+from .utils import ColorProcessor, DepthProcessor
 
 __all__ = [
     "ObjectDetector",
@@ -16,5 +16,5 @@ __all__ = [
     "DepthObjectTracker",
     "DepthTrackedObject",
     "DepthProcessor",
-    "ColorProcessor"
+    "ColorProcessor",
 ]

@@ -172,7 +172,9 @@ def save_optimizer_state(
         _save_single_optimizer_state(optimizer, save_dir)
 
 
-def _save_single_optimizer_state(optimizer: torch.optim.Optimizer, save_dir: Path) -> None:
+def _save_single_optimizer_state(
+    optimizer: torch.optim.Optimizer, save_dir: Path
+) -> None:
     """Save a single optimizer's state to disk."""
     state = optimizer.state_dict()
     param_groups = state.pop("param_groups")
@@ -199,7 +201,9 @@ def load_optimizer_state(
         for name, opt in optimizer.items():
             optimizer_dir = save_dir / name
             if optimizer_dir.exists():
-                loaded_optimizers[name] = _load_single_optimizer_state(opt, optimizer_dir)
+                loaded_optimizers[name] = _load_single_optimizer_state(
+                    opt, optimizer_dir
+                )
             else:
                 loaded_optimizers[name] = opt
         return loaded_optimizers
@@ -208,7 +212,9 @@ def load_optimizer_state(
         return _load_single_optimizer_state(optimizer, save_dir)
 
 
-def _load_single_optimizer_state(optimizer: torch.optim.Optimizer, save_dir: Path) -> torch.optim.Optimizer:
+def _load_single_optimizer_state(
+    optimizer: torch.optim.Optimizer, save_dir: Path
+) -> torch.optim.Optimizer:
     """Load a single optimizer's state from disk."""
     current_state_dict = optimizer.state_dict()
     flat_state = load_file(save_dir / OPTIMIZER_STATE)

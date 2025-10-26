@@ -36,7 +36,11 @@ def test_basic_functionality():
     truncated = torch.tensor(False)
 
     transition = create_transition(
-        observation=observation, action=action, reward=reward, done=done, truncated=truncated
+        observation=observation,
+        action=action,
+        reward=reward,
+        done=done,
+        truncated=truncated,
     )
 
     result = processor(transition)
@@ -63,7 +67,11 @@ def test_cuda_functionality():
     truncated = torch.tensor(False)
 
     transition = create_transition(
-        observation=observation, action=action, reward=reward, done=done, truncated=truncated
+        observation=observation,
+        action=action,
+        reward=reward,
+        done=done,
+        truncated=truncated,
     )
 
     result = processor(transition)
@@ -131,7 +139,9 @@ def test_none_values():
     assert result[TransitionKey.ACTION].device.type == "cpu"
 
     # Test with None action
-    transition = create_transition(observation={OBS_STATE: torch.randn(10)}, action=None)
+    transition = create_transition(
+        observation={OBS_STATE: torch.randn(10)}, action=None
+    )
     result = processor(transition)
     assert result[TransitionKey.OBSERVATION][OBS_STATE].device.type == "cpu"
     assert result[TransitionKey.ACTION] is None
@@ -156,7 +166,9 @@ def test_scalar_tensors():
     action = torch.tensor(2.0)
     reward = torch.tensor(0.5)
 
-    transition = create_transition(observation=observation, action=action, reward=reward)
+    transition = create_transition(
+        observation=observation, action=action, reward=reward
+    )
 
     result = processor(transition)
 
@@ -180,8 +192,12 @@ def test_dtype_preservation():
     transition = create_transition(observation=observation, action=action)
     result = processor(transition)
 
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
-    assert result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float64
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float64
+    )
     assert result[TransitionKey.OBSERVATION]["observation.int32"].dtype == torch.int32
     assert result[TransitionKey.OBSERVATION]["observation.bool"].dtype == torch.bool
     assert result[TransitionKey.ACTION].dtype == torch.float16
@@ -272,8 +288,12 @@ def test_features():
     processor = DeviceProcessorStep(device="cpu")
 
     features = {
-        PipelineFeatureType.OBSERVATION: {OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))},
-        PipelineFeatureType.ACTION: {ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(5,))},
+        PipelineFeatureType.OBSERVATION: {
+            OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))
+        },
+        PipelineFeatureType.ACTION: {
+            ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(5,))
+        },
     }
 
     result = processor.transform_features(features)
@@ -316,7 +336,9 @@ def test_save_and_load_pretrained():
     """Test saving and loading processor with DeviceProcessorStep."""
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     processor = DeviceProcessorStep(device=device, float_dtype="float16")
-    robot_processor = DataProcessorPipeline(steps=[processor], name="device_test_processor")
+    robot_processor = DataProcessorPipeline(
+        steps=[processor], name="device_test_processor"
+    )
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Save
@@ -364,8 +386,13 @@ def test_performance_with_large_tensors():
     result = processor(transition)
 
     # Verify all tensors are on CUDA
-    assert result[TransitionKey.OBSERVATION]["observation.large_image"].device.type == "cuda"
-    assert result[TransitionKey.OBSERVATION]["observation.features"].device.type == "cuda"
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.large_image"].device.type
+        == "cuda"
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.features"].device.type == "cuda"
+    )
     assert result[TransitionKey.ACTION].device.type == "cuda"
 
 
@@ -417,7 +444,9 @@ def test_complementary_data_preserved():
         "task": "pick_object",
         "episode_id": 42,
         "metadata": {"sensor": "camera_1"},
-        "observation_is_pad": torch.tensor([False, False, True]),  # This should be moved to device
+        "observation_is_pad": torch.tensor(
+            [False, False, True]
+        ),  # This should be moved to device
     }
 
     transition = create_transition(
@@ -430,7 +459,9 @@ def test_complementary_data_preserved():
     assert TransitionKey.COMPLEMENTARY_DATA in result
     assert result[TransitionKey.COMPLEMENTARY_DATA]["task"] == "pick_object"
     assert result[TransitionKey.COMPLEMENTARY_DATA]["episode_id"] == 42
-    assert result[TransitionKey.COMPLEMENTARY_DATA]["metadata"] == {"sensor": "camera_1"}
+    assert result[TransitionKey.COMPLEMENTARY_DATA]["metadata"] == {
+        "sensor": "camera_1"
+    }
     # Note: Currently DeviceProcessorStep doesn't process tensors in complementary_data
     # This is intentional as complementary_data is typically metadata
 
@@ -450,12 +481,18 @@ def test_float_dtype_conversion():
     action = torch.randn(3, dtype=torch.float32)
     reward = torch.tensor(1.0, dtype=torch.float32)
 
-    transition = create_transition(observation=observation, action=action, reward=reward)
+    transition = create_transition(
+        observation=observation, action=action, reward=reward
+    )
     result = processor(transition)
 
     # Check that float tensors are converted to float16
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
-    assert result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float16
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float16
+    )
     assert result[TransitionKey.ACTION].dtype == torch.float16
     assert result[TransitionKey.REWARD].dtype == torch.float16
 
@@ -480,8 +517,12 @@ def test_float_dtype_none():
     result = processor(transition)
 
     # Check that dtypes are preserved when float_dtype is None
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
-    assert result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float64
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float64
+    )
     assert result[TransitionKey.OBSERVATION]["observation.int32"].dtype == torch.int32
     assert result[TransitionKey.ACTION].dtype == torch.float64
 
@@ -540,10 +581,16 @@ def test_float_dtype_with_mixed_tensors():
     processor = DeviceProcessorStep(device="cpu", float_dtype="float32")
 
     observation = {
-        OBS_IMAGE: torch.randint(0, 255, (3, 64, 64), dtype=torch.uint8),  # Should not convert
+        OBS_IMAGE: torch.randint(
+            0, 255, (3, 64, 64), dtype=torch.uint8
+        ),  # Should not convert
         OBS_STATE: torch.randn(10, dtype=torch.float64),  # Should convert
-        "observation.mask": torch.tensor([True, False, True], dtype=torch.bool),  # Should not convert
-        "observation.indices": torch.tensor([1, 2, 3], dtype=torch.long),  # Should not convert
+        "observation.mask": torch.tensor(
+            [True, False, True], dtype=torch.bool
+        ),  # Should not convert
+        "observation.indices": torch.tensor(
+            [1, 2, 3], dtype=torch.long
+        ),  # Should not convert
     }
     action = torch.randn(5, dtype=torch.float16)  # Should convert
 
@@ -551,10 +598,18 @@ def test_float_dtype_with_mixed_tensors():
     result = processor(transition)
 
     # Check conversions
-    assert result[TransitionKey.OBSERVATION][OBS_IMAGE].dtype == torch.uint8  # Unchanged
-    assert result[TransitionKey.OBSERVATION][OBS_STATE].dtype == torch.float32  # Converted
-    assert result[TransitionKey.OBSERVATION]["observation.mask"].dtype == torch.bool  # Unchanged
-    assert result[TransitionKey.OBSERVATION]["observation.indices"].dtype == torch.long  # Unchanged
+    assert (
+        result[TransitionKey.OBSERVATION][OBS_IMAGE].dtype == torch.uint8
+    )  # Unchanged
+    assert (
+        result[TransitionKey.OBSERVATION][OBS_STATE].dtype == torch.float32
+    )  # Converted
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.mask"].dtype == torch.bool
+    )  # Unchanged
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.indices"].dtype == torch.long
+    )  # Unchanged
     assert result[TransitionKey.ACTION].dtype == torch.float32  # Converted
 
 
@@ -589,11 +644,17 @@ def test_float_dtype_with_cuda():
     result = processor(transition)
 
     # Check that tensors are on CUDA and float types are converted
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].device.type == "cuda"
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].device.type == "cuda"
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
+    )
 
     assert result[TransitionKey.OBSERVATION]["observation.int64"].device.type == "cuda"
-    assert result[TransitionKey.OBSERVATION]["observation.int64"].dtype == torch.int64  # Unchanged
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.int64"].dtype == torch.int64
+    )  # Unchanged
 
     assert result[TransitionKey.ACTION].device.type == "cuda"
     assert result[TransitionKey.ACTION].dtype == torch.float16
@@ -629,7 +690,9 @@ def test_complementary_data_index_fields():
     # Check task_index tensor
     assert isinstance(processed_comp_data["task_index"], torch.Tensor)
     assert processed_comp_data["task_index"].device.type == "cpu"
-    assert torch.equal(processed_comp_data["task_index"], complementary_data["task_index"])
+    assert torch.equal(
+        processed_comp_data["task_index"], complementary_data["task_index"]
+    )
 
     # Check non-tensor fields remain unchanged
     assert processed_comp_data["task"] == ["pick_cube"]
@@ -713,7 +776,9 @@ def test_complementary_data_float_dtype_conversion():
     complementary_data = {
         "index": torch.tensor([42], dtype=torch.int64),
         "task_index": torch.tensor([3], dtype=torch.int64),
-        "float_tensor": torch.tensor([1.5, 2.5], dtype=torch.float32),  # Should be converted
+        "float_tensor": torch.tensor(
+            [1.5, 2.5], dtype=torch.float32
+        ),  # Should be converted
     }
     transition = create_transition(complementary_data=complementary_data)
 
@@ -827,7 +892,9 @@ def test_preserves_gpu_placement():
     assert result[TransitionKey.ACTION].device.type == "cuda"
 
     # Verify no unnecessary copies were made (same data pointer)
-    assert torch.equal(result[TransitionKey.OBSERVATION][OBS_STATE], observation[OBS_STATE])
+    assert torch.equal(
+        result[TransitionKey.OBSERVATION][OBS_STATE], observation[OBS_STATE]
+    )
 
 
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="Requires at least 2 GPUs")
@@ -911,7 +978,9 @@ def test_multi_gpu_with_float_dtype():
     # Check device placement
     assert result[TransitionKey.OBSERVATION]["observation.gpu0"].device.index == 0
     assert result[TransitionKey.OBSERVATION]["observation.gpu1"].device.index == 1
-    assert result[TransitionKey.OBSERVATION]["observation.cpu"].device.index == 0  # Moved to cuda:0
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.cpu"].device.index == 0
+    )  # Moved to cuda:0
 
     # Check dtype conversion happened for all
     assert result[TransitionKey.OBSERVATION]["observation.gpu0"].dtype == torch.float16
@@ -963,7 +1032,10 @@ def test_policy_processor_integration():
         ACTION: {"mean": torch.zeros(5), "std": torch.ones(5)},
     }
 
-    norm_map = {FeatureType.STATE: NormalizationMode.MEAN_STD, FeatureType.ACTION: NormalizationMode.MEAN_STD}
+    norm_map = {
+        FeatureType.STATE: NormalizationMode.MEAN_STD,
+        FeatureType.ACTION: NormalizationMode.MEAN_STD,
+    }
 
     # Create input processor (preprocessor) that moves to GPU
     input_processor = DataProcessorPipeline(
@@ -981,7 +1053,9 @@ def test_policy_processor_integration():
     output_processor = DataProcessorPipeline(
         steps=[
             DeviceProcessorStep(device="cpu"),
-            UnnormalizerProcessorStep(features={ACTION: features[ACTION]}, norm_map=norm_map, stats=stats),
+            UnnormalizerProcessorStep(
+                features={ACTION: features[ACTION]}, norm_map=norm_map, stats=stats
+            ),
         ],
         name="test_postprocessor",
         to_transition=identity_transition,
@@ -1021,11 +1095,21 @@ def test_mps_float64_compatibility():
 
     # Create tensors with different dtypes, including float64 which MPS doesn't support
     observation = {
-        "observation.float64": torch.randn(5, dtype=torch.float64),  # Should be converted to float32
-        "observation.float32": torch.randn(5, dtype=torch.float32),  # Should remain float32
-        "observation.float16": torch.randn(5, dtype=torch.float16),  # Should remain float16
-        "observation.int64": torch.randint(0, 10, (5,), dtype=torch.int64),  # Should remain int64
-        "observation.bool": torch.tensor([True, False, True], dtype=torch.bool),  # Should remain bool
+        "observation.float64": torch.randn(
+            5, dtype=torch.float64
+        ),  # Should be converted to float32
+        "observation.float32": torch.randn(
+            5, dtype=torch.float32
+        ),  # Should remain float32
+        "observation.float16": torch.randn(
+            5, dtype=torch.float16
+        ),  # Should remain float16
+        "observation.int64": torch.randint(
+            0, 10, (5,), dtype=torch.int64
+        ),  # Should remain int64
+        "observation.bool": torch.tensor(
+            [True, False, True], dtype=torch.bool
+        ),  # Should remain bool
     }
     action = torch.randn(3, dtype=torch.float64)  # Should be converted to float32
     reward = torch.tensor(1.0, dtype=torch.float64)  # Should be converted to float32
@@ -1033,7 +1117,11 @@ def test_mps_float64_compatibility():
     truncated = torch.tensor(True, dtype=torch.bool)  # Should remain bool
 
     transition = create_transition(
-        observation=observation, action=action, reward=reward, done=done, truncated=truncated
+        observation=observation,
+        action=action,
+        reward=reward,
+        done=done,
+        truncated=truncated,
     )
 
     result = processor(transition)
@@ -1050,13 +1138,19 @@ def test_mps_float64_compatibility():
     assert result[TransitionKey.TRUNCATED].device.type == "mps"
 
     # Check that float64 tensors were automatically converted to float32
-    assert result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float32
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float32
+    )
     assert result[TransitionKey.ACTION].dtype == torch.float32
     assert result[TransitionKey.REWARD].dtype == torch.float32
 
     # Check that other dtypes were preserved
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
-    assert result[TransitionKey.OBSERVATION]["observation.float16"].dtype == torch.float16
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float32
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float16"].dtype == torch.float16
+    )
     assert result[TransitionKey.OBSERVATION]["observation.int64"].dtype == torch.int64
     assert result[TransitionKey.OBSERVATION]["observation.bool"].dtype == torch.bool
     assert result[TransitionKey.DONE].dtype == torch.bool
@@ -1073,8 +1167,12 @@ def test_mps_float64_with_complementary_data():
         "task": ["pick_object"],
         "index": torch.tensor([42], dtype=torch.int64),  # Should remain int64
         "task_index": torch.tensor([3], dtype=torch.int64),  # Should remain int64
-        "float64_tensor": torch.tensor([1.5, 2.5], dtype=torch.float64),  # Should convert to float32
-        "float32_tensor": torch.tensor([3.5], dtype=torch.float32),  # Should remain float32
+        "float64_tensor": torch.tensor(
+            [1.5, 2.5], dtype=torch.float64
+        ),  # Should convert to float32
+        "float32_tensor": torch.tensor(
+            [3.5], dtype=torch.float32
+        ),  # Should remain float32
     }
 
     transition = create_transition(
@@ -1096,7 +1194,9 @@ def test_mps_float64_with_complementary_data():
     assert processed_comp_data["float32_tensor"].device.type == "mps"
 
     # Check dtype conversions
-    assert result[TransitionKey.OBSERVATION][OBS_STATE].dtype == torch.float32  # Converted
+    assert (
+        result[TransitionKey.OBSERVATION][OBS_STATE].dtype == torch.float32
+    )  # Converted
     assert result[TransitionKey.ACTION].dtype == torch.float32  # Converted
     assert processed_comp_data["float64_tensor"].dtype == torch.float32  # Converted
     assert processed_comp_data["float32_tensor"].dtype == torch.float32  # Unchanged
@@ -1117,8 +1217,12 @@ def test_mps_with_explicit_float_dtype():
         "observation.float64": torch.randn(
             5, dtype=torch.float64
         ),  # First converted to float32, then to float16
-        "observation.float32": torch.randn(5, dtype=torch.float32),  # Converted to float16
-        "observation.int32": torch.randint(0, 10, (5,), dtype=torch.int32),  # Should remain int32
+        "observation.float32": torch.randn(
+            5, dtype=torch.float32
+        ),  # Converted to float16
+        "observation.int32": torch.randint(
+            0, 10, (5,), dtype=torch.int32
+        ),  # Should remain int32
     }
     action = torch.randn(3, dtype=torch.float64)
 
@@ -1132,8 +1236,12 @@ def test_mps_with_explicit_float_dtype():
     assert result[TransitionKey.ACTION].device.type == "mps"
 
     # Check that all float tensors end up as float16 (the target dtype)
-    assert result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float16
-    assert result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float64"].dtype == torch.float16
+    )
+    assert (
+        result[TransitionKey.OBSERVATION]["observation.float32"].dtype == torch.float16
+    )
     assert result[TransitionKey.ACTION].dtype == torch.float16
 
     # Check that non-float tensors are preserved

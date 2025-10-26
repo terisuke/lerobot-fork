@@ -99,7 +99,9 @@ def test_sac_processor_normalization_modes():
     )
 
     # Create test data
-    observation = {OBS_STATE: torch.randn(10) * 2}  # Larger values to test normalization
+    observation = {
+        OBS_STATE: torch.randn(10) * 2
+    }  # Larger values to test normalization
     action = torch.rand(5) * 2 - 1  # Range [-1, 1]
     transition = create_transition(observation, action)
     batch = transition_to_batch(transition)
@@ -210,7 +212,9 @@ def test_sac_processor_without_stats():
     """Test SAC processor creation without dataset statistics."""
     config = create_default_config()
 
-    preprocessor, postprocessor = make_sac_pre_post_processors(config, dataset_stats=None)
+    preprocessor, postprocessor = make_sac_pre_post_processors(
+        config, dataset_stats=None
+    )
 
     # Should still create processors
     assert preprocessor is not None
@@ -273,7 +277,9 @@ def test_sac_processor_mixed_precision():
     modified_steps = []
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
-            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="float16"))
+            modified_steps.append(
+                DeviceProcessorStep(device=config.device, float_dtype="float16")
+            )
         elif isinstance(step, NormalizerProcessorStep):
             # Update normalizer to use the same device as the device processor
             norm_step = step  # Now type checker knows this is NormalizerProcessorStep
@@ -340,7 +346,9 @@ def test_sac_processor_edge_cases():
     )
 
     # Test with observation that has no state key but still exists
-    observation = {"observation.dummy": torch.randn(1)}  # Some dummy observation to pass validation
+    observation = {
+        "observation.dummy": torch.randn(1)
+    }  # Some dummy observation to pass validation
     action = torch.randn(5)
     batch = {TransitionKey.ACTION.value: action, **observation}
     processed = preprocessor(batch)
@@ -349,7 +357,9 @@ def test_sac_processor_edge_cases():
     assert processed[TransitionKey.ACTION.value].shape == (1, 5)
 
     # Test with zero action (representing "null" action)
-    transition = create_transition(observation={OBS_STATE: torch.randn(10)}, action=torch.zeros(5))
+    transition = create_transition(
+        observation={OBS_STATE: torch.randn(10)}, action=torch.zeros(5)
+    )
     batch = transition_to_batch(transition)
     processed = preprocessor(batch)
     assert processed[OBS_STATE].shape == (1, 10)
@@ -374,7 +384,9 @@ def test_sac_processor_bfloat16_device_float32_normalizer():
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
             # Device processor converts to bfloat16
-            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="bfloat16"))
+            modified_steps.append(
+                DeviceProcessorStep(device=config.device, float_dtype="bfloat16")
+            )
         elif isinstance(step, NormalizerProcessorStep):
             # Normalizer stays configured as float32 (will auto-adapt to bfloat16)
             norm_step = step  # Now type checker knows this is NormalizerProcessorStep
@@ -396,7 +408,9 @@ def test_sac_processor_bfloat16_device_float32_normalizer():
     assert normalizer_step.dtype == torch.float32
 
     # Create test data
-    observation = {OBS_STATE: torch.randn(10, dtype=torch.float32)}  # Start with float32
+    observation = {
+        OBS_STATE: torch.randn(10, dtype=torch.float32)
+    }  # Start with float32
     action = torch.randn(5, dtype=torch.float32)
     transition = create_transition(observation, action)
     batch = transition_to_batch(transition)

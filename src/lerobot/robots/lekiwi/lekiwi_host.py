@@ -90,7 +90,9 @@ def main(cfg: LeKiwiServerConfig):
                 logging.error("Message fetching failed: %s", e)
 
             now = time.time()
-            if (now - last_cmd_time > host.watchdog_timeout_ms / 1000) and not watchdog_active:
+            if (
+                now - last_cmd_time > host.watchdog_timeout_ms / 1000
+            ) and not watchdog_active:
                 logging.warning(
                     f"Command not received for more than {host.watchdog_timeout_ms} milliseconds. Stopping the base."
                 )
@@ -102,7 +104,9 @@ def main(cfg: LeKiwiServerConfig):
             # Encode ndarrays to base64 strings
             for cam_key, _ in robot.cameras.items():
                 ret, buffer = cv2.imencode(
-                    ".jpg", last_observation[cam_key], [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+                    ".jpg",
+                    last_observation[cam_key],
+                    [int(cv2.IMWRITE_JPEG_QUALITY), 90],
                 )
                 if ret:
                     last_observation[cam_key] = base64.b64encode(buffer).decode("utf-8")
@@ -111,7 +115,9 @@ def main(cfg: LeKiwiServerConfig):
 
             # Send the observation to the remote agent
             try:
-                host.zmq_observation_socket.send_string(json.dumps(last_observation), flags=zmq.NOBLOCK)
+                host.zmq_observation_socket.send_string(
+                    json.dumps(last_observation), flags=zmq.NOBLOCK
+                )
             except zmq.Again:
                 logging.info("Dropping observation, no client connected")
 

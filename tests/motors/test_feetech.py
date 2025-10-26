@@ -77,7 +77,9 @@ def dummy_calibration(dummy_motors) -> dict[str, MotorCalibration]:
     return calibration
 
 
-@pytest.mark.skipif(sys.platform != "darwin", reason=f"No patching needed on {sys.platform=}")
+@pytest.mark.skipif(
+    sys.platform != "darwin", reason=f"No patching needed on {sys.platform=}"
+)
 def test_autouse_patch():
     """Ensures that the autouse fixture correctly patches scs.PortHandler with MockPortHandler."""
     assert scs.PortHandler is MockPortHandler
@@ -188,7 +190,9 @@ def test__read_error(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(RuntimeError, match=re.escape("[RxPacketError] Input voltage error!")):
+        with pytest.raises(
+            RuntimeError, match=re.escape("[RxPacketError] Input voltage error!")
+        ):
             bus._read(addr, length, id_, raise_on_error=raise_on_error)
     else:
         _, _, read_error = bus._read(addr, length, id_, raise_on_error=raise_on_error)
@@ -208,7 +212,9 @@ def test__read_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
+        with pytest.raises(
+            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
+        ):
             bus._read(addr, length, id_, raise_on_error=raise_on_error)
     else:
         _, read_comm, _ = bus._read(addr, length, id_, raise_on_error=raise_on_error)
@@ -248,10 +254,14 @@ def test__write_error(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(RuntimeError, match=re.escape("[RxPacketError] Input voltage error!")):
+        with pytest.raises(
+            RuntimeError, match=re.escape("[RxPacketError] Input voltage error!")
+        ):
             bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
     else:
-        _, write_error = bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
+        _, write_error = bus._write(
+            addr, length, id_, value, raise_on_error=raise_on_error
+        )
         assert write_error == error
 
     assert mock_motors.stubs[stub].called
@@ -265,10 +275,14 @@ def test__write_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
+        with pytest.raises(
+            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
+        ):
             bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
     else:
-        write_comm, _ = bus._write(addr, length, id_, value, raise_on_error=raise_on_error)
+        write_comm, _ = bus._write(
+            addr, length, id_, value, raise_on_error=raise_on_error
+        )
         assert write_comm == scs.COMM_RX_TIMEOUT
 
     assert mock_motors.stubs[stub].called
@@ -302,10 +316,16 @@ def test__sync_read_comm(raise_on_error, mock_motors, dummy_motors):
     bus.connect(handshake=False)
 
     if raise_on_error:
-        with pytest.raises(ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")):
-            bus._sync_read(addr, length, list(ids_values), raise_on_error=raise_on_error)
+        with pytest.raises(
+            ConnectionError, match=re.escape("[TxRxResult] There is no status packet!")
+        ):
+            bus._sync_read(
+                addr, length, list(ids_values), raise_on_error=raise_on_error
+            )
     else:
-        _, read_comm = bus._sync_read(addr, length, list(ids_values), raise_on_error=raise_on_error)
+        _, read_comm = bus._sync_read(
+            addr, length, list(ids_values), raise_on_error=raise_on_error
+        )
         assert read_comm == scs.COMM_RX_TIMEOUT
 
     assert mock_motors.stubs[stub].called
@@ -336,12 +356,16 @@ def test_is_calibrated(mock_motors, dummy_motors, dummy_calibration):
     for cal in dummy_calibration.values():
         mins_stubs.append(
             mock_motors.build_read_stub(
-                *STS_SMS_SERIES_CONTROL_TABLE["Min_Position_Limit"], cal.id, cal.range_min
+                *STS_SMS_SERIES_CONTROL_TABLE["Min_Position_Limit"],
+                cal.id,
+                cal.range_min,
             )
         )
         maxes_stubs.append(
             mock_motors.build_read_stub(
-                *STS_SMS_SERIES_CONTROL_TABLE["Max_Position_Limit"], cal.id, cal.range_max
+                *STS_SMS_SERIES_CONTROL_TABLE["Max_Position_Limit"],
+                cal.id,
+                cal.range_max,
             )
         )
         homings_stubs.append(
@@ -373,13 +397,19 @@ def test_reset_calibration(mock_motors, dummy_motors):
     write_maxes_stubs = []
     for motor in dummy_motors.values():
         write_homing_stubs.append(
-            mock_motors.build_write_stub(*STS_SMS_SERIES_CONTROL_TABLE["Homing_Offset"], motor.id, 0)
+            mock_motors.build_write_stub(
+                *STS_SMS_SERIES_CONTROL_TABLE["Homing_Offset"], motor.id, 0
+            )
         )
         write_mins_stubs.append(
-            mock_motors.build_write_stub(*STS_SMS_SERIES_CONTROL_TABLE["Min_Position_Limit"], motor.id, 0)
+            mock_motors.build_write_stub(
+                *STS_SMS_SERIES_CONTROL_TABLE["Min_Position_Limit"], motor.id, 0
+            )
         )
         write_maxes_stubs.append(
-            mock_motors.build_write_stub(*STS_SMS_SERIES_CONTROL_TABLE["Max_Position_Limit"], motor.id, 4095)
+            mock_motors.build_write_stub(
+                *STS_SMS_SERIES_CONTROL_TABLE["Max_Position_Limit"], motor.id, 4095
+            )
         )
 
     bus = FeetechMotorsBus(port=mock_motors.port, motors=dummy_motors)

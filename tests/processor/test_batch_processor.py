@@ -235,7 +235,9 @@ def test_integration_with_robot_processor():
     """Test AddBatchDimensionProcessorStep integration with RobotProcessor."""
     to_batch_processor = AddBatchDimensionProcessorStep()
     pipeline = DataProcessorPipeline(
-        [to_batch_processor], to_transition=identity_transition, to_output=identity_transition
+        [to_batch_processor],
+        to_transition=identity_transition,
+        to_output=identity_transition,
     )
 
     # Create unbatched observation
@@ -277,7 +279,10 @@ def test_save_and_load_pretrained():
     """Test saving and loading AddBatchDimensionProcessorStep with RobotProcessor."""
     processor = AddBatchDimensionProcessorStep()
     pipeline = DataProcessorPipeline(
-        [processor], name="BatchPipeline", to_transition=identity_transition, to_output=identity_transition
+        [processor],
+        name="BatchPipeline",
+        to_transition=identity_transition,
+        to_output=identity_transition,
     )
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -705,7 +710,9 @@ def test_complementary_data_none():
     """Test processor handles None complementary_data gracefully."""
     processor = AddBatchDimensionProcessorStep()
 
-    transition = create_transition(complementary_data=None, action=torch.empty(0), observation={})
+    transition = create_transition(
+        complementary_data=None, action=torch.empty(0), observation={}
+    )
     result = processor(transition)
 
     assert result[TransitionKey.COMPLEMENTARY_DATA] == {}
@@ -998,7 +1005,9 @@ def test_task_index_already_batched():
         complementary_data=complementary_data, observation={}, action=torch.empty(0)
     )
     result = processor(transition)
-    assert torch.equal(result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_1d)
+    assert torch.equal(
+        result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_1d
+    )
 
     # Test 2D
     complementary_data = {"task_index": task_index_2d}
@@ -1006,7 +1015,9 @@ def test_task_index_already_batched():
         complementary_data=complementary_data, observation={}, action=torch.empty(0)
     )
     result = processor(transition)
-    assert torch.equal(result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_2d)
+    assert torch.equal(
+        result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_2d
+    )
 
 
 def test_index_non_tensor_unchanged():

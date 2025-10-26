@@ -39,7 +39,9 @@ def bytes_buffer_size(buffer: io.BytesIO) -> int:
     return result
 
 
-def send_bytes_in_chunks(buffer: bytes, message_class: Any, log_prefix: str = "", silent: bool = True):
+def send_bytes_in_chunks(
+    buffer: bytes, message_class: Any, log_prefix: str = "", silent: bool = True
+):
     buffer = io.BytesIO(buffer)
     size_in_bytes = bytes_buffer_size(buffer)
 
@@ -62,12 +64,16 @@ def send_bytes_in_chunks(buffer: bytes, message_class: Any, log_prefix: str = ""
 
         yield message_class(transfer_state=transfer_state, data=chunk)
         sent_bytes += size_to_read
-        logging_method(f"{log_prefix} Sent {sent_bytes}/{size_in_bytes} bytes with state {transfer_state}")
+        logging_method(
+            f"{log_prefix} Sent {sent_bytes}/{size_in_bytes} bytes with state {transfer_state}"
+        )
 
     logging_method(f"{log_prefix} Published {sent_bytes / 1024 / 1024} MB")
 
 
-def receive_bytes_in_chunks(iterator, queue: Queue | None, shutdown_event: Event, log_prefix: str = ""):
+def receive_bytes_in_chunks(
+    iterator, queue: Queue | None, shutdown_event: Event, log_prefix: str = ""
+):
     bytes_buffer = io.BytesIO()
     step = 0
 
@@ -90,7 +96,9 @@ def receive_bytes_in_chunks(iterator, queue: Queue | None, shutdown_event: Event
             logging.debug(f"{log_prefix} Received data at step {step}")
         elif item.transfer_state == services_pb2.TransferState.TRANSFER_END:
             bytes_buffer.write(item.data)
-            logging.debug(f"{log_prefix} Received data at step end size {bytes_buffer_size(bytes_buffer)}")
+            logging.debug(
+                f"{log_prefix} Received data at step end size {bytes_buffer_size(bytes_buffer)}"
+            )
 
             if queue is not None:
                 queue.put(bytes_buffer.getvalue())
@@ -103,7 +111,9 @@ def receive_bytes_in_chunks(iterator, queue: Queue | None, shutdown_event: Event
 
             logging.debug(f"{log_prefix} Queue updated")
         else:
-            logging.warning(f"{log_prefix} Received unknown transfer state {item.transfer_state}")
+            logging.warning(
+                f"{log_prefix} Received unknown transfer state {item.transfer_state}"
+            )
             raise ValueError(f"Received unknown transfer state {item.transfer_state}")
 
 

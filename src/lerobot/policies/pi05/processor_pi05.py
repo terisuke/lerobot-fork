@@ -36,7 +36,10 @@ from lerobot.processor import (
     TokenizerProcessorStep,
     UnnormalizerProcessorStep,
 )
-from lerobot.processor.converters import policy_action_to_transition, transition_to_policy_action
+from lerobot.processor.converters import (
+    policy_action_to_transition,
+    transition_to_policy_action,
+)
 from lerobot.processor.core import EnvTransition, TransitionKey
 from lerobot.utils.constants import (
     OBS_STATE,
@@ -74,7 +77,9 @@ class Pi05PrepareStateTokenizerProcessorStep(ProcessorStep):
         # State should already be normalized to [-1, 1] by the NormalizerProcessorStep that runs before this step
         # Discretize into 256 bins (see openpi `PaligemmaTokenizer.tokenize()`)
         state_np = state.cpu().numpy()
-        discretized_states = np.digitize(state_np, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        discretized_states = (
+            np.digitize(state_np, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        )
 
         full_prompts = []
         for i, task in enumerate(tasks):
@@ -131,7 +136,9 @@ def make_pi05_pre_post_processors(
 
     # Add remaining processors
     input_steps: list[ProcessorStep] = [
-        RenameObservationsProcessorStep(rename_map={}),  # To mimic the same processor as pretrained one
+        RenameObservationsProcessorStep(
+            rename_map={}
+        ),  # To mimic the same processor as pretrained one
         AddBatchDimensionProcessorStep(),
         # NOTE: NormalizerProcessorStep MUST come before Pi05PrepareStateTokenizerProcessorStep
         # because the tokenizer step expects normalized state in [-1, 1] range for discretization
@@ -152,7 +159,9 @@ def make_pi05_pre_post_processors(
 
     output_steps: list[ProcessorStep] = [
         UnnormalizerProcessorStep(
-            features=config.output_features, norm_map=config.normalization_mapping, stats=dataset_stats
+            features=config.output_features,
+            norm_map=config.normalization_mapping,
+            stats=dataset_stats,
         ),
         DeviceProcessorStep(device="cpu"),
     ]

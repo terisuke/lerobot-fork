@@ -31,7 +31,11 @@ def learner_service_stub():
     interactions_queue = Queue()
     seconds_between_pushes = 1
     client, channel, server = create_learner_service_stub(
-        shutdown_event, parameters_queue, transitions_queue, interactions_queue, seconds_between_pushes
+        shutdown_event,
+        parameters_queue,
+        transitions_queue,
+        interactions_queue,
+        seconds_between_pushes,
     )
 
     yield client  # provide the stub to the test function
@@ -103,18 +107,38 @@ def test_send_interactions():
     interactions_queue = Queue()
     seconds_between_pushes = 1
     client, channel, server = create_learner_service_stub(
-        shutdown_event, parameters_queue, transitions_queue, interactions_queue, seconds_between_pushes
+        shutdown_event,
+        parameters_queue,
+        transitions_queue,
+        interactions_queue,
+        seconds_between_pushes,
     )
 
     list_of_interaction_messages = [
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"1"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"2"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"3"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"4"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"5"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"6"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"7"),
-        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"8"),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"1"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"2"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"3"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"4"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"5"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"6"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"7"
+        ),
+        services_pb2.InteractionMessage(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"8"
+        ),
     ]
 
     def mock_interactions_stream():
@@ -148,20 +172,32 @@ def test_send_transitions():
     seconds_between_pushes = 1
 
     client, channel, server = create_learner_service_stub(
-        shutdown_event, parameters_queue, transitions_queue, interactions_queue, seconds_between_pushes
+        shutdown_event,
+        parameters_queue,
+        transitions_queue,
+        interactions_queue,
+        seconds_between_pushes,
     )
 
     # Create test transition messages
     list_of_transition_messages = [
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"transition_1"
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
+            data=b"transition_1",
         ),
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"transition_2"
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
+            data=b"transition_2",
         ),
-        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"transition_3"),
-        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"batch_1"),
-        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"batch_2"),
+        services_pb2.Transition(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"transition_3"
+        ),
+        services_pb2.Transition(
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"batch_1"
+        ),
+        services_pb2.Transition(
+            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"batch_2"
+        ),
     ]
 
     def mock_transitions_stream():
@@ -194,7 +230,11 @@ def test_send_transitions_empty_stream():
     seconds_between_pushes = 1
 
     client, channel, server = create_learner_service_stub(
-        shutdown_event, parameters_queue, transitions_queue, interactions_queue, seconds_between_pushes
+        shutdown_event,
+        parameters_queue,
+        transitions_queue,
+        interactions_queue,
+        seconds_between_pushes,
     )
 
     def empty_stream():
@@ -224,7 +264,11 @@ def test_stream_parameters():
     seconds_between_pushes = 0.2  # Short delay for testing
 
     client, channel, server = create_learner_service_stub(
-        shutdown_event, parameters_queue, transitions_queue, interactions_queue, seconds_between_pushes
+        shutdown_event,
+        parameters_queue,
+        transitions_queue,
+        interactions_queue,
+        seconds_between_pushes,
     )
 
     # Add test parameters to the queue

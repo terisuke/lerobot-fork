@@ -20,7 +20,9 @@ import torch
 from torch import Tensor, nn
 
 from lerobot.policies.pretrained import PreTrainedPolicy
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
 from lerobot.utils.constants import OBS_IMAGE, REWARD
 
 
@@ -114,7 +116,9 @@ class Classifier(PreTrainedPolicy):
         self.config = config
 
         # Set up encoder
-        encoder = AutoModel.from_pretrained(self.config.model_name, trust_remote_code=True)
+        encoder = AutoModel.from_pretrained(
+            self.config.model_name, trust_remote_code=True
+        )
         # Extract vision model if we're given a multimodal model
         if hasattr(encoder, "vision_model"):
             logging.info("Multimodal model detected - using vision encoder only")
@@ -135,7 +139,9 @@ class Classifier(PreTrainedPolicy):
 
         # Extract image keys from input_features
         self.image_keys = [
-            key.replace(".", "_") for key in config.input_features if key.startswith(OBS_IMAGE)
+            key.replace(".", "_")
+            for key in config.input_features
+            if key.startswith(OBS_IMAGE)
         ]
 
         if self.is_cnn:
@@ -152,7 +158,9 @@ class Classifier(PreTrainedPolicy):
             self.feature_dim = self.encoder.fc.in_features
             self.encoder = nn.Sequential(*list(self.encoder.children())[:-1])
         elif hasattr(self.encoder.config, "hidden_sizes"):
-            self.feature_dim = self.encoder.config.hidden_sizes[-1]  # Last channel dimension
+            self.feature_dim = self.encoder.config.hidden_sizes[
+                -1
+            ]  # Last channel dimension
         else:
             raise ValueError("Unsupported CNN architecture")
 
@@ -171,7 +179,10 @@ class Classifier(PreTrainedPolicy):
                 num_features=self.config.image_embedding_pooling_dim,
             ),
             nn.Dropout(self.config.dropout_rate),
-            nn.Linear(self.feature_dim * self.config.image_embedding_pooling_dim, self.config.latent_dim),
+            nn.Linear(
+                self.feature_dim * self.config.image_embedding_pooling_dim,
+                self.config.latent_dim,
+            ),
             nn.LayerNorm(self.config.latent_dim),
             nn.Tanh(),
         )
@@ -187,7 +198,9 @@ class Classifier(PreTrainedPolicy):
             if hasattr(self.encoder.config, "hidden_size"):
                 input_dim = self.encoder.config.hidden_size
             else:
-                raise ValueError("Unsupported transformer architecture since hidden_size is not found")
+                raise ValueError(
+                    "Unsupported transformer architecture since hidden_size is not found"
+                )
 
         self.classifier_head = nn.Sequential(
             nn.Linear(input_dim * self.config.num_cameras, self.config.hidden_dim),
@@ -211,10 +224,16 @@ class Classifier(PreTrainedPolicy):
                 outputs = self.encoder(x)
                 return outputs.last_hidden_state[:, 0, :]
 
-    def extract_images_and_labels(self, batch: dict[str, Tensor]) -> tuple[list, Tensor]:
+    def extract_images_and_labels(
+        self, batch: dict[str, Tensor]
+    ) -> tuple[list, Tensor]:
         """Extract image tensors and label tensors from batch."""
         # Check for both OBS_IMAGE and OBS_IMAGES prefixes
-        images = [batch[key] for key in self.config.input_features if key.startswith(OBS_IMAGE)]
+        images = [
+            batch[key]
+            for key in self.config.input_features
+            if key.startswith(OBS_IMAGE)
+        ]
         labels = batch[REWARD]
 
         return images, labels
@@ -222,7 +241,10 @@ class Classifier(PreTrainedPolicy):
     def predict(self, xs: list) -> ClassifierOutput:
         """Forward pass of the classifier for inference."""
         encoder_outputs = torch.hstack(
-            [self._get_encoder_output(x, img_key) for x, img_key in zip(xs, self.image_keys, strict=True)]
+            [
+                self._get_encoder_output(x, img_key)
+                for x, img_key in zip(xs, self.image_keys, strict=True)
+            ]
         )
         logits = self.classifier_head(encoder_outputs)
 
@@ -232,7 +254,9 @@ class Classifier(PreTrainedPolicy):
         else:
             probabilities = torch.softmax(logits, dim=-1)
 
-        return ClassifierOutput(logits=logits, probabilities=probabilities, hidden_states=encoder_outputs)
+        return ClassifierOutput(
+            logits=logits, probabilities=probabilities, hidden_states=encoder_outputs
+        )
 
     def forward(self, batch: dict[str, Tensor]) -> tuple[Tensor, dict[str, Tensor]]:
         """Standard forward pass for training compatible with train.py."""
@@ -245,7 +269,9 @@ class Classifier(PreTrainedPolicy):
         # Calculate loss
         if self.config.num_classes == 2:
             # Binary classification
-            loss = nn.functional.binary_cross_entropy_with_logits(outputs.logits, labels)
+            loss = nn.functional.binary_cross_entropy_with_logits(
+                outputs.logits, labels
+            )
             predictions = (torch.sigmoid(outputs.logits) > 0.5).float()
         else:
             # Multi-class classification
@@ -273,7 +299,11 @@ class Classifier(PreTrainedPolicy):
         batch = self.normalize_targets(batch)
 
         # Extract images from batch dict
-        images = [batch[key] for key in self.config.input_features if key.startswith(OBS_IMAGE)]
+        images = [
+            batch[key]
+            for key in self.config.input_features
+            if key.startswith(OBS_IMAGE)
+        ]
 
         if self.config.num_classes == 2:
             probs = self.predict(images).probabilities
