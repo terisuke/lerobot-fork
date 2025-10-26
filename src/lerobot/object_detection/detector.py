@@ -55,11 +55,11 @@ class ObjectDetector:
         # Initialize YOLO model for object detection
         self._init_yolo_model()
 
-        # RealSense pipeline - disabled for macOS compatibility
+        # Initialize RealSense camera with direct serial number
         self.pipeline = None
         self.config = None
         self.camera_available = False
-        print("📷 RealSense camera disabled for macOS compatibility")
+        self._setup_realsense_direct()
 
     def _init_yolo_model(self):
         """Initialize YOLO model for object detection."""
@@ -80,27 +80,97 @@ class ObjectDetector:
         self.model = net
         print("✅ OpenCV DNN model loaded")
 
-    def _setup_realsense(self):
-        """Setup RealSense camera configuration."""
-        try:
-            # Initialize RealSense pipeline and config
-            self.pipeline = rs.pipeline()
-            self.config = rs.config()
+    def _setup_realsense_direct(self):
+        """Setup RealSense camera with retry logic for macOS ARM64."""
+        import time
+        
+        print(f"📷 Attempting to connect to RealSense camera...")
+        
+        # Retry up to 3 times
+        for attempt in range(3):
+            try:
+                # Step 1: Hardware reset (skip on first attempt to avoid immediate failure)
+                if attempt > 0:
+                    try:
+                        ctx = rs.context()
+                        devices = ctx.query_devices()
+                        if len(devices) > 0:
+                            dev = devices[0]
+                            print(f"🔄 Retry {attempt}: Performing hardware reset...")
+                            dev.hardware_reset()
+                            time.sleep(2)  # Wait for reset to complete
+                    except Exception as reset_err:
+                        print(f"⚠️  Hardware reset skipped: {reset_err}")
+                
+                # Step 2: Initialize pipeline
+                self.pipeline = rs.pipeline()
+                self.config = rs.config()
+                
+                # Configure depth and color streams
+                # Use RGB8 instead of BGR8 on macOS ARM64 (M chip)
+                self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 15)
+                self.config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 15)
 
-            # Configure depth and color streams
-            self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-            self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-
-            # Start streaming
-            self.pipeline.start(self.config)
-            print("✅ RealSense camera started")
-            self.camera_available = True
-        except Exception as e:
-            print(f"⚠️  RealSense camera setup failed: {e}")
-            print("📷 Falling back to mock camera mode")
-            self.camera_available = False
-            self.pipeline = None
-            self.config = None
+                # Start streaming
+                profile = self.pipeline.start(self.config)
+                
+                # Step 3: Wait for stabilization (critical for macOS)
+                if attempt == 0:
+                    print("⏳ Waiting for camera stabilization...")
+                time.sleep(2)  # Critical: allows USB power state to stabilize
+                
+                # Step 4: Try to get first frame to verify connection
+                frames = self.pipeline.wait_for_frames(timeout_ms=10000)
+                print(f"✅ Test frame received (attempt {attempt + 1})")
+                
+                print("✅ RealSense camera started successfully")
+                self.camera_available = True
+                return  # Success!
+                
+            except RuntimeError as e:
+                if "failed to set power state" in str(e):
+                    print(f"⚠️  Attempt {attempt + 1}/3: Power error")
+                    if attempt < 2:
+                        print(f"🔄 Retrying in 3 seconds...")
+                        time.sleep(3)
+                    else:
+                        print(f"❌ Failed after 3 attempts: {e}")
+                        print("💡 Try: 1) Power cycle the camera, 2) Use a powered USB hub")
+                elif "No device connected" in str(e):
+                    print(f"⚠️  Attempt {attempt + 1}/3: No device connected")
+                    if attempt < 2:
+                        print(f"🔄 Retrying in 3 seconds...")
+                        time.sleep(3)
+                    else:
+                        print(f"❌ Failed after 3 attempts: {e}")
+                else:
+                    print(f"⚠️  Attempt {attempt + 1}/3: {e}")
+                    if attempt < 2:
+                        time.sleep(3)
+                    else:
+                        print(f"❌ Failed after 3 attempts")
+                # Cleanup for retry
+                if self.pipeline:
+                    try:
+                        self.pipeline.stop()
+                    except:
+                        pass
+                    self.pipeline = None
+                self.config = None
+                
+            except Exception as e:
+                print(f"⚠️  Attempt {attempt + 1}/3: {type(e).__name__}: {e}")
+                if attempt < 2:
+                    time.sleep(3)
+                # Cleanup
+                self.pipeline = None
+                self.config = None
+        
+        # If we get here, all attempts failed
+        print("❌ RealSense camera setup failed after all retries")
+        self.camera_available = False
+        self.pipeline = None
+        self.config = None
 
     def detect_objects(
         self,
@@ -304,6 +374,10 @@ class ObjectDetector:
             # Convert to numpy arrays
             color_image = np.asanyarray(color_frame.get_data())
             depth_image = np.asanyarray(depth_frame.get_data())
+            
+            # Convert RGB8 to BGR for OpenCV compatibility (RGB8 is used on macOS ARM64)
+            if len(color_image.shape) == 3 and color_image.shape[2] == 3:
+                color_image = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
 
             # Get camera intrinsics
             intrinsics = (

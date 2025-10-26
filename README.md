@@ -25,9 +25,30 @@
 
 ## ⚠️ Important Note for RealSense Camera Users
 
-This fork includes SO101 robot arm integration with Intel RealSense D435 depth camera. **RealSense camera tests are skipped in CI/CD environments** due to hardware requirements and power supply issues on macOS. These tests should be run locally with proper hardware setup including a powered USB hub.
+This fork includes SO101 robot arm integration with Intel RealSense D435 depth camera. 
 
-For more information, see [SO101_RealSense_Complete_Guide.md](SO101_RealSense_Complete_Guide.md).
+**Current Status (Dec 2024):**
+- RealSense D435 integration is **experimental and unstable on macOS (Apple Silicon)**
+- Camera may work with multiple retries but connection is unreliable
+- Recommended: Use webcam-based implementation for macOS development
+- See [ARCHIVE_README.md](ARCHIVE_README.md) for detailed technical status and known issues
+
+**Hardware Requirements:**
+- Intel RealSense D435 depth camera
+- Powered USB 3.0 hub recommended
+- Type-C to Type-C cable for better power delivery
+- Linux/Windows recommended (macOS has stability issues)
+
+**Camera Implementation:**
+- **RealSense** (experimental on macOS): `src/lerobot/object_detection/detector.py`
+- **Stereo Webcams** (planned): See [Web Camera Stereo Vision Plan](docs/WEB_CAMERA_STEREO_IMPLEMENTATION.md)
+- Object detection: YOLOv8
+- Depth tracking: Custom DepthObjectTracker
+- Dataset recording: `src/lerobot/datasets/realsense_dataset.py`
+
+**Recommended Setup**:
+- For macOS: Use dual webcam stereo vision (planning phase)
+- For Linux/Windows: RealSense D435 or dual webcams
 
 <div align="center">
   <img

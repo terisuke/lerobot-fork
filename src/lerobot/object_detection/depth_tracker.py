@@ -381,3 +381,4 @@ class DepthObjectTracker:
                 stable_objects.append(track)
 
         return stable_objects
+

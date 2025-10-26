@@ -16,7 +16,21 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import h5py
 import numpy as np
-import pyrealsense2 as rs
+
+try:
+    import pyrealsense2 as rs
+except ImportError:
+    rs = None
+
+try:
+    from ..cameras.realsense import RealSenseCamera, RealSenseCameraConfig
+    from ..cameras.configs import ColorMode
+    REALSENSE_AVAILABLE = True
+except ImportError:
+    REALSENSE_AVAILABLE = False
+    RealSenseCamera = None
+    RealSenseCameraConfig = None
+    ColorMode = None
 
 from ..object_detection import DepthObjectTracker, ObjectDetector
 from ..object_detection.depth_tracker import DepthTrackedObject
@@ -79,13 +93,12 @@ class RealSenseDatasetRecorder:
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Initialize RealSense pipeline - disabled for macOS compatibility
-        self.pipeline = None
-        self.config = None
+        # Initialize RealSense camera using LeRobot's official class
         self.camera_available = False
-        print(
-            "📷 RealSense camera disabled for macOS compatibility in dataset recorder"
-        )
+        self.camera = None
+        self._setup_camera()  # Try to initialize camera
+        if not self.camera_available:
+            print("📷 RealSense camera setup failed in dataset recorder, using mock mode")
 
         # Initialize object detection and tracking
         self.detector = ObjectDetector()
@@ -98,33 +111,60 @@ class RealSenseDatasetRecorder:
 
     def _setup_camera(self):
         """Setup RealSense camera configuration."""
+        if not REALSENSE_AVAILABLE:
+            print("⚠️  RealSense not available")
+            return
+            
         try:
-            # Configure depth and color streams
-            self.config.enable_stream(
-                rs.stream.depth,
-                self.camera_resolution[0],
-                self.camera_resolution[1],
-                rs.format.z16,
-                self.fps,
-            )
-            self.config.enable_stream(
-                rs.stream.color,
-                self.camera_resolution[0],
-                self.camera_resolution[1],
-                rs.format.bgr8,
-                self.fps,
-            )
-
-            # Start streaming
-            self.pipeline.start(self.config)
-            print("✅ RealSense camera started for dataset recording")
-            self.camera_available = True
+            # Find available RealSense cameras
+            try:
+                cameras = RealSenseCamera.find_cameras()
+            except RuntimeError as e:
+                if "failed to set power state" in str(e):
+                    print(f"⚠️  RealSense camera power error: {e}")
+                    print("💡 Try using a powered USB hub or Type-C to Type-C cable")
+                    cameras = []
+                else:
+                    raise
+                    
+            if cameras and len(cameras) > 0:
+                serial_number = cameras[0]['id']
+                print(f"📷 Found RealSense camera for dataset: {serial_number}")
+                
+                # Create camera config - use depth only to reduce power
+                config = RealSenseCameraConfig(
+                    serial_number_or_name=serial_number,
+                    width=self.camera_resolution[0],
+                    height=self.camera_resolution[1],
+                    fps=min(self.fps, 15),  # Cap at 15fps
+                    use_depth=True,
+                    color_mode=ColorMode.RGB,
+                    warmup_s=1.0
+                )
+                
+                # Initialize camera
+                self.camera = RealSenseCamera(config)
+                
+                # Try to connect
+                try:
+                    self.camera.connect(warmup=False)
+                    self.camera_available = True
+                    print("✅ RealSense camera started for dataset recording (depth-only)")
+                except Exception as e:
+                    print(f"⚠️  RealSense camera connection failed: {e}")
+                    self.camera_available = False
+                    if self.camera:
+                        try:
+                            self.camera.disconnect()
+                        except:
+                            pass
+                        self.camera = None
+            else:
+                print("⚠️  No RealSense cameras found for dataset recording")
         except Exception as e:
             print(f"⚠️  RealSense camera setup failed: {e}")
             print("📷 Falling back to mock camera mode for dataset recording")
             self.camera_available = False
-            self.pipeline = None
-            self.config = None
 
     def start_episode(
         self,

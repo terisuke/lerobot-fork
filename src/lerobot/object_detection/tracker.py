@@ -289,3 +289,4 @@ class ObjectTracker:
                 moving_objects.append(track)
 
         return moving_objects
+
