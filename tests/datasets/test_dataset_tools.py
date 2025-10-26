@@ -546,9 +546,7 @@ def test_modify_features_only_remove(sample_dataset, tmp_path):
 
 def test_modify_features_no_changes(sample_dataset, tmp_path):
     """Test error when modify_features is called with no changes."""
-    with pytest.raises(
-        ValueError, match="Must specify at least one of add_features or remove_features"
-    ):
+    with pytest.raises(ValueError, match="Must specify at least one of add_features or remove_features"):
         modify_features(
             sample_dataset,
             output_dir=tmp_path / "modified",

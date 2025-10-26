@@ -579,9 +579,7 @@ class MockMotors(MockSerial):
         self, address: int, length: int, ids_values: dict[int, list[int]] | None = None
     ) -> str:
         sequence_length = len(next(iter(ids_values.values())))
-        assert all(
-            len(positions) == sequence_length for positions in ids_values.values()
-        )
+        assert all(len(positions) == sequence_length for positions in ids_values.values())
         sync_read_request = MockInstructionPacket.sync_read(
             list(ids_values), address, length
         )
