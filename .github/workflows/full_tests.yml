@@ -46,7 +46,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # This job runs the E2E tests + pytest with all extras
   # It runs everytime a PR is approved or a push to main
   full-tests:

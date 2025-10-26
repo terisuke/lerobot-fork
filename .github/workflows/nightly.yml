@@ -160,7 +160,7 @@ jobs:
   nightly-multi-gpu-tests:
     name: Nightly Multi-GPU Tests
     needs: [build-docker-gpu-nightly]
-    runs-on: ubuntu-latest  # Standard runner
+    runs-on: ubuntu-latest # Standard runner
     env:
       HF_HOME: /home/user_lerobot/.cache/huggingface
       HF_LEROBOT_HOME: /home/user_lerobot/.cache/huggingface/lerobot
@@ -184,6 +184,6 @@ jobs:
           python -c "import torch; print(f'PyTorch CUDA available: {torch.cuda.is_available()}'); print(f'Number of GPUs: {torch.cuda.device_count()}')"
 
       - name: Run multi-GPU training tests
-      # TODO(Steven): Investigate why motors tests are failing in multi-GPU setup
+        # TODO(Steven): Investigate why motors tests are failing in multi-GPU setup
         run: pytest tests -vv --maxfail=10 --ignore=tests/motors/
         timeout-minutes: 10

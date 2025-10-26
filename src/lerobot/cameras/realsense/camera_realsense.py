@@ -176,9 +176,18 @@ class RealSenseCamera(Camera):
         except RuntimeError as e:
             self.rs_profile = None
             self.rs_pipeline = None
-            raise ConnectionError(
-                f"Failed to open {self}.Run `lerobot-find-cameras realsense` to find available cameras."
-            ) from e
+            error_msg = str(e)
+            if "failed to set power state" in error_msg:
+                raise ConnectionError(
+                    f"❌ RealSense USB power error: {self}\n"
+                    f"💡 Solution: Use a powered USB hub to connect the RealSense camera.\n"
+                    f"🔌 This error occurs when the USB port cannot provide sufficient power.\n"
+                    f"Run `lerobot-find-cameras realsense` to find available cameras."
+                ) from e
+            else:
+                raise ConnectionError(
+                    f"Failed to open {self}.Run `lerobot-find-cameras realsense` to find available cameras."
+                ) from e
 
         self._configure_capture_settings()
 

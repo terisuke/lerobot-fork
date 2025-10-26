@@ -21,7 +21,7 @@ on:
 
   # Run on the 1st and 15th of every month at 09:00 UTC
   schedule:
-    - cron: '0 2 1,15 * *'
+    - cron: "0 2 1,15 * *"
 
 permissions:
   contents: read
@@ -38,7 +38,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # This job runs the E2E tests + pytest with all unbound extras
   full-tests:
     name: Full Unbound Tests
@@ -81,8 +80,7 @@ jobs:
   # This job builds a GPU enabled image for testing
   build-and-push-docker:
     name: Build and Push Docker
-    runs-on:
-      ubuntu-latest
+    runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ env.DOCKER_IMAGE_NAME }}
     env:
