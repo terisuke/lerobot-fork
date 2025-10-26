@@ -17,6 +17,7 @@
 from dataclasses import dataclass, field
 
 from lerobot.cameras import CameraConfig
+from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig
 
 from ..config import RobotConfig
 
@@ -34,8 +35,27 @@ class SO101FollowerConfig(RobotConfig):
     # names to the max_relative_target value for that motor.
     max_relative_target: float | dict[str, float] | None = None
 
-    # cameras
-    cameras: dict[str, CameraConfig] = field(default_factory=dict)
+    # cameras - Default stereo camera configuration for depth perception
+    cameras: dict[str, CameraConfig] = field(
+        default_factory=lambda: {
+            # Stereo camera pair for depth perception
+            "left": OpenCVCameraConfig(
+                index_or_path=0,
+                fps=30,
+                width=1280,
+                height=720,
+            ),
+            "right": OpenCVCameraConfig(
+                index_or_path=1,
+                fps=30,
+                width=1280,
+                height=720,
+            ),
+        }
+    )
+
+    # Stereo calibration file path (optional)
+    stereo_calibration_path: str = "configs/camera/stereo_calibration.yaml"
 
     # Set to `True` for backward compatibility with previous policies/dataset
     use_degrees: bool = False
