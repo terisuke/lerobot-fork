@@ -73,9 +73,7 @@ class MockDynamixelPacketv2(abc.ABC):
         return bytes(packet)
 
     @abc.abstractclassmethod
-    def _build(
-        cls, dxl_id: int, params: list[int], length: int, *args, **kwargs
-    ) -> list[int]:
+    def _build(cls, dxl_id: int, params: list[int], length: int, *args, **kwargs) -> list[int]:
         pass
 
     @staticmethod
@@ -173,9 +171,7 @@ class MockInstructionPacket(MockDynamixelPacketv2):
     """
 
     @classmethod
-    def _build(
-        cls, dxl_id: int, params: list[int], length: int, instruction: int
-    ) -> list[int]:
+    def _build(cls, dxl_id: int, params: list[int], length: int, instruction: int) -> list[int]:
         length = len(params) + 3
         return [
             0xFF, 0xFF, 0xFD, 0x00,  # header
@@ -375,9 +371,7 @@ class MockStatusPacket(MockDynamixelPacketv2):
     """
 
     @classmethod
-    def _build(
-        cls, dxl_id: int, params: list[int], length: int, error: int = 0
-    ) -> list[int]:
+    def _build(cls, dxl_id: int, params: list[int], length: int, error: int = 0) -> list[int]:
         return [
             0xFF, 0xFF, 0xFD, 0x00,  # header
             dxl_id,                  # servo id
@@ -521,9 +515,7 @@ class MockMotors(MockSerial):
         num_invalid_try: int = 0,
     ) -> str:
         read_request = MockInstructionPacket.read(dxl_id, address, length)
-        return_packet = (
-            MockStatusPacket.read(dxl_id, value, length, error) if reply else b""
-        )
+        return_packet = MockStatusPacket.read(dxl_id, value, length, error) if reply else b""
         read_response = self._build_send_fn(return_packet, num_invalid_try)
         stub_name = f"Read_{address}_{length}_{dxl_id}_{value}_{error}"
         self.stub(
@@ -544,11 +536,7 @@ class MockMotors(MockSerial):
         num_invalid_try: int = 0,
     ) -> str:
         sync_read_request = MockInstructionPacket.write(dxl_id, value, address, length)
-        return_packet = (
-            MockStatusPacket.build(dxl_id, params=[], length=4, error=error)
-            if reply
-            else b""
-        )
+        return_packet = MockStatusPacket.build(dxl_id, params=[], length=4, error=error) if reply else b""
         stub_name = f"Write_{address}_{length}_{dxl_id}"
         self.stub(
             name=stub_name,
