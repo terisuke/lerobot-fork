@@ -23,6 +23,12 @@
         Build Your Own HopeJR Robot!</a></p>
 </h2>
 
+## ⚠️ Important Note for RealSense Camera Users
+
+This fork includes SO101 robot arm integration with Intel RealSense D435 depth camera. **RealSense camera tests are skipped in CI/CD environments** due to hardware requirements and power supply issues on macOS. These tests should be run locally with proper hardware setup including a powered USB hub.
+
+For more information, see [SO101_RealSense_Complete_Guide.md](SO101_RealSense_Complete_Guide.md).
+
 <div align="center">
   <img
     src="https://raw.githubusercontent.com/huggingface/lerobot/main/media/hope_jr/hopejr.png"

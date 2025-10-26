@@ -42,7 +42,7 @@ jobs:
   # This job builds and deploys the official documentation.
   build_main_docs:
     name: Build Main Docs
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && secrets.HF_DOC_BUILD_PUSH != ''
     permissions:
       contents: read
     uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@main

@@ -1,0 +1,23 @@
+# RealSenseカメラテストのスキップ設定
+# CI/CD環境でハードウェア依存のテストをスキップするための設定
+
+name: Skip RealSense Tests in CI
+
+on:
+  workflow_call:
+    inputs:
+      skip_realsense:
+        description: 'Skip RealSense camera tests'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  skip-realsense-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip RealSense Tests
+        run: |
+          echo "Skipping RealSense camera tests in CI environment"
+          echo "RealSense camera requires physical hardware and stable power supply"
+          echo "These tests should be run locally with proper hardware setup"
