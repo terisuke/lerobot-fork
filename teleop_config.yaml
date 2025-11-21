@@ -8,6 +8,3 @@ teleop:
   port: /dev/tty.usbmodem58760431551
 
 display_data: true
-
-
-
