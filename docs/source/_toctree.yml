@@ -69,6 +69,8 @@
 - sections:
   - local: so101
     title: SO-101
+  - local: so101_complete_training_guide
+    title: SO-101完全ガイド（テレオペ→トレーニング）
   - local: so100
     title: SO-100
   - local: koch

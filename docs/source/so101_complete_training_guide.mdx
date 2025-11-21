@@ -1,0 +1,331 @@
+# SO-101完全ガイド: テレオペレーションからトレーニングまで
+
+このガイドでは、SO-101ロボットアームを使って、テレオペレーションができる状態から始めて、2台のwebカメラでデータセットを作成し、ACTポリシーをトレーニングして評価するまでの完全な流れを初心者向けに説明します。
+
+## はじめに
+
+このガイドを完了すると、以下のことができるようになります：
+
+1. 2台のwebカメラをセットアップする
+2. テレオペレーションでロボットを操作しながらデータセットを記録する
+3. 記録したデータセットを確認する
+4. ACTポリシーをトレーニングする
+5. トレーニングしたポリシーでロボットを評価する
+
+### 前提条件
+
+このガイドを始める前に、以下が完了している必要があります：
+
+- ✅ SO-101ロボットアームの組み立てが完了している
+- ✅ モーターのID設定とキャリブレーションが完了している（[SO-101セットアップガイド](./so101)を参照）
+- ✅ テレオペレーションが正常に動作している
+- ✅ LeRobotがインストールされている（[インストールガイド](./installation)を参照）
+- ✅ Hugging Faceアカウントを作成し、`huggingface-cli login`でログインしている
+
+### 必要なハードウェア
+
+- SO-101 Follower Arm（操作されるロボット）
+- SO-101 Leader Arm（テレオペレーション用のコントローラー）
+- USB webカメラ 2台（推奨：640x480 @ 30fps以上）
+- USBポート 4つ（Follower、Leader、カメラ2台）
+
+> [!TIP]
+> カメラの数は1台でも動作しますが、2台のカメラ（例：正面カメラと横カメラ）を使用することで、モデルの性能が向上します。公式ドキュメントや実践的な報告では、正面と横の組み合わせが精度向上に効果的とされています。
+
+## ステップ1: カメラのセットアップ
+
+### 1.1 カメラの検出
+
+まず、接続されているカメラを確認します：
+
+```bash
+lerobot-find-cameras opencv
+```
+
+出力例：
+
+```
+--- Detected Cameras ---
+Camera #0:
+  Name: OpenCV Camera @ 0
+  Type: OpenCV
+  Id: 0
+  Backend api: AVFOUNDATION
+  Default stream profile:
+    Format: 16.0
+    Width: 1920
+    Height: 1080
+    Fps: 15.0
+--------------------
+Camera #1:
+  Name: OpenCV Camera @ 1
+  Type: OpenCV
+  Id: 1
+  Backend api: AVFOUNDATION
+  Default stream profile:
+    Format: 16.0
+    Width: 1920
+    Height: 1080
+    Fps: 15.0
+--------------------
+```
+
+この例では、カメラ0とカメラ1が検出されています。これらのIDをメモしておきます。
+
+> [!WARNING]
+> カメラのIDは、コンピュータを再起動したり、カメラを再接続したりすると変わる可能性があります。データセット記録の前に、必ずカメラIDを確認してください。
+
+### 1.2 カメラの配置
+
+2台のカメラを以下のように配置することを推奨します：
+
+- **正面カメラ（front）**: ロボットの正面から作業エリアを見る。物体の形状や位置を正確に捉えるのに適しています
+- **横カメラ（side）**: 作業エリアの横（約45度の角度）から見る。深度情報の取得に優れ、物体の3次元構造を理解しやすくなります
+
+この配置により、モデルは異なる視点からの視覚情報を学習でき、物体の形状、位置、深度をより正確に理解できるようになります。公式ドキュメントや実践的な報告では、この正面と横の組み合わせが精度向上に効果的とされています。
+
+## ステップ2: データセットの記録
+
+### 2.1 データセット記録の準備
+
+データセットを記録する前に、以下を確認してください：
+
+1. **USBポートの接続**: Follower、Leader、カメラ2台がすべて接続されている
+2. **カメラIDの確認**: `lerobot-find-cameras opencv`でカメラIDを確認
+3. **ポート番号の確認**: `lerobot-find-port`でFollowerとLeaderのポートを確認
+
+### 2.2 データセット記録コマンド
+
+以下のコマンドでデータセットを記録します：
+
+```bash
+lerobot-record \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.id=my_awesome_follower_arm \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.id=my_awesome_leader_arm \
+    --display_data=true \
+    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --dataset.num_episodes=50 \
+    --dataset.single_task="Pick up the red cube and place it in the box"
+```
+
+**パラメータの説明**：
+
+- `--robot.type`: ロボットのタイプ（`so101_follower`）
+- `--robot.port`: FollowerアームのUSBポート（`lerobot-find-port`で確認）
+- `--robot.id`: ロボットの一意のID（キャリブレーションファイルに関連付けられる）
+- `--robot.cameras`: カメラ設定の辞書
+  - `front`: 正面カメラ（ID 0）
+  - `side`: 横カメラ（ID 1）
+  - `width`, `height`, `fps`: 解像度とフレームレート
+- `--teleop.type`: テレオペレーターのタイプ（`so101_leader`）
+- `--teleop.port`: LeaderアームのUSBポート
+- `--teleop.id`: Leaderアームの一意のID
+- `--display_data`: リアルタイムでカメラ映像を表示するか（`true`/`false`）
+- `--dataset.repo_id`: Hugging Face HubのデータセットリポジトリID
+- `--dataset.num_episodes`: 記録するエピソード数（推奨：50以上）
+- `--dataset.single_task`: タスクの説明
+
+> [!TIP]
+> データセットの品質を向上させるために：
+> - エピソード数は50以上を推奨
+> - オブジェクトの位置を変えて多様性を持たせる
+> - 一貫したグリッピング方法を保つ
+> - 各エピソードは約60秒程度を目安にする
+
+### 2.3 データセット記録の操作
+
+記録中は以下のキーボード操作が可能です：
+
+- **右矢印キー（→）**: 現在のエピソードを完了して保存
+- **左矢印キー（←）**: 現在のエピソードを破棄して再記録
+- **Escキー**: 記録を停止
+
+各エピソードの記録が完了すると、音声で通知されます。次のエピソードを記録する前に、環境をリセットする時間が与えられます。
+
+### 2.4 データセット記録の完了
+
+すべてのエピソードの記録が完了すると、データセットが自動的にHugging Face Hubにアップロードされます。アップロードには時間がかかる場合があります。
+
+## ステップ3: データセットの確認
+
+記録したデータセットを確認するには、Hugging Face Hubでデータセットのページを開くか、以下のコマンドでデータセットをリプレイできます：
+
+```bash
+lerobot-replay \
+    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.id=my_awesome_follower_arm \
+    --episode_idx=0
+```
+
+これにより、記録した最初のエピソードがロボットで再現されます。
+
+## ステップ4: ポリシーのトレーニング（ACT）
+
+### 4.1 トレーニングコマンド
+
+記録したデータセットを使ってACTポリシーをトレーニングします：
+
+```bash
+lerobot-train \
+    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --policy.type=act \
+    --output_dir=outputs/train/act_my_so101_dataset \
+    --job_name=act_my_so101_dataset \
+    --policy.device=cuda \
+    --wandb.enable=true \
+    --policy.repo_id=${HF_USER}/my_act_policy
+```
+
+**パラメータの説明**：
+
+- `--dataset.repo_id`: トレーニングに使用するデータセットのID
+- `--policy.type`: ポリシーのタイプ（`act`）
+- `--output_dir`: チェックポイントの保存先
+- `--job_name`: ジョブ名（ログに表示される）
+- `--policy.device`: 使用するデバイス（`cuda`、`mps`、`cpu`）
+  - `cuda`: NVIDIA GPU
+  - `mps`: Apple Silicon（M1/M2/M3 Mac）
+  - `cpu`: CPUのみ
+- `--wandb.enable`: Weights & Biasesを使用するか（`true`/`false`）
+- `--policy.repo_id`: トレーニングしたポリシーをアップロードするHugging Face HubのリポジトリID
+
+> [!TIP]
+> Weights & Biasesを使用する場合は、事前に`wandb login`でログインしてください。
+
+### 4.2 トレーニング時間
+
+ACTのトレーニングは通常、以下の時間がかかります：
+
+- **100kステップ**: 約1-3時間（GPUによる）
+- **デフォルトのバッチサイズ**: 8（GPUメモリに応じて調整可能）
+
+トレーニング中は、`outputs/train/act_my_so101_dataset/checkpoints/`にチェックポイントが保存されます。
+
+### 4.3 Google Colabでのトレーニング
+
+ローカルコンピュータに強力なGPUがない場合は、Google Colabを使用してトレーニングできます。詳細は[ACTトレーニングノートブック](./notebooks#training-act)を参照してください。
+
+## ステップ5: ポリシーの評価
+
+### 5.1 評価コマンド
+
+トレーニングしたポリシーを評価するには、以下のコマンドを使用します：
+
+```bash
+lerobot-record \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.id=my_awesome_follower_arm \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --display_data=true \
+    --dataset.repo_id=${HF_USER}/eval_my_so101_dataset \
+    --dataset.num_episodes=10 \
+    --dataset.single_task="Pick up the red cube and place it in the box" \
+    --policy.path=${HF_USER}/my_act_policy
+```
+
+このコマンドは、トレーニングしたポリシーを使用してロボットを制御し、評価エピソードを記録します。
+
+### 5.2 評価結果の確認
+
+評価エピソードは`${HF_USER}/eval_my_so101_dataset`に保存されます。Hugging Face Hubで確認するか、`lerobot-replay`コマンドで再生できます。
+
+## トラブルシューティング
+
+### カメラ関連の問題
+
+#### 問題: `TimeoutError: Timed out waiting for frame from camera`
+
+**原因**: カメラからのフレーム取得がタイムアウトしている
+
+**解決策**:
+- 仮想webカメラ（例：AndroidのCamo）を使用している場合は、直接USB接続のwebカメラに切り替える
+- カメラの解像度やFPSを下げる（例：640x480 @ 15fps）
+- USBケーブルを確認し、USB 3.0ポートを使用する
+
+#### 問題: カメラが検出されない
+
+**解決策**:
+- `lerobot-find-cameras opencv`を再実行してカメラIDを確認
+- カメラを再接続する
+- 他のアプリケーションがカメラを使用していないか確認
+
+### ロボット関連の問題
+
+#### 問題: `ConnectionError: Failed to sync read 'Present_Position'`
+
+**原因**: ロボットとの通信が不安定
+
+**解決策**:
+- `--display_data=false`に設定してリアルタイム表示を無効化（M1 Macで特に有効）
+- USBケーブルを確認し、USB 3.0ポートを使用する
+- ロボットの電源を確認する
+
+#### 問題: アームが不安定に動く（ジッター）
+
+**原因**: USB帯域幅の不足や処理能力の限界
+
+**解決策**:
+- カメラの数を1台に減らす（ただし、モデルの性能に影響する可能性がある）
+- カメラの解像度やFPSを下げる
+- `--display_data=false`に設定する
+
+### データセット記録の問題
+
+#### 問題: エピソードが保存されない
+
+**解決策**:
+- キーボード操作を確認（右矢印キーでエピソードを完了）
+- エピソード時間が短すぎないか確認（最低10秒以上推奨）
+- ログを確認してエラーがないか確認
+
+#### 問題: データセットのアップロードが失敗する
+
+**解決策**:
+- `huggingface-cli login`で再ログイン
+- インターネット接続を確認
+- データセットサイズが大きすぎる場合は、ローカルに保存してから手動でアップロード
+
+### トレーニング関連の問題
+
+#### 問題: GPUメモリ不足
+
+**解決策**:
+- バッチサイズを減らす（`--policy.batch_size=4`）
+- 画像の解像度を下げる（データセット記録時に640x480を使用）
+- より小さいモデルを使用する
+
+#### 問題: トレーニングが遅い
+
+**解決策**:
+- GPUが正しく認識されているか確認（`nvidia-smi`または`torch.cuda.is_available()`）
+- バッチサイズを増やす（GPUメモリが許す範囲で）
+- データセットをローカルにダウンロードして使用
+
+## 次のステップ
+
+データセットの作成とトレーニングが完了したら、以下を試してみてください：
+
+1. **ハイパーパラメータの調整**: バッチサイズ、学習率などを調整して性能を向上させる
+2. **データ拡張**: より多様なデータセットを作成する
+3. **他のポリシー**: SmolVLAやDiffusion Policyなど、他のポリシーも試してみる
+4. **マルチタスク学習**: 複数のタスクを1つのモデルで学習する
+
+## 参考資料
+
+- [SO-101セットアップガイド](./so101)
+- [ACTポリシーの詳細](./act)
+- [カメラのセットアップ](./cameras)
+- [実世界ロボットでの模倣学習](./il_robots)
+
+## サポート
+
+問題が発生した場合は、[Discordコミュニティ](https://discord.com/invite/s3KuuzsPFb)でサポートを受けることができます。
+
