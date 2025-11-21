@@ -419,10 +419,7 @@ def test_image_processor_features_pixels_to_image(policy_feature_factory):
         == features[PipelineFeatureType.OBSERVATION]["pixels"]
     )
     assert "pixels" not in out[PipelineFeatureType.OBSERVATION]
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["keep"]
-        == features[PipelineFeatureType.OBSERVATION]["keep"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION]["keep"] == features[PipelineFeatureType.OBSERVATION]["keep"]
     assert_contract_is_typed(out)
 
 
@@ -430,9 +427,7 @@ def test_image_processor_features_observation_pixels_to_image(policy_feature_fac
     processor = VanillaObservationProcessorStep()
     features = {
         PipelineFeatureType.OBSERVATION: {
-            "observation.pixels": policy_feature_factory(
-                FeatureType.VISUAL, (3, 64, 64)
-            ),
+            "observation.pixels": policy_feature_factory(FeatureType.VISUAL, (3, 64, 64)),
             "keep": policy_feature_factory(FeatureType.ENV, (1,)),
         },
     }
@@ -444,10 +439,7 @@ def test_image_processor_features_observation_pixels_to_image(policy_feature_fac
         == features[PipelineFeatureType.OBSERVATION]["observation.pixels"]
     )
     assert "observation.pixels" not in out[PipelineFeatureType.OBSERVATION]
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["keep"]
-        == features[PipelineFeatureType.OBSERVATION]["keep"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION]["keep"] == features[PipelineFeatureType.OBSERVATION]["keep"]
     assert_contract_is_typed(out)
 
 
@@ -457,9 +449,7 @@ def test_image_processor_features_multi_camera_and_prefixed(policy_feature_facto
         PipelineFeatureType.OBSERVATION: {
             "pixels.front": policy_feature_factory(FeatureType.VISUAL, (3, 64, 64)),
             "pixels.wrist": policy_feature_factory(FeatureType.VISUAL, (3, 64, 64)),
-            "observation.pixels.rear": policy_feature_factory(
-                FeatureType.VISUAL, (3, 64, 64)
-            ),
+            "observation.pixels.rear": policy_feature_factory(FeatureType.VISUAL, (3, 64, 64)),
             "keep": policy_feature_factory(FeatureType.ENV, (7,)),
         },
     }
@@ -485,10 +475,7 @@ def test_image_processor_features_multi_camera_and_prefixed(policy_feature_facto
         and "pixels.wrist" not in out[PipelineFeatureType.OBSERVATION]
         and "observation.pixels.rear" not in out[PipelineFeatureType.OBSERVATION]
     )
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["keep"]
-        == features[PipelineFeatureType.OBSERVATION]["keep"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION]["keep"] == features[PipelineFeatureType.OBSERVATION]["keep"]
     assert_contract_is_typed(out)
 
 
@@ -517,10 +504,7 @@ def test_state_processor_features_environment_and_agent_pos(policy_feature_facto
         "environment_state" not in out[PipelineFeatureType.OBSERVATION]
         and "agent_pos" not in out[PipelineFeatureType.OBSERVATION]
     )
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["keep"]
-        == features[PipelineFeatureType.OBSERVATION]["keep"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION]["keep"] == features[PipelineFeatureType.OBSERVATION]["keep"]
     assert_contract_is_typed(out)
 
 

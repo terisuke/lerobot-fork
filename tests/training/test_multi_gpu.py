@@ -142,9 +142,7 @@ class TestMultiGPUTraining:
                 "--num_workers=0",
             ]
 
-            result = run_accelerate_training(
-                config_args, num_processes=4, temp_dir=temp_dir
-            )
+            result = run_accelerate_training(config_args, num_processes=4, temp_dir=temp_dir)
 
             # Check that training completed successfully
             assert result.returncode == 0, (
@@ -187,11 +185,11 @@ class TestMultiGPUTraining:
                 "--num_workers=0",
             ]
 
-            result = run_accelerate_training(
-                config_args, num_processes=2, temp_dir=temp_dir
-            )
+            result = run_accelerate_training(config_args, num_processes=2, temp_dir=temp_dir)
 
-            assert result.returncode == 0, f"Training failed:\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+            assert result.returncode == 0, (
+                f"Training failed:\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+            )
 
             # Verify checkpoint directory exists
             checkpoints_dir = output_dir / "checkpoints"

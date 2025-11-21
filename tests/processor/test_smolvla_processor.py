@@ -217,9 +217,7 @@ def test_smolvla_processor_cuda():
         OBS_IMAGE: torch.randn(3, 224, 224),
     }
     action = torch.randn(7)
-    transition = create_transition(
-        observation, action, complementary_data={"task": "test task"}
-    )
+    transition = create_transition(observation, action, complementary_data={"task": "test task"})
 
     batch = transition_to_batch(transition)
 
@@ -279,9 +277,7 @@ def test_smolvla_processor_accelerate_scenario():
         OBS_IMAGE: torch.randn(1, 3, 224, 224).to(device),
     }
     action = torch.randn(1, 7).to(device)
-    transition = create_transition(
-        observation, action, complementary_data={"task": ["test task"]}
-    )
+    transition = create_transition(observation, action, complementary_data={"task": ["test task"]})
 
     batch = transition_to_batch(transition)
 
@@ -341,9 +337,7 @@ def test_smolvla_processor_multi_gpu():
         OBS_IMAGE: torch.randn(1, 3, 224, 224).to(device),
     }
     action = torch.randn(1, 7).to(device)
-    transition = create_transition(
-        observation, action, complementary_data={"task": ["test task"]}
-    )
+    transition = create_transition(observation, action, complementary_data={"task": ["test task"]})
 
     batch = transition_to_batch(transition)
 
@@ -401,9 +395,7 @@ def test_smolvla_newline_processor_transform_features():
 
     # Test transform_features
     features = {
-        PipelineFeatureType.OBSERVATION: {
-            OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))
-        },
+        PipelineFeatureType.OBSERVATION: {OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))},
     }
     result = processor.transform_features(features)
     assert result == features  # Should return unchanged
@@ -430,9 +422,7 @@ def test_smolvla_processor_bfloat16_device_float32_normalizer():
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
             # Device processor converts to bfloat16
-            modified_steps.append(
-                DeviceProcessorStep(device=config.device, float_dtype="bfloat16")
-            )
+            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="bfloat16"))
         elif isinstance(step, NormalizerProcessorStep):
             # Normalizer stays configured as float32 (will auto-adapt to bfloat16)
             modified_steps.append(
@@ -469,9 +459,7 @@ def test_smolvla_processor_bfloat16_device_float32_normalizer():
 
     # Verify: DeviceProcessor → bfloat16, NormalizerProcessor adapts → final output is bfloat16
     assert processed[OBS_STATE].dtype == torch.bfloat16
-    assert (
-        processed[OBS_IMAGE].dtype == torch.bfloat16
-    )  # IDENTITY normalization still gets dtype conversion
+    assert processed[OBS_IMAGE].dtype == torch.bfloat16  # IDENTITY normalization still gets dtype conversion
     assert processed[TransitionKey.ACTION.value].dtype == torch.bfloat16
 
     # Verify normalizer automatically adapted its internal state

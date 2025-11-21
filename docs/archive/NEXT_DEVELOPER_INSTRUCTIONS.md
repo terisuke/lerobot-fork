@@ -2,8 +2,8 @@
 
 ## 📋 プロジェクト概要
 
-**プロジェクト名**: 投げられた物体を検出して自動で拾うシステム  
-**実装完了日**: 2025年1月23日  
+**プロジェクト名**: 投げられた物体を検出して自動で拾うシステム
+**実装完了日**: 2025年1月23日
 **現在の状態**: モックモードで動作中（RealSenseカメラは未使用）
 
 ## 🎯 次の開発者の最優先タスク
@@ -15,6 +15,7 @@
 **必要な修正**:
 
 #### A. ObjectDetector の修正
+
 ```python
 # ファイル: src/lerobot/object_detection/detector.py
 # 行番号: 54-58
@@ -30,6 +31,7 @@ print("📷 RealSense camera enabled")
 ```
 
 #### B. RealSenseDatasetRecorder の修正
+
 ```python
 # ファイル: src/lerobot/datasets/realsense_dataset.py
 # 行番号: 30-34
@@ -60,16 +62,19 @@ sudo python examples/object_picking/test_integrated_system.py --test all
 ## 🔧 環境設定
 
 ### 1. 仮想環境の確認
+
 ```bash
 conda activate leorobot
 ```
 
 ### 2. 依存関係の確認
+
 ```bash
 pip install ultralytics h5py opencv-python
 ```
 
 ### 3. RealSenseカメラの確認
+
 ```bash
 sudo python -c "
 import pyrealsense2 as rs
@@ -84,6 +89,7 @@ for i, dev in enumerate(devices):
 ## 📁 重要なファイル
 
 ### 実装されたファイル
+
 - `src/lerobot/object_detection/detector.py` - 物体検出システム
 - `src/lerobot/object_detection/depth_tracker.py` - 深度追跡システム
 - `src/lerobot/datasets/realsense_dataset.py` - データセット記録システム
@@ -91,6 +97,7 @@ for i, dev in enumerate(devices):
 - `examples/object_picking/test_integrated_system.py` - 統合テストシステム
 
 ### ドキュメント
+
 - `IMPLEMENTATION_HANDOVER.md` - 詳細な実装引き継ぎドキュメント
 - `RealSense_Camera_Setup.md` - RealSenseカメラ設定ガイド
 - `Next_Development_Steps.md` - 次の開発ステップ
@@ -98,14 +105,17 @@ for i, dev in enumerate(devices):
 ## 🚨 重要な注意事項
 
 ### 1. 実行権限
+
 - **必ずsudo権限で実行**: `sudo python examples/object_picking/test_integrated_system.py --test all`
 
 ### 2. macOSでのRealSense互換性問題
+
 - `RuntimeError: failed to set power state` エラーが発生する可能性
 - sudo権限での実行が必要
 - カメラの権限設定を確認
 
 ### 3. モックモードからの切り替え
+
 - 現在はモックモードで動作中
 - 実際のカメラ使用への切り替えが必要
 - 切り替え後は必ずテストを実行
@@ -113,6 +123,7 @@ for i, dev in enumerate(devices):
 ## 🎯 期待される結果
 
 ### 修正後のテスト結果
+
 ```
 ==================================================
 📊 TEST SUMMARY
@@ -131,11 +142,13 @@ Overall: 6/6 tests passed
 ## 📞 サポート情報
 
 ### ハードウェア情報
+
 - **RealSenseカメラ**: Intel RealSense D435 (Serial: 332322074110)
 - **仮想環境**: conda leorobot
 - **Python**: 3.10.19
 
 ### 主要依存関係
+
 - ultralytics
 - h5py
 - opencv-python
@@ -160,6 +173,6 @@ Overall: 6/6 tests passed
 
 **⚠️ 重要**: この指示書に従って作業を進めてください。問題が発生した場合は、`IMPLEMENTATION_HANDOVER.md`を参照してください。
 
-**作成日**: 2025年1月23日  
-**対象**: 次の開発者  
+**作成日**: 2025年1月23日
+**対象**: 次の開発者
 **ステータス**: 待機中

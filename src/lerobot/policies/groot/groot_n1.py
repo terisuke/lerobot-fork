@@ -48,9 +48,7 @@ from lerobot.policies.groot.action_head.flow_matching_action_head import (
 from lerobot.policies.groot.utils import ensure_eagle_cache_ready
 from lerobot.utils.constants import HF_LEROBOT_HOME
 
-DEFAULT_VENDOR_EAGLE_PATH = str(
-    (Path(__file__).resolve().parent / "eagle2_hg_model").resolve()
-)
+DEFAULT_VENDOR_EAGLE_PATH = str((Path(__file__).resolve().parent / "eagle2_hg_model").resolve())
 DEFAULT_TOKENIZER_ASSETS_REPO = "lerobot/eagle2hg-processor-groot-n1p5"
 
 
@@ -73,9 +71,7 @@ class EagleBackbone(nn.Module):
             tune_visual: whether to tune the visual model (default: False)
         """
         super().__init__()
-        assert (
-            not reproject_vision
-        ), "Reproject vision is not implemented here, set to False"
+        assert not reproject_vision, "Reproject vision is not implemented here, set to False"
 
         # Prefer loading Eagle model config from the cache directory where vendor files were copied.
         vendor_dir = DEFAULT_VENDOR_EAGLE_PATH
@@ -138,15 +134,11 @@ class EagleBackbone(nn.Module):
     def forward_eagle(self, vl_input: BatchFeature) -> BatchFeature:
         eagle_prefix = "eagle_"
         eagle_input = {
-            k.removeprefix(eagle_prefix): v
-            for k, v in vl_input.items()
-            if k.startswith(eagle_prefix)
+            k.removeprefix(eagle_prefix): v for k, v in vl_input.items() if k.startswith(eagle_prefix)
         }
         del eagle_input["image_sizes"]
 
-        eagle_output = self.eagle_model(
-            **eagle_input, output_hidden_states=True, return_dict=True
-        )
+        eagle_output = self.eagle_model(**eagle_input, output_hidden_states=True, return_dict=True)
         eagle_features = eagle_output.hidden_states[self.select_layer]
 
         eagle_features = self.eagle_linear(eagle_features)
@@ -192,9 +184,7 @@ class GR00TN15Config(PretrainedConfig):
     model_type = "gr00t_n1_5"
     backbone_cfg: dict = field(init=False, metadata={"help": "Backbone configuration."})
 
-    action_head_cfg: dict = field(
-        init=False, metadata={"help": "Action head configuration."}
-    )
+    action_head_cfg: dict = field(init=False, metadata={"help": "Action head configuration."})
 
     action_horizon: int = field(init=False, metadata={"help": "Action horizon."})
 
@@ -282,8 +272,7 @@ class GR00TN15(PreTrainedModel):
 
     def validate_data(self, action_head_outputs, backbone_outputs, is_training):
         fail_backbone = (
-            not isinstance(backbone_outputs, BatchFeature)
-            or BACKBONE_FEATURE_KEY not in backbone_outputs
+            not isinstance(backbone_outputs, BatchFeature) or BACKBONE_FEATURE_KEY not in backbone_outputs
         )
 
         if fail_backbone:
@@ -330,9 +319,7 @@ class GR00TN15(PreTrainedModel):
         backbone_inputs, action_inputs = self.prepare_input(inputs)
         # Because the behavior of backbones remains the same for training and inference, we can use `forward` for backbones.
         backbone_outputs = self.backbone(backbone_inputs)
-        action_head_outputs = self.action_head.get_action(
-            backbone_outputs, action_inputs
-        )
+        action_head_outputs = self.action_head.get_action(backbone_outputs, action_inputs)
         self.validate_data(action_head_outputs, backbone_outputs, is_training=False)
         return action_head_outputs
 
@@ -355,9 +342,7 @@ class GR00TN15(PreTrainedModel):
             # Non-floating tensors: move device only
             return x.to(self.device)
 
-        backbone_inputs = tree.map_structure(
-            to_device_with_maybe_dtype, backbone_inputs
-        )
+        backbone_inputs = tree.map_structure(to_device_with_maybe_dtype, backbone_inputs)
         action_inputs = tree.map_structure(to_device_with_maybe_dtype, action_inputs)
         return backbone_inputs, action_inputs
 
@@ -378,9 +363,7 @@ class GR00TN15(PreTrainedModel):
         try:
             # NOTE(YL) This downloads the model to the local cache and returns the local path to the model
             # saved in ~/.cache/huggingface/hub/
-            local_model_path = snapshot_download(
-                pretrained_model_name_or_path, repo_type="model"
-            )
+            local_model_path = snapshot_download(pretrained_model_name_or_path, repo_type="model")
             # HFValidationError, RepositoryNotFoundError
         except (HFValidationError, RepositoryNotFoundError):
             print(
@@ -392,9 +375,7 @@ class GR00TN15(PreTrainedModel):
             local_model_path, local_model_path=local_model_path, **kwargs
         )
 
-        pretrained_model.backbone.set_trainable_parameters(
-            tune_visual=tune_visual, tune_llm=tune_llm
-        )
+        pretrained_model.backbone.set_trainable_parameters(tune_visual=tune_visual, tune_llm=tune_llm)
         pretrained_model.action_head.set_trainable_parameters(
             tune_projector=tune_projector, tune_diffusion_model=tune_diffusion_model
         )

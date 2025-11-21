@@ -296,9 +296,7 @@ def test_registry_based_save_load():
         # Verify config uses registry name
         import json
 
-        with open(
-            Path(tmp_dir) / "dataprocessorpipeline.json"
-        ) as f:  # Default name is "RobotProcessor"
+        with open(Path(tmp_dir) / "dataprocessorpipeline.json") as f:  # Default name is "RobotProcessor"
             config = json.load(f)
 
         assert "registry_name" in config["steps"][0]
@@ -446,18 +444,9 @@ def test_features_basic_renaming(policy_feature_factory):
     out = processor.transform_features(features.copy())
 
     # Values preserved and typed
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["x"]
-        == features[PipelineFeatureType.OBSERVATION]["a"]
-    )
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["y"]
-        == features[PipelineFeatureType.OBSERVATION]["b"]
-    )
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["c"]
-        == features[PipelineFeatureType.OBSERVATION]["c"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION]["x"] == features[PipelineFeatureType.OBSERVATION]["a"]
+    assert out[PipelineFeatureType.OBSERVATION]["y"] == features[PipelineFeatureType.OBSERVATION]["b"]
+    assert out[PipelineFeatureType.OBSERVATION]["c"] == features[PipelineFeatureType.OBSERVATION]["c"]
 
     assert_contract_is_typed(out)
     # Input not mutated
@@ -477,21 +466,17 @@ def test_features_overlapping_keys(policy_feature_factory):
 
     assert set(out[PipelineFeatureType.OBSERVATION]) == {"b", "c"}
     assert (
-        out[PipelineFeatureType.OBSERVATION]["b"]
-        == features[PipelineFeatureType.OBSERVATION]["a"]
+        out[PipelineFeatureType.OBSERVATION]["b"] == features[PipelineFeatureType.OBSERVATION]["a"]
     )  # 'a' renamed to'b'
     assert (
-        out[PipelineFeatureType.OBSERVATION]["c"]
-        == features[PipelineFeatureType.OBSERVATION]["b"]
+        out[PipelineFeatureType.OBSERVATION]["c"] == features[PipelineFeatureType.OBSERVATION]["b"]
     )  # 'b' renamed to 'c'
     assert_contract_is_typed(out)
 
 
 def test_features_chained_processors(policy_feature_factory):
     # Chain two rename processors at the contract level
-    processor1 = RenameObservationsProcessorStep(
-        rename_map={"pos": "agent_position", "img": "camera_image"}
-    )
+    processor1 = RenameObservationsProcessorStep(rename_map={"pos": "agent_position", "img": "camera_image"})
     processor2 = RenameObservationsProcessorStep(
         rename_map={"agent_position": OBS_STATE, "camera_image": OBS_IMAGE}
     )
@@ -507,18 +492,9 @@ def test_features_chained_processors(policy_feature_factory):
     out = pipeline.transform_features(initial_features=spec)
 
     assert set(out[PipelineFeatureType.OBSERVATION]) == {OBS_STATE, OBS_IMAGE, "extra"}
-    assert (
-        out[PipelineFeatureType.OBSERVATION][OBS_STATE]
-        == spec[PipelineFeatureType.OBSERVATION]["pos"]
-    )
-    assert (
-        out[PipelineFeatureType.OBSERVATION][OBS_IMAGE]
-        == spec[PipelineFeatureType.OBSERVATION]["img"]
-    )
-    assert (
-        out[PipelineFeatureType.OBSERVATION]["extra"]
-        == spec[PipelineFeatureType.OBSERVATION]["extra"]
-    )
+    assert out[PipelineFeatureType.OBSERVATION][OBS_STATE] == spec[PipelineFeatureType.OBSERVATION]["pos"]
+    assert out[PipelineFeatureType.OBSERVATION][OBS_IMAGE] == spec[PipelineFeatureType.OBSERVATION]["img"]
+    assert out[PipelineFeatureType.OBSERVATION]["extra"] == spec[PipelineFeatureType.OBSERVATION]["extra"]
     assert_contract_is_typed(out)
 
 

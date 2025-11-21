@@ -710,9 +710,7 @@ def test_complementary_data_none():
     """Test processor handles None complementary_data gracefully."""
     processor = AddBatchDimensionProcessorStep()
 
-    transition = create_transition(
-        complementary_data=None, action=torch.empty(0), observation={}
-    )
+    transition = create_transition(complementary_data=None, action=torch.empty(0), observation={})
     result = processor(transition)
 
     assert result[TransitionKey.COMPLEMENTARY_DATA] == {}
@@ -1005,9 +1003,7 @@ def test_task_index_already_batched():
         complementary_data=complementary_data, observation={}, action=torch.empty(0)
     )
     result = processor(transition)
-    assert torch.equal(
-        result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_1d
-    )
+    assert torch.equal(result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_1d)
 
     # Test 2D
     complementary_data = {"task_index": task_index_2d}
@@ -1015,9 +1011,7 @@ def test_task_index_already_batched():
         complementary_data=complementary_data, observation={}, action=torch.empty(0)
     )
     result = processor(transition)
-    assert torch.equal(
-        result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_2d
-    )
+    assert torch.equal(result[TransitionKey.COMPLEMENTARY_DATA]["task_index"], task_index_2d)
 
 
 def test_index_non_tensor_unchanged():

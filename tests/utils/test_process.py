@@ -54,9 +54,7 @@ def test_setup_process_handlers_event_with_processes():
     """Test that setup_process_handlers returns the correct event type."""
     handler = ProcessSignalHandler(use_threads=False)
     shutdown_event = handler.shutdown_event
-    assert isinstance(
-        shutdown_event, type(multiprocessing.Event())
-    ), "Should be a multiprocessing.Event"
+    assert isinstance(shutdown_event, type(multiprocessing.Event())), "Should be a multiprocessing.Event"
     assert not shutdown_event.is_set(), "Event should initially be unset"
 
 
@@ -69,15 +67,11 @@ def test_setup_process_handlers_event_with_processes():
         # SIGHUP and SIGQUIT are not reliably available on all platforms (e.g. Windows)
         pytest.param(
             signal.SIGHUP,
-            marks=pytest.mark.skipif(
-                not hasattr(signal, "SIGHUP"), reason="SIGHUP not available"
-            ),
+            marks=pytest.mark.skipif(not hasattr(signal, "SIGHUP"), reason="SIGHUP not available"),
         ),
         pytest.param(
             signal.SIGQUIT,
-            marks=pytest.mark.skipif(
-                not hasattr(signal, "SIGQUIT"), reason="SIGQUIT not available"
-            ),
+            marks=pytest.mark.skipif(not hasattr(signal, "SIGQUIT"), reason="SIGQUIT not available"),
         ),
     ],
 )

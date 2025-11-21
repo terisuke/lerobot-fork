@@ -161,9 +161,7 @@ def test_act_processor_accelerate_scenario():
 
     # Simulate Accelerate: data already on GPU
     device = torch.device("cuda:0")
-    observation = {
-        OBS_STATE: torch.randn(1, 7).to(device)
-    }  # Already batched and on GPU
+    observation = {OBS_STATE: torch.randn(1, 7).to(device)}  # Already batched and on GPU
     action = torch.randn(1, 4).to(device)
     transition = create_transition(observation, action)
     batch = transition_to_batch(transition)
@@ -296,9 +294,7 @@ def test_act_processor_mixed_precision():
     modified_steps = []
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
-            modified_steps.append(
-                DeviceProcessorStep(device=config.device, float_dtype="float16")
-            )
+            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="float16"))
         elif isinstance(step, NormalizerProcessorStep):
             # Update normalizer to use the same device as the device processor
             norm_step = step  # Now type checker knows this is NormalizerProcessorStep
@@ -376,9 +372,7 @@ def test_act_processor_bfloat16_device_float32_normalizer():
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
             # Device processor converts to bfloat16
-            modified_steps.append(
-                DeviceProcessorStep(device=config.device, float_dtype="bfloat16")
-            )
+            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="bfloat16"))
         elif isinstance(step, NormalizerProcessorStep):
             # Normalizer stays configured as float32 (will auto-adapt to bfloat16)
             norm_step = step  # Now type checker knows this is NormalizerProcessorStep

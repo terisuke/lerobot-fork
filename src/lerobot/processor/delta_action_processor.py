@@ -105,12 +105,8 @@ class MapDeltaActionToRobotActionStep(RobotActionProcessorStep):
 
         # Determine if the teleoperator is actively providing input
         # Consider enabled if any significant movement delta is detected
-        position_magnitude = (
-            delta_x**2 + delta_y**2 + delta_z**2
-        ) ** 0.5  # Use Euclidean norm for position
-        enabled = (
-            position_magnitude > self.noise_threshold
-        )  # Small threshold to avoid noise
+        position_magnitude = (delta_x**2 + delta_y**2 + delta_z**2) ** 0.5  # Use Euclidean norm for position
+        enabled = position_magnitude > self.noise_threshold  # Small threshold to avoid noise
 
         # Scale the deltas appropriately
         scaled_delta_x = delta_x * self.position_scale

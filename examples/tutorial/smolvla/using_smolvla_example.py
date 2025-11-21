@@ -37,9 +37,7 @@ camera_config = {
     "camera2": OpenCVCameraConfig(index_or_path=1, width=640, height=480, fps=30),
 }
 
-robot_cfg = SO100FollowerConfig(
-    port=follower_port, id=follower_id, cameras=camera_config
-)
+robot_cfg = SO100FollowerConfig(port=follower_port, id=follower_id, cameras=camera_config)
 robot = SO100Follower(robot_cfg)
 robot.connect()
 

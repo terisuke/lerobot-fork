@@ -230,11 +230,7 @@ def convert_lerobot_dataset_to_cropped_lerobot_dataset(
                 cropped = F.crop(value, top, left, height, width)
                 value = F.resize(cropped, resize_size)
                 value = value.clamp(0, 1)
-            if (
-                key.startswith("complementary_info")
-                and isinstance(value, torch.Tensor)
-                and value.dim() == 0
-            ):
+            if key.startswith("complementary_info") and isinstance(value, torch.Tensor) and value.dim() == 0:
                 value = value.unsqueeze(0)
             new_frame[key] = value
 
@@ -256,9 +252,7 @@ def convert_lerobot_dataset_to_cropped_lerobot_dataset(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Crop rectangular ROIs from a LeRobot dataset."
-    )
+    parser = argparse.ArgumentParser(description="Crop rectangular ROIs from a LeRobot dataset.")
     parser.add_argument(
         "--repo-id",
         type=str,
@@ -313,9 +307,7 @@ if __name__ == "__main__":
     for key, roi in rois.items():
         print(f"{key}: {roi}")
 
-    new_repo_id = (
-        args.new_repo_id if args.new_repo_id else args.repo_id + "_cropped_resized"
-    )
+    new_repo_id = args.new_repo_id if args.new_repo_id else args.repo_id + "_cropped_resized"
 
     if args.new_repo_id:
         new_dataset_name = args.new_repo_id.split("/")[-1]

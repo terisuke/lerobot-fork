@@ -13,16 +13,19 @@
 ## 🔧 環境設定（必須）
 
 ### 1. 仮想環境の使用
+
 ```bash
 conda activate leorobot
 ```
 
 ### 2. 依存関係のインストール
+
 ```bash
 pip install ultralytics h5py opencv-python
 ```
 
 ### 3. RealSenseカメラの確認
+
 ```bash
 sudo python -c "
 import pyrealsense2 as rs
@@ -37,11 +40,13 @@ for i, dev in enumerate(devices):
 ## 🚨 macOSでの重要な制限事項
 
 ### 1. 電源状態設定エラー
+
 - **問題**: "failed to set power state" エラーが発生
 - **解決策**: sudo権限での実行が必要
 - **現在の実装**: モックモードでのフォールバック機能を実装済み
 
 ### 2. 実行方法
+
 ```bash
 # 必ずsudo権限で実行
 sudo python examples/object_picking/test_integrated_system.py --test camera
@@ -50,16 +55,19 @@ sudo python examples/object_picking/test_integrated_system.py --test camera
 ## 🎯 実装されたシステム
 
 ### 1. 物体検出システム
+
 - YOLOv8を使用した高精度物体検出
 - 深度情報による3D位置推定
 - モックモード対応
 
 ### 2. 物体追跡システム
+
 - 深度情報を活用した物体追跡
 - 移動予測機能
 - 信頼度計算
 
 ### 3. データセット記録システム
+
 - HDF5形式でのデータ保存
 - RGB画像と深度画像の同時記録
 - 物体検出結果と追跡情報の記録
@@ -67,11 +75,13 @@ sudo python examples/object_picking/test_integrated_system.py --test camera
 ## 🧪 テスト実行
 
 ### 全テストの実行
+
 ```bash
 sudo python examples/object_picking/test_integrated_system.py --test all
 ```
 
 ### テスト結果
+
 ```
 ==================================================
 📊 TEST SUMMARY
@@ -111,6 +121,6 @@ Overall: 6/6 tests passed
 
 **⚠️ 重要**: このドキュメントは実装完了時点での正確な情報を反映しています。詳細な実装情報については `IMPLEMENTATION_HANDOVER.md` を参照してください。
 
-**作成日**: 2025年1月23日  
-**対象**: 投げられた物体を検出して自動で拾うシステム  
+**作成日**: 2025年1月23日
+**対象**: 投げられた物体を検出して自動で拾うシステム
 **ステータス**: 動作確認済み ✅

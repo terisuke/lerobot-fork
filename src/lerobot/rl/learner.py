@@ -89,9 +89,7 @@ from lerobot.utils.constants import (
 from lerobot.utils.random_utils import set_seed
 from lerobot.utils.train_utils import (
     get_step_checkpoint_dir,
-)
-from lerobot.utils.train_utils import load_training_state as utils_load_training_state
-from lerobot.utils.train_utils import (
+    load_training_state as utils_load_training_state,
     save_checkpoint,
     update_last_checkpoint,
 )
@@ -139,9 +137,7 @@ def train(cfg: TrainRLServerPipelineConfig, job_name: str | None = None):
         job_name = cfg.job_name
 
     if job_name is None:
-        raise ValueError(
-            "Job name must be specified either in config or as a parameter"
-        )
+        raise ValueError("Job name must be specified either in config or as a parameter")
 
     display_pid = False
     if not use_threads(cfg):
@@ -175,9 +171,7 @@ def train(cfg: TrainRLServerPipelineConfig, job_name: str | None = None):
     torch.backends.cuda.matmul.allow_tf32 = True
 
     is_threaded = use_threads(cfg)
-    shutdown_event = ProcessSignalHandler(
-        is_threaded, display_pid=display_pid
-    ).shutdown_event
+    shutdown_event = ProcessSignalHandler(is_threaded, display_pid=display_pid).shutdown_event
 
     start_learner_threads(
         cfg=cfg,
@@ -300,9 +294,7 @@ def add_actor_information_and_train(
     log_freq = cfg.log_freq
     save_freq = cfg.save_freq
     policy_update_freq = cfg.policy.policy_update_freq
-    policy_parameters_push_frequency = (
-        cfg.policy.actor_learner_config.policy_parameters_push_frequency
-    )
+    policy_parameters_push_frequency = cfg.policy.actor_learner_config.policy_parameters_push_frequency
     saving_checkpoint = cfg.save_checkpoint
     online_steps = cfg.policy.online_steps
     async_prefetch = cfg.policy.async_prefetch
@@ -333,9 +325,7 @@ def add_actor_information_and_train(
     optimizers, lr_scheduler = make_optimizers_and_scheduler(cfg=cfg, policy=policy)
 
     # If we are resuming, we need to load the training state
-    resume_optimization_step, resume_interaction_step = load_training_state(
-        cfg=cfg, optimizers=optimizers
-    )
+    resume_optimization_step, resume_interaction_step = load_training_state(cfg=cfg, optimizers=optimizers)
 
     log_training_info(cfg=cfg, policy=policy)
 
@@ -353,12 +343,8 @@ def add_actor_information_and_train(
 
     logging.info("Starting learner thread")
     interaction_message = None
-    optimization_step = (
-        resume_optimization_step if resume_optimization_step is not None else 0
-    )
-    interaction_step_shift = (
-        resume_interaction_step if resume_interaction_step is not None else 0
-    )
+    optimization_step = resume_optimization_step if resume_optimization_step is not None else 0
+    interaction_step_shift = resume_interaction_step if resume_interaction_step is not None else 0
 
     dataset_repo_id = None
     if cfg.dataset is not None:
@@ -423,9 +409,7 @@ def add_actor_information_and_train(
             observations = batch["state"]
             next_observations = batch["next_state"]
             done = batch["done"]
-            check_nan_in_transition(
-                observations=observations, actions=actions, next_state=next_observations
-            )
+            check_nan_in_transition(observations=observations, actions=actions, next_state=next_observations)
 
             observation_features, next_observation_features = get_observation_features(
                 policy=policy,
@@ -460,9 +444,7 @@ def add_actor_information_and_train(
 
             # Discrete critic optimization (if available)
             if policy.config.num_discrete_actions is not None:
-                discrete_critic_output = policy.forward(
-                    forward_batch, model="discrete_critic"
-                )
+                discrete_critic_output = policy.forward(forward_batch, model="discrete_critic")
                 loss_discrete_critic = discrete_critic_output["loss_discrete_critic"]
                 optimizers["discrete_critic"].zero_grad()
                 loss_discrete_critic.backward()
@@ -490,9 +472,7 @@ def add_actor_information_and_train(
         next_observations = batch["next_state"]
         done = batch["done"]
 
-        check_nan_in_transition(
-            observations=observations, actions=actions, next_state=next_observations
-        )
+        check_nan_in_transition(observations=observations, actions=actions, next_state=next_observations)
 
         observation_features, next_observation_features = get_observation_features(
             policy=policy,
@@ -530,9 +510,7 @@ def add_actor_information_and_train(
 
         # Discrete critic optimization (if available)
         if policy.config.num_discrete_actions is not None:
-            discrete_critic_output = policy.forward(
-                forward_batch, model="discrete_critic"
-            )
+            discrete_critic_output = policy.forward(forward_batch, model="discrete_critic")
             loss_discrete_critic = discrete_critic_output["loss_discrete_critic"]
             optimizers["discrete_critic"].zero_grad()
             loss_discrete_critic.backward()
@@ -593,26 +571,18 @@ def add_actor_information_and_train(
         if optimization_step % log_freq == 0:
             training_infos["replay_buffer_size"] = len(replay_buffer)
             if offline_replay_buffer is not None:
-                training_infos["offline_replay_buffer_size"] = len(
-                    offline_replay_buffer
-                )
+                training_infos["offline_replay_buffer_size"] = len(offline_replay_buffer)
             training_infos["Optimization step"] = optimization_step
 
             # Log training metrics
             if wandb_logger:
-                wandb_logger.log_dict(
-                    d=training_infos, mode="train", custom_step_key="Optimization step"
-                )
+                wandb_logger.log_dict(d=training_infos, mode="train", custom_step_key="Optimization step")
 
         # Calculate and log optimization frequency
         time_for_one_optimization_step = time.time() - time_for_one_optimization_step
-        frequency_for_one_optimization_step = 1 / (
-            time_for_one_optimization_step + 1e-9
-        )
+        frequency_for_one_optimization_step = 1 / (time_for_one_optimization_step + 1e-9)
 
-        logging.info(
-            f"[LEARNER] Optimization frequency loop [Hz]: {frequency_for_one_optimization_step}"
-        )
+        logging.info(f"[LEARNER] Optimization frequency loop [Hz]: {frequency_for_one_optimization_step}")
 
         # Log optimization frequency
         if wandb_logger:
@@ -630,9 +600,7 @@ def add_actor_information_and_train(
             logging.info(f"[LEARNER] Number of optimization step: {optimization_step}")
 
         # Save checkpoint at specified intervals
-        if saving_checkpoint and (
-            optimization_step % save_freq == 0 or optimization_step == online_steps
-        ):
+        if saving_checkpoint and (optimization_step % save_freq == 0 or optimization_step == online_steps):
             save_training_checkpoint(
                 cfg=cfg,
                 optimization_step=optimization_step,
@@ -754,16 +722,10 @@ def save_training_checkpoint(
     """
     logging.info(f"Checkpoint policy after step {optimization_step}")
     _num_digits = max(6, len(str(online_steps)))
-    interaction_step = (
-        interaction_message["Interaction step"]
-        if interaction_message is not None
-        else 0
-    )
+    interaction_step = interaction_message["Interaction step"] if interaction_message is not None else 0
 
     # Create checkpoint directory
-    checkpoint_dir = get_step_checkpoint_dir(
-        cfg.output_dir, online_steps, optimization_step
-    )
+    checkpoint_dir = get_step_checkpoint_dir(cfg.output_dir, online_steps, optimization_step)
 
     # Save checkpoint
     save_checkpoint(
@@ -794,9 +756,7 @@ def save_training_checkpoint(
     # NOTE: Handle the case where the dataset repo id is not specified in the config
     # eg. RL training without demonstrations data
     repo_id_buffer_save = cfg.env.task if dataset_repo_id is None else dataset_repo_id
-    replay_buffer.to_lerobot_dataset(
-        repo_id=repo_id_buffer_save, fps=fps, root=dataset_dir
-    )
+    replay_buffer.to_lerobot_dataset(repo_id=repo_id_buffer_save, fps=fps, root=dataset_dir)
 
     if offline_replay_buffer is not None:
         dataset_offline_dir = os.path.join(cfg.output_dir, "dataset_offline")
@@ -846,17 +806,13 @@ def make_optimizers_and_scheduler(cfg: TrainRLServerPipelineConfig, policy: nn.M
         ],
         lr=cfg.policy.actor_lr,
     )
-    optimizer_critic = torch.optim.Adam(
-        params=policy.critic_ensemble.parameters(), lr=cfg.policy.critic_lr
-    )
+    optimizer_critic = torch.optim.Adam(params=policy.critic_ensemble.parameters(), lr=cfg.policy.critic_lr)
 
     if cfg.policy.num_discrete_actions is not None:
         optimizer_discrete_critic = torch.optim.Adam(
             params=policy.discrete_critic.parameters(), lr=cfg.policy.critic_lr
         )
-    optimizer_temperature = torch.optim.Adam(
-        params=[policy.log_alpha], lr=cfg.policy.critic_lr
-    )
+    optimizer_temperature = torch.optim.Adam(params=[policy.log_alpha], lr=cfg.policy.critic_lr)
     lr_scheduler = None
     optimizers = {
         "actor": optimizer_actor,
@@ -910,9 +866,7 @@ def handle_resume_logic(
     # Case 2: Resuming training
     checkpoint_dir = os.path.join(out_dir, CHECKPOINTS_DIR, LAST_CHECKPOINT_LINK)
     if not os.path.exists(checkpoint_dir):
-        raise RuntimeError(
-            f"No model checkpoint found in {checkpoint_dir} for resume=True"
-        )
+        raise RuntimeError(f"No model checkpoint found in {checkpoint_dir} for resume=True")
 
     # Log that we found a valid checkpoint and are resuming
     logging.info(
@@ -924,9 +878,7 @@ def handle_resume_logic(
     )
 
     # Load config using Draccus
-    checkpoint_cfg_path = os.path.join(
-        checkpoint_dir, PRETRAINED_MODEL_DIR, "train_config.json"
-    )
+    checkpoint_cfg_path = os.path.join(checkpoint_dir, PRETRAINED_MODEL_DIR, "train_config.json")
     checkpoint_cfg = TrainRLServerPipelineConfig.from_pretrained(checkpoint_cfg_path)
 
     # Ensure resume flag is set in returned config
@@ -958,19 +910,13 @@ def load_training_state(
 
     try:
         # Use the utility function from train_utils which loads the optimizer state
-        step, optimizers, _ = utils_load_training_state(
-            Path(checkpoint_dir), optimizers, None
-        )
+        step, optimizers, _ = utils_load_training_state(Path(checkpoint_dir), optimizers, None)
 
         # Load interaction step separately from training_state.pt
-        training_state_path = os.path.join(
-            checkpoint_dir, TRAINING_STATE_DIR, "training_state.pt"
-        )
+        training_state_path = os.path.join(checkpoint_dir, TRAINING_STATE_DIR, "training_state.pt")
         interaction_step = 0
         if os.path.exists(training_state_path):
-            training_state = torch.load(
-                training_state_path, weights_only=False
-            )  # nosec B614: Safe usage of torch.load
+            training_state = torch.load(training_state_path, weights_only=False)  # nosec B614: Safe usage of torch.load
             interaction_step = training_state.get("interaction_step", 0)
 
         logging.info(f"Resuming from step {step}, interaction step {interaction_step}")
@@ -989,14 +935,10 @@ def log_training_info(cfg: TrainRLServerPipelineConfig, policy: nn.Module) -> No
         cfg (TrainRLServerPipelineConfig): Training configuration
         policy (nn.Module): Policy model
     """
-    num_learnable_params = sum(
-        p.numel() for p in policy.parameters() if p.requires_grad
-    )
+    num_learnable_params = sum(p.numel() for p in policy.parameters() if p.requires_grad)
     num_total_params = sum(p.numel() for p in policy.parameters())
 
-    logging.info(
-        colored("Output dir:", "yellow", attrs=["bold"]) + f" {cfg.output_dir}"
-    )
+    logging.info(colored("Output dir:", "yellow", attrs=["bold"]) + f" {cfg.output_dir}")
     logging.info(f"{cfg.env.task=}")
     logging.info(f"{cfg.policy.online_steps=}")
     logging.info(f"{num_learnable_params=} ({format_big_number(num_learnable_params)})")
@@ -1105,19 +1047,12 @@ def get_observation_features(
         tuple: observation_features, next_observation_features
     """
 
-    if (
-        policy.config.vision_encoder_name is None
-        or not policy.config.freeze_vision_encoder
-    ):
+    if policy.config.vision_encoder_name is None or not policy.config.freeze_vision_encoder:
         return None, None
 
     with torch.no_grad():
-        observation_features = policy.actor.encoder.get_cached_image_features(
-            observations
-        )
-        next_observation_features = policy.actor.encoder.get_cached_image_features(
-            next_observations
-        )
+        observation_features = policy.actor.encoder.get_cached_image_features(observations)
+        next_observation_features = policy.actor.encoder.get_cached_image_features(next_observations)
 
     return observation_features, next_observation_features
 
@@ -1176,9 +1111,7 @@ def push_actor_policy_to_queue(parameters_queue: Queue, policy: nn.Module):
     logging.debug("[LEARNER] Pushing actor policy to the queue")
 
     # Create a dictionary to hold all the state dicts
-    state_dicts = {
-        "policy": move_state_dict_to_device(policy.actor.state_dict(), device="cpu")
-    }
+    state_dicts = {"policy": move_state_dict_to_device(policy.actor.state_dict(), device="cpu")}
 
     # Add discrete critic if it exists
     if hasattr(policy, "discrete_critic") and policy.discrete_critic is not None:
@@ -1201,9 +1134,7 @@ def process_interaction_message(
 
     # Log if logger available
     if wandb_logger:
-        wandb_logger.log_dict(
-            d=message, mode="train", custom_step_key="Interaction step"
-        )
+        wandb_logger.log_dict(d=message, mode="train", custom_step_key="Interaction step")
 
     return message
 
@@ -1245,9 +1176,9 @@ def process_transitions(
             replay_buffer.add(**transition)
 
             # Add to offline buffer if it's an intervention
-            if dataset_repo_id is not None and transition.get(
-                "complementary_info", {}
-            ).get(TeleopEvents.IS_INTERVENTION):
+            if dataset_repo_id is not None and transition.get("complementary_info", {}).get(
+                TeleopEvents.IS_INTERVENTION
+            ):
                 offline_replay_buffer.add(**transition)
 
 

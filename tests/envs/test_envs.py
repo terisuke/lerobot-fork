@@ -20,8 +20,7 @@ import gymnasium as gym
 import numpy as np
 import pytest
 import torch
-from gymnasium.envs.registration import register
-from gymnasium.envs.registration import registry as gym_registry
+from gymnasium.envs.registration import register, registry as gym_registry
 from gymnasium.utils.env_checker import check_env
 
 import lerobot

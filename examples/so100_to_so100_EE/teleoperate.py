@@ -41,9 +41,7 @@ FPS = 30
 follower_config = SO100FollowerConfig(
     port="/dev/tty.usbmodem5A460814411", id="my_awesome_follower_arm", use_degrees=True
 )
-leader_config = SO100LeaderConfig(
-    port="/dev/tty.usbmodem5A460819811", id="my_awesome_leader_arm"
-)
+leader_config = SO100LeaderConfig(port="/dev/tty.usbmodem5A460819811", id="my_awesome_leader_arm")
 
 # Initialize the robot and teleoperator
 follower = SO100Follower(follower_config)
@@ -76,9 +74,7 @@ leader_to_ee = RobotProcessorPipeline[RobotAction, RobotAction](
 )
 
 # build pipeline to convert EE action to robot joints
-ee_to_follower_joints = RobotProcessorPipeline[
-    tuple[RobotAction, RobotObservation], RobotAction
-](
+ee_to_follower_joints = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
     [
         EEBoundsAndSafety(
             end_effector_bounds={"min": [-1.0, -1.0, -1.0], "max": [1.0, 1.0, 1.0]},

@@ -50,8 +50,7 @@ for idx in range(len(episode_frames)):
 
     # Get recorded action from dataset
     action = {
-        name: float(actions[idx][ACTION][i])
-        for i, name in enumerate(dataset.features[ACTION]["names"])
+        name: float(actions[idx][ACTION][i]) for i, name in enumerate(dataset.features[ACTION]["names"])
     }
 
     # Send action to robot

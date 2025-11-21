@@ -31,12 +31,12 @@ from lerobot.processor.converters import (
     transition_to_observation,
     transition_to_robot_action,
 )
-from lerobot.robots.so101_follower.config_so101_follower import SO101FollowerConfig
 from lerobot.robots.so100_follower.robot_kinematic_processor import (
     EEBoundsAndSafety,
     ForwardKinematicsJointsToEE,
     InverseKinematicsEEToJoints,
 )
+from lerobot.robots.so101_follower.config_so101_follower import SO101FollowerConfig
 from lerobot.robots.so101_follower.so101_follower import SO101Follower
 from lerobot.scripts.lerobot_record import record_loop
 from lerobot.teleoperators.so100_leader.config_so100_leader import SO100LeaderConfig
@@ -60,7 +60,7 @@ camera_config = {
         index_or_path=0,
         fps=30.0,  # Match recording FPS
         width=640,  # Reduce for processing speed
-        height=480
+        height=480,
     )
 }
 
@@ -100,8 +100,10 @@ follower_kinematics_solver = None
 leader_kinematics_solver = None
 
 try:
-    import placo  # Check if placo is available
     import os
+
+    import placo  # noqa: F401  # Check if placo is available
+
     if os.path.exists(URDF_PATH):
         follower_kinematics_solver = RobotKinematics(
             urdf_path=URDF_PATH,
@@ -135,9 +137,7 @@ if follower_kinematics_solver is not None:
     )
 
     # Build pipeline to convert leader joints to EE action
-    leader_joints_to_ee = RobotProcessorPipeline[
-        tuple[RobotAction, RobotObservation], RobotAction
-    ](
+    leader_joints_to_ee = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
         steps=[
             ForwardKinematicsJointsToEE(
                 kinematics=leader_kinematics_solver,
@@ -149,9 +149,7 @@ if follower_kinematics_solver is not None:
     )
 
     # Build pipeline to convert EE action to follower joints
-    ee_to_follower_joints = RobotProcessorPipeline[
-        tuple[RobotAction, RobotObservation], RobotAction
-    ](
+    ee_to_follower_joints = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
         [
             EEBoundsAndSafety(
                 end_effector_bounds={"min": [-1.0, -1.0, -1.0], "max": [1.0, 1.0, 1.0]},
@@ -184,9 +182,7 @@ dataset = LeRobotDataset.create(
         ),
         aggregate_pipeline_dataset_features(
             pipeline=follower_joints_to_ee or RobotProcessorPipeline(),
-            initial_features=create_initial_features(
-                observation=follower.observation_features
-            ),
+            initial_features=create_initial_features(observation=follower.observation_features),
             use_videos=True,
         ),
     ),
@@ -242,9 +238,7 @@ while episode_idx < NUM_EPISODES and not events["stop_recording"]:
     )
 
     # Reset the environment if not stopping or re-recording
-    if not events["stop_recording"] and (
-        episode_idx < NUM_EPISODES - 1 or events["rerecord_episode"]
-    ):
+    if not events["stop_recording"] and (episode_idx < NUM_EPISODES - 1 or events["rerecord_episode"]):
         log_say("Reset the environment")
         record_loop(
             robot=follower,
@@ -287,8 +281,8 @@ print(f"Dataset: {HF_REPO_ID}")
 print("\nNext steps:")
 print("1. Review your recorded demonstrations")
 print("2. Train ACT model:")
-print(f"   lerobot-train \\")
+print("   lerobot-train \\")
 print(f"     --dataset.repo_id={HF_REPO_ID} \\")
-print(f"     --policy.type=act \\")
-print(f"     --output_dir=outputs/cup_to_bottle_act")
+print("     --policy.type=act \\")
+print("     --output_dir=outputs/cup_to_bottle_act")
 print("=" * 70)

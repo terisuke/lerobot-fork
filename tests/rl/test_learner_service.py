@@ -115,30 +115,14 @@ def test_send_interactions():
     )
 
     list_of_interaction_messages = [
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"1"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"2"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"3"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"4"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"5"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"6"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"7"
-        ),
-        services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"8"
-        ),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"1"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"2"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"3"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"4"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"5"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"6"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b"7"),
+        services_pb2.InteractionMessage(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"8"),
     ]
 
     def mock_interactions_stream():
@@ -189,15 +173,9 @@ def test_send_transitions():
             transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
             data=b"transition_2",
         ),
-        services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"transition_3"
-        ),
-        services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"batch_1"
-        ),
-        services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"batch_2"
-        ),
+        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"transition_3"),
+        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b"batch_1"),
+        services_pb2.Transition(transfer_state=services_pb2.TransferState.TRANSFER_END, data=b"batch_2"),
     ]
 
     def mock_transitions_stream():

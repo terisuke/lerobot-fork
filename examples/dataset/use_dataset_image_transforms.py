@@ -81,9 +81,7 @@ def example_1_default_transforms():
 
                     # Save original and transformed images
                     save_image(original_sample[cam_key], f"{cam_name}_original.png")
-                    save_image(
-                        transformed_sample[cam_key], f"{cam_name}_transformed.png"
-                    )
+                    save_image(transformed_sample[cam_key], f"{cam_name}_transformed.png")
 
     except Exception as e:
         print(f"Could not load dataset '{repo_id}': {e}")
@@ -154,9 +152,7 @@ def example_3_torchvision_transforms():
             ]
         )
 
-        dataset_with_torchvision = LeRobotDataset(
-            repo_id=repo_id, image_transforms=torchvision_transforms
-        )
+        dataset_with_torchvision = LeRobotDataset(repo_id=repo_id, image_transforms=torchvision_transforms)
 
         # Save examples with torchvision transforms
         if len(dataset_with_torchvision) > 0:

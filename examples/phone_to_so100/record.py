@@ -54,9 +54,7 @@ TASK_DESCRIPTION = "My task description"
 HF_REPO_ID = "<hf_username>/<dataset_repo_id>"
 
 # Create the robot and teleoperator configurations
-camera_config = {
-    "front": OpenCVCameraConfig(index_or_path=0, width=640, height=480, fps=FPS)
-}
+camera_config = {"front": OpenCVCameraConfig(index_or_path=0, width=640, height=480, fps=FPS)}
 robot_config = SO100FollowerConfig(
     port="/dev/tty.usbmodem5A460814411",
     id="my_awesome_follower_arm",
@@ -77,9 +75,7 @@ kinematics_solver = RobotKinematics(
 )
 
 # Build pipeline to convert phone action to EE action
-phone_to_robot_ee_pose_processor = RobotProcessorPipeline[
-    tuple[RobotAction, RobotObservation], RobotAction
-](
+phone_to_robot_ee_pose_processor = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
     steps=[
         MapPhoneActionToRobotAction(platform=teleop_config.phone_os),
         EEReferenceAndDelta(
@@ -99,9 +95,7 @@ phone_to_robot_ee_pose_processor = RobotProcessorPipeline[
 )
 
 # Build pipeline to convert EE action to joints action
-robot_ee_to_joints_processor = RobotProcessorPipeline[
-    tuple[RobotAction, RobotObservation], RobotAction
-](
+robot_ee_to_joints_processor = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
     steps=[
         InverseKinematicsEEToJoints(
             kinematics=kinematics_solver,
@@ -116,9 +110,7 @@ robot_ee_to_joints_processor = RobotProcessorPipeline[
 # Build pipeline to convert joint observation to EE observation
 robot_joints_to_ee_pose = RobotProcessorPipeline[RobotObservation, RobotObservation](
     steps=[
-        ForwardKinematicsJointsToEE(
-            kinematics=kinematics_solver, motor_names=list(robot.bus.motors.keys())
-        )
+        ForwardKinematicsJointsToEE(kinematics=kinematics_solver, motor_names=list(robot.bus.motors.keys()))
     ],
     to_transition=observation_to_transition,
     to_output=transition_to_observation,
@@ -138,9 +130,7 @@ dataset = LeRobotDataset.create(
         ),
         aggregate_pipeline_dataset_features(
             pipeline=robot_joints_to_ee_pose,
-            initial_features=create_initial_features(
-                observation=robot.observation_features
-            ),
+            initial_features=create_initial_features(observation=robot.observation_features),
             use_videos=True,
         ),
     ),
@@ -182,9 +172,7 @@ while episode_idx < NUM_EPISODES and not events["stop_recording"]:
     )
 
     # Reset the environment if not stopping or re-recording
-    if not events["stop_recording"] and (
-        episode_idx < NUM_EPISODES - 1 or events["rerecord_episode"]
-    ):
+    if not events["stop_recording"] and (episode_idx < NUM_EPISODES - 1 or events["rerecord_episode"]):
         log_say("Reset the environment")
         record_loop(
             robot=robot,

@@ -84,9 +84,7 @@ class VanillaObservationProcessorStep(ObservationProcessorStep):
         # Validate image format
         _, h, w, c = img_tensor.shape
         if not (c < h and c < w):
-            raise ValueError(
-                f"Expected channel-last images, but got shape {img_tensor.shape}"
-            )
+            raise ValueError(f"Expected channel-last images, but got shape {img_tensor.shape}")
 
         if img_tensor.dtype != torch.uint8:
             raise ValueError(f"Expected torch.uint8 images, but got {img_tensor.dtype}")
@@ -160,9 +158,7 @@ class VanillaObservationProcessorStep(ObservationProcessorStep):
         """
         # Build a new features mapping keyed by the same FeatureType buckets
         # We assume callers already placed features in the correct FeatureType.
-        new_features: dict[PipelineFeatureType, dict[str, PolicyFeature]] = {
-            ft: {} for ft in features
-        }
+        new_features: dict[PipelineFeatureType, dict[str, PolicyFeature]] = {ft: {} for ft in features}
 
         exact_pairs = {
             "pixels": OBS_IMAGE,

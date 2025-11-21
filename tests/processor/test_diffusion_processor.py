@@ -323,11 +323,7 @@ def test_diffusion_processor_batch_consistency():
     for batch_size in [1, 8, 32]:
         observation = {
             OBS_STATE: torch.randn(batch_size, 7) if batch_size > 1 else torch.randn(7),
-            OBS_IMAGE: (
-                torch.randn(batch_size, 3, 224, 224)
-                if batch_size > 1
-                else torch.randn(3, 224, 224)
-            ),
+            OBS_IMAGE: (torch.randn(batch_size, 3, 224, 224) if batch_size > 1 else torch.randn(3, 224, 224)),
         }
         action = torch.randn(batch_size, 6) if batch_size > 1 else torch.randn(6)
         transition = create_transition(observation, action)
@@ -357,9 +353,7 @@ def test_diffusion_processor_bfloat16_device_float32_normalizer():
     for step in preprocessor.steps:
         if isinstance(step, DeviceProcessorStep):
             # Device processor converts to bfloat16
-            modified_steps.append(
-                DeviceProcessorStep(device=config.device, float_dtype="bfloat16")
-            )
+            modified_steps.append(DeviceProcessorStep(device=config.device, float_dtype="bfloat16"))
         elif isinstance(step, NormalizerProcessorStep):
             # Normalizer stays configured as float32 (will auto-adapt to bfloat16)
             norm_step = step  # Now type checker knows this is NormalizerProcessorStep
@@ -395,9 +389,7 @@ def test_diffusion_processor_bfloat16_device_float32_normalizer():
 
     # Verify: DeviceProcessor → bfloat16, NormalizerProcessor adapts → final output is bfloat16
     assert processed[OBS_STATE].dtype == torch.bfloat16
-    assert (
-        processed[OBS_IMAGE].dtype == torch.bfloat16
-    )  # IDENTITY normalization still gets dtype conversion
+    assert processed[OBS_IMAGE].dtype == torch.bfloat16  # IDENTITY normalization still gets dtype conversion
     assert processed[TransitionKey.ACTION.value].dtype == torch.bfloat16
 
     # Verify normalizer automatically adapted its internal state

@@ -151,9 +151,7 @@ def test_end_to_end_transitions_flow(cfg):
 
     received_transitions = []
     while not transitions_learner_queue.empty():
-        received_transitions.extend(
-            bytes_to_transitions(transitions_learner_queue.get())
-        )
+        received_transitions.extend(bytes_to_transitions(transitions_learner_queue.get()))
 
     assert len(received_transitions) == len(input_transitions)
     for i, transition in enumerate(received_transitions):
@@ -228,9 +226,7 @@ def test_end_to_end_interactions_flow(cfg):
     # Verify that the learner received the interactions
     received_interactions = []
     while not interactions_learner_queue.empty():
-        received_interactions.append(
-            bytes_to_python_object(interactions_learner_queue.get())
-        )
+        received_interactions.append(bytes_to_python_object(interactions_learner_queue.get()))
 
     assert len(received_interactions) == len(input_interactions)
 
@@ -238,9 +234,7 @@ def test_end_to_end_interactions_flow(cfg):
     received_interactions.sort(key=lambda x: x["step"])
     input_interactions.sort(key=lambda x: x["step"])
 
-    for received, expected in zip(
-        received_interactions, input_interactions, strict=False
-    ):
+    for received, expected in zip(received_interactions, input_interactions, strict=False):
         assert received == expected
 
 

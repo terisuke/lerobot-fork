@@ -5,6 +5,7 @@
 **Created**: `examples/webcam_single/record_cup_demos.py`
 
 This script provides:
+
 - Webcam capture with YOLO object detection
 - Recording controls (SPACE: start/stop, s: save, r: reset)
 - Frame-by-frame capture with cup detection

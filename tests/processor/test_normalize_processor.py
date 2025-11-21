@@ -48,9 +48,7 @@ def test_numpy_conversion():
 
     assert isinstance(tensor_stats[OBS_IMAGE]["mean"], torch.Tensor)
     assert isinstance(tensor_stats[OBS_IMAGE]["std"], torch.Tensor)
-    assert torch.allclose(
-        tensor_stats[OBS_IMAGE]["mean"], torch.tensor([0.5, 0.5, 0.5])
-    )
+    assert torch.allclose(tensor_stats[OBS_IMAGE]["mean"], torch.tensor([0.5, 0.5, 0.5]))
     assert torch.allclose(tensor_stats[OBS_IMAGE]["std"], torch.tensor([0.2, 0.2, 0.2]))
 
 
@@ -89,9 +87,7 @@ def test_list_conversion():
     }
     tensor_stats = to_tensor(stats)
 
-    assert torch.allclose(
-        tensor_stats[OBS_STATE]["min"], torch.tensor([0.0, -1.0, -2.0])
-    )
+    assert torch.allclose(tensor_stats[OBS_STATE]["min"], torch.tensor([0.0, -1.0, -2.0]))
     assert torch.allclose(tensor_stats[OBS_STATE]["max"], torch.tensor([1.0, 1.0, 2.0]))
 
 
@@ -140,9 +136,7 @@ def observation_normalizer(observation_stats):
     """Return a NormalizerProcessorStep that only has observation stats (no action)."""
     features = _create_observation_features()
     norm_map = _create_observation_norm_map()
-    return NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=observation_stats
-    )
+    return NormalizerProcessorStep(features=features, norm_map=norm_map, stats=observation_stats)
 
 
 def test_mean_std_normalization(observation_normalizer):
@@ -191,9 +185,7 @@ def test_quantile_normalization():
         },
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         "observation.state": torch.tensor([0.5, 0.0]),
@@ -207,9 +199,7 @@ def test_quantile_normalization():
     # For state[0]: 2 * (0.5 - 0.1) / (0.9 - 0.1) - 1 = 2 * 0.4 / 0.8 - 1 = 0.0
     # For state[1]: 2 * (0.0 - (-0.8)) / (0.8 - (-0.8)) - 1 = 2 * 0.8 / 1.6 - 1 = 0.0
     expected_state = torch.tensor([0.0, 0.0])
-    assert torch.allclose(
-        normalized_obs["observation.state"], expected_state, atol=1e-6
-    )
+    assert torch.allclose(normalized_obs["observation.state"], expected_state, atol=1e-6)
 
 
 def test_quantile10_normalization():
@@ -227,9 +217,7 @@ def test_quantile10_normalization():
         },
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         "observation.state": torch.tensor([0.5, 0.0]),
@@ -243,9 +231,7 @@ def test_quantile10_normalization():
     # For state[0]: 2 * (0.5 - 0.2) / (0.8 - 0.2) - 1 = 2 * 0.3 / 0.6 - 1 = 0.0
     # For state[1]: 2 * (0.0 - (-0.6)) / (0.6 - (-0.6)) - 1 = 2 * 0.6 / 1.2 - 1 = 0.0
     expected_state = torch.tensor([0.0, 0.0])
-    assert torch.allclose(
-        normalized_obs["observation.state"], expected_state, atol=1e-6
-    )
+    assert torch.allclose(normalized_obs["observation.state"], expected_state, atol=1e-6)
 
 
 def test_quantile_unnormalization():
@@ -263,12 +249,8 @@ def test_quantile_unnormalization():
         },
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     # Test round-trip normalization
     original_action = torch.tensor([0.5, 0.0])
@@ -298,9 +280,7 @@ def test_quantile_division_by_zero():
         },
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         "observation.state": torch.tensor([0.5]),
@@ -331,9 +311,7 @@ def test_quantile_partial_stats():
         },
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats_partial
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats_partial)
 
     observation = {
         "observation.state": torch.tensor([0.5, 0.0]),
@@ -362,9 +340,7 @@ def test_quantile_mixed_with_other_modes():
         "action": {"q10": [0.2, -0.6], "q90": [0.8, 0.6]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         "observation.image": torch.tensor([0.7, 0.5, 0.3]),
@@ -383,9 +359,7 @@ def test_quantile_mixed_with_other_modes():
 
     # State should be quantile normalized: 2 * (0.5 - 0.1) / (0.9 - 0.1) - 1 = 0.0, etc.
     expected_state = torch.tensor([0.0, 0.0])
-    assert torch.allclose(
-        normalized_obs["observation.state"], expected_state, atol=1e-6
-    )
+    assert torch.allclose(normalized_obs["observation.state"], expected_state, atol=1e-6)
 
     # Action should be quantile10 normalized: 2 * (0.5 - 0.2) / (0.8 - 0.2) - 1 = 0.0, etc.
     expected_action = torch.tensor([0.0, 0.0])
@@ -402,9 +376,7 @@ def test_quantile_with_missing_stats():
     }
     stats = {}  # No stats provided
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         "observation.state": torch.tensor([0.5, 0.0]),
@@ -415,9 +387,7 @@ def test_quantile_with_missing_stats():
     normalized_obs = normalized_transition[TransitionKey.OBSERVATION]
 
     # Should pass through unchanged when no stats available
-    assert torch.allclose(
-        normalized_obs["observation.state"], observation["observation.state"]
-    )
+    assert torch.allclose(normalized_obs["observation.state"], observation["observation.state"])
 
 
 def test_selective_normalization(observation_stats):
@@ -440,9 +410,7 @@ def test_selective_normalization(observation_stats):
     normalized_obs = normalized_transition[TransitionKey.OBSERVATION]
 
     # Only image should be normalized
-    assert torch.allclose(
-        normalized_obs[OBS_IMAGE], (torch.tensor([0.7, 0.5, 0.3]) - 0.5) / 0.2
-    )
+    assert torch.allclose(normalized_obs[OBS_IMAGE], (torch.tensor([0.7, 0.5, 0.3]) - 0.5) / 0.2)
     # State should remain unchanged
     assert torch.allclose(normalized_obs[OBS_STATE], observation[OBS_STATE])
 
@@ -451,9 +419,7 @@ def test_selective_normalization(observation_stats):
 def test_device_compatibility(observation_stats):
     features = _create_observation_features()
     norm_map = _create_observation_norm_map()
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=observation_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=observation_stats)
     observation = {
         OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3]).cuda(),
     }
@@ -482,9 +448,7 @@ def test_from_lerobot_dataset():
         FeatureType.ACTION: NormalizationMode.MEAN_STD,
     }
 
-    normalizer = NormalizerProcessorStep.from_lerobot_dataset(
-        mock_dataset, features, norm_map
-    )
+    normalizer = NormalizerProcessorStep.from_lerobot_dataset(mock_dataset, features, norm_map)
 
     # Both observation and action statistics should be present in tensor stats
     assert OBS_IMAGE in normalizer._tensor_stats
@@ -499,9 +463,7 @@ def test_state_dict_save_load(observation_normalizer):
     # Create new normalizer and load state
     features = _create_observation_features()
     norm_map = _create_observation_norm_map()
-    new_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats={}
-    )
+    new_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats={})
     new_normalizer.load_state_dict(state_dict)
 
     # Test that it works the same
@@ -630,9 +592,7 @@ def test_action_from_lerobot_dataset():
     mock_dataset.meta.stats = {ACTION: {"mean": [0.0], "std": [1.0]}}
     features = {ACTION: PolicyFeature(FeatureType.ACTION, (1,))}
     norm_map = {FeatureType.ACTION: NormalizationMode.MEAN_STD}
-    unnormalizer = UnnormalizerProcessorStep.from_lerobot_dataset(
-        mock_dataset, features, norm_map
-    )
+    unnormalizer = UnnormalizerProcessorStep.from_lerobot_dataset(mock_dataset, features, norm_map)
     assert "mean" in unnormalizer._tensor_stats[ACTION]
 
 
@@ -675,9 +635,7 @@ def _create_full_norm_map():
 def normalizer_processor(full_stats):
     features = _create_full_features()
     norm_map = _create_full_norm_map()
-    return NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=full_stats
-    )
+    return NormalizerProcessorStep(features=features, norm_map=norm_map, stats=full_stats)
 
 
 def test_combined_normalization(normalizer_processor):
@@ -794,9 +752,7 @@ def test_empty_observation():
     stats = {OBS_IMAGE: {"mean": [0.5], "std": [0.2]}}
     features = {OBS_IMAGE: PolicyFeature(FeatureType.VISUAL, (3, 96, 96))}
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     transition = create_transition()
     result = normalizer(transition)
@@ -813,9 +769,7 @@ def test_empty_stats():
 
     result = normalizer(transition)
     # Should return observation unchanged since no stats are available
-    assert torch.allclose(
-        result[TransitionKey.OBSERVATION][OBS_IMAGE], observation[OBS_IMAGE]
-    )
+    assert torch.allclose(result[TransitionKey.OBSERVATION][OBS_IMAGE], observation[OBS_IMAGE])
 
 
 def test_partial_stats():
@@ -823,9 +777,7 @@ def test_partial_stats():
     stats = {OBS_IMAGE: {"mean": [0.5]}}  # Missing std / (min,max)
     features = {OBS_IMAGE: PolicyFeature(FeatureType.VISUAL, (3, 96, 96))}
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
     observation = {OBS_IMAGE: torch.tensor([0.7])}
     transition = create_transition(observation=observation)
 
@@ -840,9 +792,7 @@ def test_missing_action_stats_no_error():
     features = {OBS_IMAGE: PolicyFeature(FeatureType.VISUAL, (3, 96, 96))}
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
 
-    processor = UnnormalizerProcessorStep.from_lerobot_dataset(
-        mock_dataset, features, norm_map
-    )
+    processor = UnnormalizerProcessorStep.from_lerobot_dataset(mock_dataset, features, norm_map)
     # The tensor stats should not contain the 'action' key
     assert ACTION not in processor._tensor_stats
 
@@ -931,9 +881,7 @@ def test_identity_normalization_observations():
         OBS_STATE: {"mean": [0.0, 0.0], "std": [1.0, 1.0]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3]),
@@ -948,9 +896,7 @@ def test_identity_normalization_observations():
     assert torch.allclose(normalized_obs[OBS_IMAGE], observation[OBS_IMAGE])
 
     # State should be normalized (MEAN_STD)
-    expected_state = (
-        torch.tensor([1.0, -0.5]) - torch.tensor([0.0, 0.0])
-    ) / torch.tensor([1.0, 1.0])
+    expected_state = (torch.tensor([1.0, -0.5]) - torch.tensor([0.0, 0.0])) / torch.tensor([1.0, 1.0])
     assert torch.allclose(normalized_obs[OBS_STATE], expected_state)
 
 
@@ -960,9 +906,7 @@ def test_identity_normalization_actions():
     norm_map = {FeatureType.ACTION: NormalizationMode.IDENTITY}
     stats = {ACTION: {"mean": [0.0, 0.0], "std": [1.0, 2.0]}}
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     action = torch.tensor([1.0, -0.5])
     transition = create_transition(action=action)
@@ -988,9 +932,7 @@ def test_identity_unnormalization_observations():
         OBS_STATE: {"min": [-1.0, -1.0], "max": [1.0, 1.0]},
     }
 
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3]),
@@ -1017,9 +959,7 @@ def test_identity_unnormalization_actions():
     norm_map = {FeatureType.ACTION: NormalizationMode.IDENTITY}
     stats = {ACTION: {"min": [-1.0, -2.0], "max": [1.0, 2.0]}}
 
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     action = torch.tensor([0.5, -0.8])  # Normalized values
     transition = create_transition(action=action)
@@ -1042,12 +982,8 @@ def test_identity_with_missing_stats():
     }
     stats = {}  # No stats provided
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3])}
     action = torch.tensor([1.0, -0.5])
@@ -1087,9 +1023,7 @@ def test_identity_mixed_with_other_modes():
         ACTION: {"min": [-1.0, -1.0], "max": [1.0, 1.0]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3]),
@@ -1131,9 +1065,7 @@ def test_identity_defaults_when_not_in_norm_map():
         OBS_STATE: {"mean": [0.0, 0.0], "std": [1.0, 1.0]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     observation = {
         OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3]),
@@ -1167,27 +1099,19 @@ def test_identity_roundtrip():
         ACTION: {"min": [-1.0, -1.0], "max": [1.0, 1.0]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     original_observation = {OBS_IMAGE: torch.tensor([0.7, 0.5, 0.3])}
     original_action = torch.tensor([0.5, -0.2])
-    original_transition = create_transition(
-        observation=original_observation, action=original_action
-    )
+    original_transition = create_transition(observation=original_observation, action=original_action)
 
     # Normalize then unnormalize
     normalized = normalizer(original_transition)
     roundtrip = unnormalizer(normalized)
 
     # Should be identical to original
-    assert torch.allclose(
-        roundtrip[TransitionKey.OBSERVATION][OBS_IMAGE], original_observation[OBS_IMAGE]
-    )
+    assert torch.allclose(roundtrip[TransitionKey.OBSERVATION][OBS_IMAGE], original_observation[OBS_IMAGE])
     assert torch.allclose(roundtrip[TransitionKey.ACTION], original_action)
 
 
@@ -1206,9 +1130,7 @@ def test_identity_config_serialization():
         ACTION: {"mean": [0.0, 0.0], "std": [1.0, 1.0]},
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     # Get config
     config = normalizer.get_config()
@@ -1299,12 +1221,8 @@ def test_hotswap_stats_basic_functionality():
     }
 
     # Create processors
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
     identity = IdentityProcessorStep()
 
     # Create robot processor
@@ -1352,9 +1270,7 @@ def test_hotswap_stats_deep_copy():
     }
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
     original_processor = DataProcessorPipeline(steps=[normalizer])
 
     # Store reference to original stats
@@ -1394,12 +1310,8 @@ def test_hotswap_stats_only_affects_normalizer_steps():
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
 
     # Create mixed steps
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
     identity = IdentityProcessorStep()
 
     robot_processor = DataProcessorPipeline(steps=[normalizer, identity, unnormalizer])
@@ -1428,9 +1340,7 @@ def test_hotswap_stats_empty_stats():
     }
     norm_map = {FeatureType.VISUAL: NormalizationMode.MEAN_STD}
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
     robot_processor = DataProcessorPipeline(steps=[normalizer])
 
     # Hotswap with empty stats
@@ -1448,9 +1358,7 @@ def test_hotswap_stats_no_normalizer_steps():
     }
 
     # Create processor with only identity steps
-    robot_processor = DataProcessorPipeline(
-        steps=[IdentityProcessorStep(), IdentityProcessorStep()]
-    )
+    robot_processor = DataProcessorPipeline(steps=[IdentityProcessorStep(), IdentityProcessorStep()])
 
     # Hotswap stats - should work without error
     new_processor = hotswap_stats(robot_processor, stats)
@@ -1527,22 +1435,12 @@ def test_hotswap_stats_multiple_normalizer_types():
     }
 
     # Create multiple normalizers and unnormalizers
-    normalizer1 = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
-    normalizer2 = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
-    unnormalizer1 = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
-    unnormalizer2 = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer1 = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
+    normalizer2 = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
+    unnormalizer1 = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
+    unnormalizer2 = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
 
-    robot_processor = DataProcessorPipeline(
-        steps=[normalizer1, unnormalizer1, normalizer2, unnormalizer2]
-    )
+    robot_processor = DataProcessorPipeline(steps=[normalizer1, unnormalizer1, normalizer2, unnormalizer2])
 
     # Hotswap stats
     new_processor = hotswap_stats(robot_processor, new_stats)
@@ -1590,9 +1488,7 @@ def test_hotswap_stats_with_different_data_types():
         FeatureType.ACTION: NormalizationMode.MEAN_STD,
     }
 
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
     robot_processor = DataProcessorPipeline(steps=[normalizer])
 
     # Hotswap stats
@@ -1611,12 +1507,8 @@ def test_hotswap_stats_with_different_data_types():
     assert isinstance(tensor_stats[ACTION]["std"], torch.Tensor)
 
     # Check values
-    torch.testing.assert_close(
-        tensor_stats[OBS_IMAGE]["mean"], torch.tensor([0.3, 0.4, 0.5])
-    )
-    torch.testing.assert_close(
-        tensor_stats[OBS_IMAGE]["std"], torch.tensor([0.1, 0.2, 0.3])
-    )
+    torch.testing.assert_close(tensor_stats[OBS_IMAGE]["mean"], torch.tensor([0.3, 0.4, 0.5]))
+    torch.testing.assert_close(tensor_stats[OBS_IMAGE]["std"], torch.tensor([0.1, 0.2, 0.3]))
     torch.testing.assert_close(tensor_stats[OBS_IMAGE]["min"], torch.tensor(0.0))
     torch.testing.assert_close(tensor_stats[OBS_IMAGE]["max"], torch.tensor(1.0))
 
@@ -1652,9 +1544,7 @@ def test_hotswap_stats_functional_test():
     }
 
     # Create original processor
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=initial_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=initial_stats)
     original_processor = DataProcessorPipeline(
         steps=[normalizer],
         to_transition=identity_transition,
@@ -1677,9 +1567,7 @@ def test_hotswap_stats_functional_test():
         rtol=1e-3,
         atol=1e-3,
     )
-    assert not torch.allclose(
-        original_result[ACTION], new_result[ACTION], rtol=1e-3, atol=1e-3
-    )
+    assert not torch.allclose(original_result[ACTION], new_result[ACTION], rtol=1e-3, atol=1e-3)
 
     # Verify that the new processor is actually using the new stats by checking internal state
     assert new_processor.steps[0].stats == new_stats
@@ -1687,15 +1575,9 @@ def test_hotswap_stats_functional_test():
         new_processor.steps[0]._tensor_stats[OBS_IMAGE]["mean"],
         torch.tensor([0.3, 0.2]),
     )
-    assert torch.allclose(
-        new_processor.steps[0]._tensor_stats[OBS_IMAGE]["std"], torch.tensor([0.1, 0.2])
-    )
-    assert torch.allclose(
-        new_processor.steps[0]._tensor_stats[ACTION]["mean"], torch.tensor([0.1, -0.1])
-    )
-    assert torch.allclose(
-        new_processor.steps[0]._tensor_stats[ACTION]["std"], torch.tensor([0.5, 0.5])
-    )
+    assert torch.allclose(new_processor.steps[0]._tensor_stats[OBS_IMAGE]["std"], torch.tensor([0.1, 0.2]))
+    assert torch.allclose(new_processor.steps[0]._tensor_stats[ACTION]["mean"], torch.tensor([0.1, -0.1]))
+    assert torch.allclose(new_processor.steps[0]._tensor_stats[ACTION]["std"], torch.tensor([0.5, 0.5]))
 
     # Test that normalization actually happens (output should not equal input)
     assert not torch.allclose(new_result[OBS_STR][OBS_IMAGE], observation[OBS_IMAGE])
@@ -1707,15 +1589,11 @@ def test_zero_std_uses_eps():
     features = {OBS_STATE: PolicyFeature(FeatureType.STATE, (1,))}
     norm_map = {FeatureType.STATE: NormalizationMode.MEAN_STD}
     stats = {OBS_STATE: {"mean": np.array([0.5]), "std": np.array([0.0])}}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats, eps=1e-6
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats, eps=1e-6)
 
     observation = {OBS_STATE: torch.tensor([0.5])}  # equals mean
     out = normalizer(create_transition(observation=observation))
-    assert torch.allclose(
-        out[TransitionKey.OBSERVATION][OBS_STATE], torch.tensor([0.0])
-    )
+    assert torch.allclose(out[TransitionKey.OBSERVATION][OBS_STATE], torch.tensor([0.0]))
 
 
 def test_min_equals_max_maps_to_minus_one():
@@ -1723,15 +1601,11 @@ def test_min_equals_max_maps_to_minus_one():
     features = {OBS_STATE: PolicyFeature(FeatureType.STATE, (1,))}
     norm_map = {FeatureType.STATE: NormalizationMode.MIN_MAX}
     stats = {OBS_STATE: {"min": np.array([2.0]), "max": np.array([2.0])}}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats, eps=1e-6
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats, eps=1e-6)
 
     observation = {OBS_STATE: torch.tensor([2.0])}
     out = normalizer(create_transition(observation=observation))
-    assert torch.allclose(
-        out[TransitionKey.OBSERVATION][OBS_STATE], torch.tensor([-1.0])
-    )
+    assert torch.allclose(out[TransitionKey.OBSERVATION][OBS_STATE], torch.tensor([-1.0]))
 
 
 def test_action_normalized_despite_normalize_observation_keys():
@@ -1803,9 +1677,7 @@ def test_unknown_observation_keys_ignored():
     features = {OBS_STATE: PolicyFeature(FeatureType.STATE, (1,))}
     norm_map = {FeatureType.STATE: NormalizationMode.MEAN_STD}
     stats = {OBS_STATE: {"mean": np.array([0.0]), "std": np.array([1.0])}}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     obs = {OBS_STATE: torch.tensor([1.0]), "observation.unknown": torch.tensor([5.0])}
     tr = create_transition(observation=obs)
@@ -1822,13 +1694,9 @@ def test_batched_action_normalization():
     features = {ACTION: PolicyFeature(FeatureType.ACTION, (2,))}
     norm_map = {FeatureType.ACTION: NormalizationMode.MEAN_STD}
     stats = {ACTION: {"mean": np.array([1.0, -1.0]), "std": np.array([2.0, 4.0])}}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
-    actions = torch.tensor(
-        [[1.0, -1.0], [3.0, 3.0]]
-    )  # first equals mean → zeros; second → [1, 1]
+    actions = torch.tensor([[1.0, -1.0], [3.0, 3.0]])  # first equals mean → zeros; second → [1, 1]
     out = normalizer(create_transition(action=actions))[TransitionKey.ACTION]
     expected = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
     assert torch.allclose(out, expected)
@@ -1838,14 +1706,10 @@ def test_complementary_data_preservation():
     features = {OBS_STATE: PolicyFeature(FeatureType.STATE, (1,))}
     norm_map = {FeatureType.STATE: NormalizationMode.MEAN_STD}
     stats = {OBS_STATE: {"mean": np.array([0.0]), "std": np.array([1.0])}}
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     comp = {"existing": 123}
-    tr = create_transition(
-        observation={OBS_STATE: torch.tensor([1.0])}, complementary_data=comp
-    )
+    tr = create_transition(observation={OBS_STATE: torch.tensor([1.0])}, complementary_data=comp)
     out = normalizer(tr)
     new_comp = out[TransitionKey.COMPLEMENTARY_DATA]
     assert new_comp["existing"] == 123
@@ -1864,12 +1728,8 @@ def test_roundtrip_normalize_unnormalize_non_identity():
         OBS_STATE: {"mean": np.array([1.0, -1.0]), "std": np.array([2.0, 4.0])},
         ACTION: {"min": np.array([-2.0, 0.0]), "max": np.array([2.0, 4.0])},
     }
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
-    unnormalizer = UnnormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
+    unnormalizer = UnnormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     # Add a time dimension in action for broadcasting check (B,T,D)
     obs = {OBS_STATE: torch.tensor([[3.0, 3.0], [1.0, -1.0]])}
@@ -1878,9 +1738,7 @@ def test_roundtrip_normalize_unnormalize_non_identity():
     tr = create_transition(observation=obs, action=act)
     out = unnormalizer(normalizer(tr))
 
-    assert torch.allclose(
-        out[TransitionKey.OBSERVATION][OBS_STATE], obs[OBS_STATE], atol=1e-5
-    )
+    assert torch.allclose(out[TransitionKey.OBSERVATION][OBS_STATE], obs[OBS_STATE], atol=1e-5)
     assert torch.allclose(out[TransitionKey.ACTION], act, atol=1e-5)
 
 
@@ -1906,9 +1764,7 @@ def test_dtype_adaptation_bfloat16_input_float32_normalizer():
         assert stat_tensor.dtype == torch.float32
 
     # Create bfloat16 input tensor
-    observation = {
-        OBS_STATE: torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0], dtype=torch.bfloat16)
-    }
+    observation = {OBS_STATE: torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0], dtype=torch.bfloat16)}
     transition = create_transition(observation=observation)
 
     # Process the transition
@@ -1929,9 +1785,7 @@ def test_dtype_adaptation_bfloat16_input_float32_normalizer():
         torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0], dtype=torch.bfloat16)
         - torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.bfloat16)
     ) / torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0], dtype=torch.bfloat16)
-    assert torch.allclose(
-        output_tensor, expected, atol=1e-2
-    )  # bfloat16 has lower precision
+    assert torch.allclose(output_tensor, expected, atol=1e-2)  # bfloat16 has lower precision
 
 
 def test_stats_override_preservation_in_load_state_dict():
@@ -1969,22 +1823,16 @@ def test_stats_override_preservation_in_load_state_dict():
     }
 
     # Create a normalizer with original stats and save its state
-    original_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=original_stats
-    )
+    original_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=original_stats)
     saved_state_dict = original_normalizer.state_dict()
 
     # Create a new normalizer with override stats (simulating from_pretrained with overrides)
-    override_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=override_stats
-    )
+    override_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=override_stats)
 
     # Verify that the override stats are initially set correctly
     assert set(override_normalizer.stats.keys()) == set(override_stats.keys())
     for key in override_stats:
-        assert set(override_normalizer.stats[key].keys()) == set(
-            override_stats[key].keys()
-        )
+        assert set(override_normalizer.stats[key].keys()) == set(override_stats[key].keys())
         for stat_name in override_stats[key]:
             np.testing.assert_array_equal(
                 override_normalizer.stats[key][stat_name],
@@ -1999,9 +1847,7 @@ def test_stats_override_preservation_in_load_state_dict():
     # Check that loaded stats match override stats
     assert set(override_normalizer.stats.keys()) == set(override_stats.keys())
     for key in override_stats:
-        assert set(override_normalizer.stats[key].keys()) == set(
-            override_stats[key].keys()
-        )
+        assert set(override_normalizer.stats[key].keys()) == set(override_stats[key].keys())
         for stat_name in override_stats[key]:
             np.testing.assert_array_equal(
                 override_normalizer.stats[key][stat_name],
@@ -2049,15 +1895,11 @@ def test_stats_without_override_loads_normally():
     }
 
     # Create a normalizer with original stats and save its state
-    original_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=original_stats
-    )
+    original_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=original_stats)
     saved_state_dict = original_normalizer.state_dict()
 
     # Create a new normalizer without stats (simulating normal from_pretrained)
-    new_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats={}
-    )
+    new_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats={})
 
     # Verify that stats are not explicitly provided
     assert new_normalizer._stats_explicitly_provided is False
@@ -2088,21 +1930,15 @@ def test_stats_explicit_provided_flag_detection():
 
     # Test 1: Explicitly provided stats (non-empty dict)
     stats = {OBS_IMAGE: {"mean": [0.5], "std": [0.2]}}
-    normalizer1 = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    normalizer1 = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
     assert normalizer1._stats_explicitly_provided is True
 
     # Test 2: Empty stats dict
-    normalizer2 = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats={}
-    )
+    normalizer2 = NormalizerProcessorStep(features=features, norm_map=norm_map, stats={})
     assert normalizer2._stats_explicitly_provided is False
 
     # Test 3: None stats
-    normalizer3 = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=None
-    )
+    normalizer3 = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=None)
     assert normalizer3._stats_explicitly_provided is False
 
     # Test 4: Stats not provided (defaults to None)
@@ -2146,13 +1982,9 @@ def test_pipeline_from_pretrained_with_stats_overrides():
     }
 
     # Create and save a pipeline with the original stats
-    normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=original_stats
-    )
+    normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=original_stats)
     identity = IdentityProcessorStep()
-    original_pipeline = DataProcessorPipeline(
-        steps=[normalizer, identity], name="test_pipeline"
-    )
+    original_pipeline = DataProcessorPipeline(steps=[normalizer, identity], name="test_pipeline")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Save the pipeline
@@ -2172,9 +2004,7 @@ def test_pipeline_from_pretrained_with_stats_overrides():
         # Check that loaded stats match override stats
         assert set(loaded_normalizer.stats.keys()) == set(override_stats.keys())
         for key in override_stats:
-            assert set(loaded_normalizer.stats[key].keys()) == set(
-                override_stats[key].keys()
-            )
+            assert set(loaded_normalizer.stats[key].keys()) == set(override_stats[key].keys())
             for stat_name in override_stats[key]:
                 np.testing.assert_array_equal(
                     loaded_normalizer.stats[key][stat_name],
@@ -2223,14 +2053,10 @@ def test_dtype_adaptation_device_processor_bfloat16_normalizer_float32():
 
     features = {OBS_STATE: PolicyFeature(FeatureType.STATE, (3,))}
     norm_map = {FeatureType.STATE: NormalizationMode.MEAN_STD}
-    stats = {
-        OBS_STATE: {"mean": np.array([0.0, 0.0, 0.0]), "std": np.array([1.0, 1.0, 1.0])}
-    }
+    stats = {OBS_STATE: {"mean": np.array([0.0, 0.0, 0.0]), "std": np.array([1.0, 1.0, 1.0])}}
 
     # Create pipeline: DeviceProcessor(bfloat16) → NormalizerProcessor(float32)
-    device_processor = DeviceProcessorStep(
-        device=str(auto_select_torch_device()), float_dtype="bfloat16"
-    )
+    device_processor = DeviceProcessorStep(device=str(auto_select_torch_device()), float_dtype="bfloat16")
     normalizer = NormalizerProcessorStep(
         features=features, norm_map=norm_map, stats=stats, dtype=torch.float32
     )
@@ -2300,17 +2126,13 @@ def test_stats_reconstruction_after_load_state_dict():
         },
     }
 
-    original_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats=stats
-    )
+    original_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats=stats)
 
     # Save state dict (simulating save/load)
     state_dict = original_normalizer.state_dict()
 
     # Create new normalizer with empty stats (simulating load)
-    new_normalizer = NormalizerProcessorStep(
-        features=features, norm_map=norm_map, stats={}
-    )
+    new_normalizer = NormalizerProcessorStep(features=features, norm_map=norm_map, stats={})
 
     # Before fix: this would cause stats to remain empty
     new_normalizer.load_state_dict(state_dict)
@@ -2377,6 +2199,4 @@ def test_stats_reconstruction_after_load_state_dict():
         original_result[TransitionKey.OBSERVATION][OBS_STATE],
         new_result[TransitionKey.OBSERVATION][OBS_STATE],
     )
-    torch.testing.assert_close(
-        original_result[TransitionKey.ACTION], new_result[TransitionKey.ACTION]
-    )
+    torch.testing.assert_close(original_result[TransitionKey.ACTION], new_result[TransitionKey.ACTION])

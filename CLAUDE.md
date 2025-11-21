@@ -125,39 +125,47 @@ lerobot-teleoperate
 ### Core Components
 
 **Policies** (`src/lerobot/policies/`)
+
 - Policy implementations organized by type (ACT, Diffusion, TDMPC, SmolVLA, etc.)
 - `vision_policy.py` - Custom vision-based policy with object detection integration
 - Each policy has its own subdirectory with model architecture and configuration
 
 **Datasets** (`src/lerobot/datasets/`)
+
 - `LeRobotDataset` - Core dataset class using HuggingFace datasets backend (Arrow/Parquet)
 - Supports temporal frame queries via `delta_timestamps`
 - Video compression using MP4 to save space
 - `realsense_dataset.py` - Custom dataset recorder for RealSense depth camera data
 
 **Robots** (`src/lerobot/robots/`)
+
 - Robot control abstractions for various hardware platforms
 - `so100_follower/`, `so101_follower/` - SO-100/SO-101 robot arm implementations
 - `hope_jr/` - HopeJR humanoid robot arm
 - `lekiwi/` - Mobile robot platform
 
 **Object Detection** (`src/lerobot/object_detection/`) - **CUSTOM EXTENSION**
+
 - `detector.py` - YOLOv8-based object detection with RealSense integration
 - `depth_tracker.py` - Depth-aware object tracking
 - `tracker.py` - Generic object tracking utilities
 - `utils.py` - Detection utilities and helpers
 
 **Cameras** (`src/lerobot/cameras/`)
+
 - Camera interface abstractions
 - OpenCV, RealSense, and other camera backends
 
 **Motors** (`src/lerobot/motors/`)
+
 - Motor control for Dynamixel, Feetech servos
 
 **Environments** (`src/lerobot/envs/`)
+
 - Simulation environment wrappers (gym-aloha, gym-pusht, etc.)
 
 **Configuration** (`src/lerobot/configs/`)
+
 - Draccus-based configuration system
 - Type-safe config dataclasses in `types.py`
 - Training/eval configs in `train.py`, `eval.py`
@@ -195,6 +203,7 @@ dataset.meta:
 ### Current Status
 
 ⚠️ **IMPORTANT**: RealSense D435 integration is experimental on macOS (Apple Silicon):
+
 - Connection is unstable on macOS with frequent "failed to set power state" errors
 - Currently operates in **mock mode** by default (actual camera disabled)
 - Linux/Windows recommended for production use
@@ -253,6 +262,7 @@ To enable actual RealSense camera (when hardware is stable):
 ### Configuration System
 
 Uses Draccus for type-safe configs:
+
 - Override via CLI: `--policy.type=act --batch_size=32`
 - Load from file: `--config_path=path/to/config.json`
 - Configs are dataclasses in `src/lerobot/configs/`
@@ -268,6 +278,7 @@ Uses Draccus for type-safe configs:
 ### Dataset Management
 
 Datasets hosted on HuggingFace Hub under `lerobot/` organization:
+
 - Use `LeRobotDataset("lerobot/dataset_name")` to auto-download
 - Local datasets: specify `root` parameter for custom path
 - Create datasets: Use `lerobot-record` or custom recorder classes

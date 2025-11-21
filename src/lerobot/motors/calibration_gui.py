@@ -73,9 +73,7 @@ class RangeSlider:
         self.max_x = self._pos_from_val(self.max_v)
         self.pos_x = self._pos_from_val(self.pos_v)
 
-        self.min_btn = pygame.Rect(
-            self.x0 - BTN_W - 6, self.y - BTN_H // 2, BTN_W, BTN_H
-        )
+        self.min_btn = pygame.Rect(self.x0 - BTN_W - 6, self.y - BTN_H // 2, BTN_W, BTN_H)
         self.max_btn = pygame.Rect(self.x1 + 6, self.y - BTN_H // 2, BTN_W, BTN_H)
 
         self.drag_min = self.drag_max = self.drag_pos = False
@@ -95,9 +93,7 @@ class RangeSlider:
         import pygame
 
         tri_top = self.y - BAR_THICKNESS // 2 - 2
-        return pygame.Rect(
-            self.pos_x - TRI_W // 2, tri_top - TRI_H, TRI_W, TRI_H
-        ).collidepoint(pos)
+        return pygame.Rect(self.pos_x - TRI_W // 2, tri_top - TRI_H, TRI_W, TRI_H).collidepoint(pos)
 
     def handle_event(self, e):
         import pygame
@@ -138,9 +134,7 @@ class RangeSlider:
         clr = BTN_COLOR_HL if rect.collidepoint(pygame.mouse.get_pos()) else BTN_COLOR
         pygame.draw.rect(surf, clr, rect, border_radius=4)
         t = self.font.render(text, True, TEXT_COLOR)
-        surf.blit(
-            t, (rect.centerx - t.get_width() // 2, rect.centery - t.get_height() // 2)
-        )
+        surf.blit(t, (rect.centerx - t.get_width() // 2, rect.centery - t.get_height() // 2))
 
     def draw(self, surf):
         import pygame
@@ -254,9 +248,7 @@ class RangeFinderGUI:
         self.calibration = bus.read_calibration()
         self.res_table = bus.model_resolution_table
         self.present_cache = {
-            m: bus.read("Present_Position", m, normalize=False)
-            for motors in groups.values()
-            for m in motors
+            m: bus.read("Present_Position", m, normalize=False) for motors in groups.values() for m in motors
         }
 
         pygame.init()
@@ -274,9 +266,7 @@ class RangeFinderGUI:
 
         # ui rects
         self.save_btn = pygame.Rect(width - SAVE_W - 10, 10, SAVE_W, SAVE_H)
-        self.load_btn = pygame.Rect(
-            self.save_btn.left - LOAD_W - 10, 10, LOAD_W, SAVE_H
-        )
+        self.load_btn = pygame.Rect(self.save_btn.left - LOAD_W - 10, 10, LOAD_W, SAVE_H)
         self.dd_btn = pygame.Rect(width // 2 - DD_W // 2, 10, DD_W, DD_H)
         self.dd_open = False  # dropdown expanded?
 
@@ -348,14 +338,8 @@ class RangeFinderGUI:
 
         # expanded list
         for i, name in enumerate(self.group_names):
-            item_rect = pygame.Rect(
-                self.dd_btn.left, self.dd_btn.bottom + i * DD_H, DD_W, DD_H
-            )
-            clr = (
-                DD_COLOR_HL
-                if item_rect.collidepoint(pygame.mouse.get_pos())
-                else DD_COLOR
-            )
+            item_rect = pygame.Rect(self.dd_btn.left, self.dd_btn.bottom + i * DD_H, DD_W, DD_H)
+            clr = DD_COLOR_HL if item_rect.collidepoint(pygame.mouse.get_pos()) else DD_COLOR
             pygame.draw.rect(self.screen, clr, item_rect)
             t = self.font.render(name, True, TEXT_COLOR)
             self.screen.blit(
@@ -375,9 +359,7 @@ class RangeFinderGUI:
                 return True
             if self.dd_open:
                 for i, name in enumerate(self.group_names):
-                    item_rect = pygame.Rect(
-                        self.dd_btn.left, self.dd_btn.bottom + i * DD_H, DD_W, DD_H
-                    )
+                    item_rect = pygame.Rect(self.dd_btn.left, self.dd_btn.bottom + i * DD_H, DD_W, DD_H)
                     if item_rect.collidepoint(e.pos):
                         if name != self.current_group:
                             self.current_group = name
@@ -445,11 +427,7 @@ class RangeFinderGUI:
 
             # load / save buttons
             for rect, text in ((self.load_btn, "LOAD"), (self.save_btn, "SAVE")):
-                clr = (
-                    BTN_COLOR_HL
-                    if rect.collidepoint(pygame.mouse.get_pos())
-                    else BTN_COLOR
-                )
+                clr = BTN_COLOR_HL if rect.collidepoint(pygame.mouse.get_pos()) else BTN_COLOR
                 pygame.draw.rect(self.screen, clr, rect, border_radius=6)
                 t = self.font.render(text, True, TEXT_COLOR)
                 self.screen.blit(

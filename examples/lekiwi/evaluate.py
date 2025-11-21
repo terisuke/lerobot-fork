@@ -70,9 +70,7 @@ preprocessor, postprocessor = make_pre_post_processors(
 robot.connect()
 
 # TODO(Steven): Update this example to use pipelines
-teleop_action_processor, robot_action_processor, robot_observation_processor = (
-    make_default_processors()
-)
+teleop_action_processor, robot_action_processor, robot_observation_processor = make_default_processors()
 
 # Initialize the keyboard listener and rerun visualization
 listener, events = init_keyboard_listener()
@@ -84,9 +82,7 @@ if not robot.is_connected:
 print("Starting evaluate loop...")
 recorded_episodes = 0
 while recorded_episodes < NUM_EPISODES and not events["stop_recording"]:
-    log_say(
-        f"Running inference, recording eval episode {recorded_episodes} of {NUM_EPISODES}"
-    )
+    log_say(f"Running inference, recording eval episode {recorded_episodes} of {NUM_EPISODES}")
 
     # Main record loop
     record_loop(

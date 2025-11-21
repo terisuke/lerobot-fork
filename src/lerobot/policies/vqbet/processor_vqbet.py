@@ -68,9 +68,7 @@ def make_vqbet_pre_post_processors(
     """
 
     input_steps = [
-        RenameObservationsProcessorStep(
-            rename_map={}
-        ),  # Let the possibility to the user to rename the keys
+        RenameObservationsProcessorStep(rename_map={}),  # Let the possibility to the user to rename the keys
         AddBatchDimensionProcessorStep(),
         DeviceProcessorStep(device=config.device),
         NormalizerProcessorStep(

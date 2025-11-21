@@ -26,9 +26,7 @@ from lerobot.configs.train import TrainPipelineConfig
 from lerobot.utils.constants import PRETRAINED_MODEL_DIR
 
 
-def cfg_to_group(
-    cfg: TrainPipelineConfig, return_list: bool = False
-) -> list[str] | str:
+def cfg_to_group(cfg: TrainPipelineConfig, return_list: bool = False) -> list[str] | str:
     """Return a group name for logging. Optionally returns group name as list."""
     lst = [
         f"policy:{cfg.policy.type}",
@@ -75,7 +73,9 @@ class WandBLogger:
         wandb_run_id = (
             cfg.wandb.run_id
             if cfg.wandb.run_id
-            else get_wandb_run_id_from_filesystem(self.log_dir) if cfg.resume else None
+            else get_wandb_run_id_from_filesystem(self.log_dir)
+            if cfg.resume
+            else None
         )
         wandb.init(
             id=wandb_run_id,
@@ -91,11 +91,7 @@ class WandBLogger:
             # TODO(rcadene): split train and eval, and run async eval with job_type="eval"
             job_type="train_eval",
             resume="must" if cfg.resume else None,
-            mode=(
-                self.cfg.mode
-                if self.cfg.mode in ["online", "offline", "disabled"]
-                else "online"
-            ),
+            mode=(self.cfg.mode if self.cfg.mode in ["online", "offline", "disabled"] else "online"),
         )
         run_id = wandb.run.id
         # NOTE: We will override the cfg.wandb.run_id with the wandb run id.
@@ -104,9 +100,7 @@ class WandBLogger:
         # Handle custom step key for rl asynchronous training.
         self._wandb_custom_step_key: set[str] | None = None
         logging.info(colored("Logs will be synced with wandb.", "blue", attrs=["bold"]))
-        logging.info(
-            f"Track this run --> {colored(wandb.run.get_url(), 'yellow', attrs=['bold'])}"
-        )
+        logging.info(f"Track this run --> {colored(wandb.run.get_url(), 'yellow', attrs=['bold'])}")
         self._wandb = wandb
 
     def log_policy(self, checkpoint_dir: Path):
@@ -118,9 +112,7 @@ class WandBLogger:
         artifact_name = f"{self._group}-{step_id}"
         artifact_name = get_safe_wandb_artifact_name(artifact_name)
         artifact = self._wandb.Artifact(artifact_name, type="model")
-        artifact.add_file(
-            checkpoint_dir / PRETRAINED_MODEL_DIR / SAFETENSORS_SINGLE_FILE
-        )
+        artifact.add_file(checkpoint_dir / PRETRAINED_MODEL_DIR / SAFETENSORS_SINGLE_FILE)
         self._wandb.log_artifact(artifact)
 
     def log_dict(
@@ -156,10 +148,7 @@ class WandBLogger:
                 continue
 
             # Do not log the custom step key itself.
-            if (
-                self._wandb_custom_step_key is not None
-                and k in self._wandb_custom_step_key
-            ):
+            if self._wandb_custom_step_key is not None and k in self._wandb_custom_step_key:
                 continue
 
             if custom_step_key is not None:

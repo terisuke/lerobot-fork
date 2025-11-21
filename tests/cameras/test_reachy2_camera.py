@@ -174,6 +174,4 @@ def test_wrong_image_type():
 
 def test_wrong_color_mode():
     with pytest.raises(ValueError):
-        _ = Reachy2CameraConfig(
-            name="teleop", image_type="left", color_mode="wrong-color"
-        )
+        _ = Reachy2CameraConfig(name="teleop", image_type="left", color_mode="wrong-color")

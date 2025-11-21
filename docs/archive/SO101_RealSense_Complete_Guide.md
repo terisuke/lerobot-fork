@@ -1,9 +1,11 @@
 # SO101ロボットアーム + Intel RealSense d435 完全ガイド
 
 ## 📋 プロジェクト概要
+
 M4 Mac上でIntel RealSense d435深度カメラとSO101ロボットアームを使用して、Hugging Face LeRobotフレームワークで動的把持タスクを実現する完全ガイドです。
 
 ## ✅ 実装状況
+
 - **テレオペレーション**: 完了 ✅
 - **RealSenseカメラ検出**: 完了 ✅
 - **深度パイプライン**: 完了 ✅
@@ -12,11 +14,13 @@ M4 Mac上でIntel RealSense d435深度カメラとSO101ロボットアームを�
 ## 🔧 現在の課題と解決策
 
 ### 主要な課題
+
 1. **電力供給不足**: macOSのUSB電力制限により「failed to set power state」エラー
 2. **LeRobotの制限**: カラーフレームが必須で深度のみの設定が不可能
 3. **同時ストリーミング**: カラー+深度の同時処理で電力不足
 
 ### 解決策
+
 1. **電源供給付きUSBハブの導入** (最優先)
    - 仕様: 5V/2A以上、USB 3.0以上
    - ACアダプタ付き
@@ -26,12 +30,14 @@ M4 Mac上でIntel RealSense d435深度カメラとSO101ロボットアームを�
 ## 🛠️ 技術仕様
 
 ### ハードウェア
+
 - **カメラ**: Intel RealSense D435
 - **シリアル番号**: 332322074110
 - **ファームウェア**: 5.13.0.55
 - **ロボット**: SO101 (リーダー + フォロワー)
 
 ### ソフトウェア
+
 - **OS**: macOS (Apple Silicon M4)
 - **フレームワーク**: LeRobot 0.3.4
 - **Python**: 3.10
@@ -41,6 +47,7 @@ M4 Mac上でIntel RealSense d435深度カメラとSO101ロボットアームを�
 ## 📁 実装ファイル
 
 ### データ収集
+
 ```bash
 # 環境変数設定
 export HF_USER="teradakousuke"
@@ -52,12 +59,14 @@ export TELEOP_PORT="/dev/tty.wchusbserial5AB90684961"
 ```
 
 ### トレーニング
+
 ```bash
 # 3D Diffusion Policyトレーニング
 ./train_3d_policy.sh
 ```
 
 ### 評価
+
 ```bash
 # 学習済みポリシーの評価
 ./evaluate_policy.sh
@@ -66,16 +75,19 @@ export TELEOP_PORT="/dev/tty.wchusbserial5AB90684961"
 ## 🔍 トラブルシューティング
 
 ### 電力問題
+
 - **症状**: "failed to set power state" エラー
 - **原因**: USB電力供給不足
 - **解決策**: 電源供給付きUSBハブの導入
 
 ### LeRobot統合問題
+
 - **症状**: カラーフレーム取得失敗
 - **原因**: 同時ストリーミングでの電力不足
 - **解決策**: 安定した電力供給の確保
 
 ### カメラ検出問題
+
 - **症状**: カメラが検出されない
 - **原因**: USB接続またはドライバ問題
 - **解決策**: ケーブル交換、ポート変更
@@ -83,28 +95,33 @@ export TELEOP_PORT="/dev/tty.wchusbserial5AB90684961"
 ## 📊 テスト結果
 
 ### 成功したテスト
+
 - **深度パイプライン**: 5/5回成功
 - **フレーム取得**: 640x480 @ 30fps で安定
 - **カメラ検出**: 完全に動作
 - **lerobot-find-cameras**: 正常動作
 
 ### 失敗したテスト
+
 - **LeRobot統合**: 電力不足で失敗
 - **同時ストリーミング**: 電力制限で失敗
 
 ## 🎯 次のステップ
 
 ### 1. 電力供給の改善
+
 - 電源供給付きUSBハブの導入
 - Thunderboltポートへの接続
 - 高品質USBケーブルの使用
 
 ### 2. 統合テスト
+
 - 安定した電力供給でのLeRobot統合
 - 深度+カラーフレームの同時取得
 - データ収集の開始
 
 ### 3. 本格実装
+
 - 動的把持タスクのデータ収集
 - 3D Diffusion Policyのトレーニング
 - 実世界での評価
@@ -112,10 +129,12 @@ export TELEOP_PORT="/dev/tty.wchusbserial5AB90684961"
 ## 📚 参考資料
 
 ### 重要なドキュメント
+
 - `RealSense_Investigation_Report.md`: 詳細な調査報告書
 - `IMPLEMENTATION_HANDOVER.md`: 実装引き継ぎドキュメント
 
 ### 実装スクリプト
+
 - `record_with_realsense.sh`: データ収集用
 - `train_3d_policy.sh`: トレーニング用
 - `evaluate_policy.sh`: 評価用

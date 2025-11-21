@@ -83,9 +83,7 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):  # type: igno
     def __post_init__(self) -> None:
         if not self.device or not is_torch_device_available(self.device):
             auto_device = auto_select_torch_device()
-            logger.warning(
-                f"Device '{self.device}' is not available. Switching to '{auto_device}'."
-            )
+            logger.warning(f"Device '{self.device}' is not available. Switching to '{auto_device}'.")
             self.device = auto_device.type
 
         # Automatically deactivate AMP if necessary
@@ -99,9 +97,7 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):  # type: igno
     def type(self) -> str:
         choice_name = self.get_choice_name(self.__class__)
         if not isinstance(choice_name, str):
-            raise TypeError(
-                f"Expected string from get_choice_name, got {type(choice_name)}"
-            )
+            raise TypeError(f"Expected string from get_choice_name, got {type(choice_name)}")
         return choice_name
 
     @property
@@ -147,11 +143,7 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):  # type: igno
 
     @property
     def image_features(self) -> dict[str, PolicyFeature]:
-        return {
-            key: ft
-            for key, ft in self.input_features.items()
-            if ft.type is FeatureType.VISUAL
-        }
+        return {key: ft for key, ft in self.input_features.items() if ft.type is FeatureType.VISUAL}
 
     @property
     def action_feature(self) -> PolicyFeature | None:

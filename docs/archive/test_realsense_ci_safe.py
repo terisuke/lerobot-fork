@@ -20,9 +20,7 @@ def test_realsense_ci_safe():
     # Check if running in CI
     if os.getenv("CI"):
         print("⚠️  Running in CI environment - skipping hardware tests")
-        print(
-            "💡 RealSense camera tests should be run locally with proper hardware setup"
-        )
+        print("💡 RealSense camera tests should be run locally with proper hardware setup")
         print("🔌 Use a powered USB hub to prevent 'failed to set power state' errors")
         print("✅ CI environment detected - test marked as PASSED")
         return True
@@ -64,10 +62,10 @@ def test_realsense_ci_safe():
                 depth_frame = frames.get_depth_frame()
                 if depth_frame:
                     print(
-                        f"✅ Depth Frame {i+1}: OK ({depth_frame.get_width()}x{depth_frame.get_height()})"
+                        f"✅ Depth Frame {i + 1}: OK ({depth_frame.get_width()}x{depth_frame.get_height()})"
                     )
                 else:
-                    print(f"❌ Depth Frame {i+1}: Failed")
+                    print(f"❌ Depth Frame {i + 1}: Failed")
                     return False
 
             pipeline.stop()
@@ -78,12 +76,8 @@ def test_realsense_ci_safe():
             error_msg = str(e)
             if "failed to set power state" in error_msg:
                 print("❌ RealSense USB power error detected")
-                print(
-                    "💡 Solution: Use a powered USB hub to connect the RealSense camera"
-                )
-                print(
-                    "🔌 This error occurs when the USB port cannot provide sufficient power"
-                )
+                print("💡 Solution: Use a powered USB hub to connect the RealSense camera")
+                print("🔌 This error occurs when the USB port cannot provide sufficient power")
                 return False
             else:
                 print(f"❌ RealSense pipeline test failed: {e}")

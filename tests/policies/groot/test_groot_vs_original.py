@@ -181,9 +181,7 @@ def instantiate_original_groot(
     modality_transform = ComposedModalityTransform(
         transforms=[
             VideoToTensor(apply_to=video_keys),
-            VideoToNumpy(
-                apply_to=video_keys
-            ),  # Convert to numpy (GR00TTransform expects numpy arrays)
+            VideoToNumpy(apply_to=video_keys),  # Convert to numpy (GR00TTransform expects numpy arrays)
             # State is already a single concatenated key, so no StateActionToTensor needed
             # Convert action from numpy to tensor
             StateActionToTensor(apply_to=action_keys),
@@ -291,9 +289,7 @@ def convert_lerobot_to_original_format(batch, modality_config):
         bsz = len(task_list)
         task_array = np.empty((bsz, 1), dtype=object)
         for i in range(bsz):
-            task_array[i, 0] = task_list[
-                i
-            ]  # Assign string directly to each (i, 0) position
+            task_array[i, 0] = task_list[i]  # Assign string directly to each (i, 0) position
         observation["annotation.human.action.task_description"] = task_array
 
     return observation
@@ -305,12 +301,10 @@ def test_groot_original_vs_lerobot_pretrained():
 
     set_seed_all(42)
 
-    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = (
-        instantiate_lerobot_groot(from_pretrained=True)
-    )
-    original_policy, modality_config, modality_transform = instantiate_original_groot(
+    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = instantiate_lerobot_groot(
         from_pretrained=True
     )
+    original_policy, modality_config, modality_transform = instantiate_original_groot(from_pretrained=True)
 
     batch = create_dummy_data()
     batch_lerobot = deepcopy(batch)
@@ -334,16 +328,10 @@ def test_groot_original_vs_lerobot_pretrained():
     torch.manual_seed(42)
 
     with torch.no_grad():
-        original_model_output = original_policy.model.get_action(
-            original_obs_transformed
-        )
+        original_model_output = original_policy.model.get_action(original_obs_transformed)
         original_actions_raw = original_model_output["action_pred"]  # [2, 16, 32]
     # Take first timestep
-    original_actions = (
-        original_actions_raw[:, 0, :]
-        .to(lerobot_actions.device)
-        .to(lerobot_actions.dtype)
-    )
+    original_actions = original_actions_raw[:, 0, :].to(lerobot_actions.device).to(lerobot_actions.dtype)
 
     print("Action Comparison:")
     diff = lerobot_actions - original_actions
@@ -360,15 +348,13 @@ def test_groot_original_vs_lerobot_pretrained():
             orig_val = original_actions[batch_idx, action_idx].item()
             diff_val = abs(lr_val - orig_val)
             sign = "+" if (lr_val - orig_val) > 0 else "-"
-            print(
-                f"{action_idx:<5} {lr_val:>13.6f} {orig_val:>13.6f} {sign}{diff_val:>12.6f}"
-            )
+            print(f"{action_idx:<5} {lr_val:>13.6f} {orig_val:>13.6f} {sign}{diff_val:>12.6f}")
 
     max_diff = abs_diff.max().item()
     tolerance = 0.001
-    assert torch.allclose(
-        lerobot_actions, original_actions, atol=tolerance
-    ), f"Actions differ by more than tolerance ({tolerance}): max diff = {max_diff:.6f}"
+    assert torch.allclose(lerobot_actions, original_actions, atol=tolerance), (
+        f"Actions differ by more than tolerance ({tolerance}): max diff = {max_diff:.6f}"
+    )
     print(f"\nSuccess: Actions match within tolerance ({tolerance})!")
 
     del lerobot_policy, lerobot_preprocessor, lerobot_postprocessor
@@ -383,12 +369,10 @@ def test_groot_forward_pass_comparison():
 
     set_seed_all(42)
 
-    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = (
-        instantiate_lerobot_groot(from_pretrained=True)
-    )
-    original_policy, modality_config, modality_transform = instantiate_original_groot(
+    lerobot_policy, lerobot_preprocessor, lerobot_postprocessor = instantiate_lerobot_groot(
         from_pretrained=True
     )
+    original_policy, modality_config, modality_transform = instantiate_original_groot(from_pretrained=True)
 
     batch = create_dummy_data()
     lerobot_policy.eval()
@@ -415,9 +399,7 @@ def test_groot_forward_pass_comparison():
         # Match action horizon if needed
         if action_for_forward.shape[1] != original_policy.model.action_horizon:
             if action_for_forward.shape[1] < original_policy.model.action_horizon:
-                pad_size = (
-                    original_policy.model.action_horizon - action_for_forward.shape[1]
-                )
+                pad_size = original_policy.model.action_horizon - action_for_forward.shape[1]
                 last_action = action_for_forward[:, -1:, :]
                 padding = last_action.repeat(1, pad_size, 1)
                 action_for_forward = torch.cat([action_for_forward, padding], dim=1)
@@ -429,13 +411,9 @@ def test_groot_forward_pass_comparison():
                     dtype=action_mask_for_forward.dtype,
                     device=action_mask_for_forward.device,
                 )
-                action_mask_for_forward = torch.cat(
-                    [action_mask_for_forward, mask_padding], dim=1
-                )
+                action_mask_for_forward = torch.cat([action_mask_for_forward, mask_padding], dim=1)
             else:
-                action_for_forward = action_for_forward[
-                    :, : original_policy.model.action_horizon, :
-                ]
+                action_for_forward = action_for_forward[:, : original_policy.model.action_horizon, :]
                 action_mask_for_forward = action_mask_for_forward[
                     :, : original_policy.model.action_horizon, :
                 ]

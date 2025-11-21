@@ -310,24 +310,12 @@ def generate_lerobot_frames(tf_episode):
             "language_instruction": f["language_instruction"].numpy().decode(),
             "language_instruction_2": f["language_instruction_2"].numpy().decode(),
             "language_instruction_3": f["language_instruction_3"].numpy().decode(),
-            "observation.state.gripper_position": f["observation"][
-                "gripper_position"
-            ].numpy(),
-            "observation.state.cartesian_position": f["observation"][
-                "cartesian_position"
-            ].numpy(),
-            "observation.state.joint_position": f["observation"][
-                "joint_position"
-            ].numpy(),
-            "observation.images.wrist_left": f["observation"][
-                "wrist_image_left"
-            ].numpy(),
-            "observation.images.exterior_1_left": f["observation"][
-                "exterior_image_1_left"
-            ].numpy(),
-            "observation.images.exterior_2_left": f["observation"][
-                "exterior_image_2_left"
-            ].numpy(),
+            "observation.state.gripper_position": f["observation"]["gripper_position"].numpy(),
+            "observation.state.cartesian_position": f["observation"]["cartesian_position"].numpy(),
+            "observation.state.joint_position": f["observation"]["joint_position"].numpy(),
+            "observation.images.wrist_left": f["observation"]["wrist_image_left"].numpy(),
+            "observation.images.exterior_1_left": f["observation"]["exterior_image_1_left"].numpy(),
+            "observation.images.exterior_2_left": f["observation"]["exterior_image_2_left"].numpy(),
             "action.gripper_position": f["action_dict"]["gripper_position"].numpy(),
             "action.gripper_velocity": f["action_dict"]["gripper_velocity"].numpy(),
             "action.cartesian_position": f["action_dict"]["cartesian_position"].numpy(),
@@ -349,9 +337,7 @@ def generate_lerobot_frames(tf_episode):
                 frame["observation.state.gripper_position"],
             ]
         )
-        frame["action"] = np.concatenate(
-            [frame["action.joint_position"], frame["action.gripper_position"]]
-        )
+        frame["action"] = np.concatenate([frame["action.joint_position"], frame["action.gripper_position"]])
 
         # Meta data that are the same for all frames in the episode
         frame.update(frame_meta)

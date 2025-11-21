@@ -77,9 +77,7 @@ class HomunculusArm(Teleoperator):
         self._state: dict[str, float] | None = None
         self.new_state_event = threading.Event()
         self.stop_event = threading.Event()
-        self.thread = threading.Thread(
-            target=self._read_loop, daemon=True, name=f"{self} _read_loop"
-        )
+        self.thread = threading.Thread(target=self._read_loop, daemon=True, name=f"{self} _read_loop")
         self.state_lock = threading.Lock()
 
     @property
@@ -170,12 +168,8 @@ class HomunculusArm(Teleoperator):
         user_pressed_enter = False
         while not user_pressed_enter:
             positions = self._read(joints, normalize=False)
-            mins = {
-                joint: int(min(positions[joint], min_)) for joint, min_ in mins.items()
-            }
-            maxes = {
-                joint: int(max(positions[joint], max_)) for joint, max_ in maxes.items()
-            }
+            mins = {joint: int(min(positions[joint], min_)) for joint, min_ in mins.items()}
+            maxes = {joint: int(max(positions[joint], max_)) for joint, max_ in maxes.items()}
 
             if display_values:
                 print("\n-------------------------------------------")
@@ -194,9 +188,7 @@ class HomunculusArm(Teleoperator):
 
         same_min_max = [joint for joint in joints if mins[joint] == maxes[joint]]
         if same_min_max:
-            raise ValueError(
-                f"Some joints have the same min and max values:\n{pformat(same_min_max)}"
-            )
+            raise ValueError(f"Some joints have the same min and max values:\n{pformat(same_min_max)}")
 
         return mins, maxes
 
@@ -235,9 +227,7 @@ class HomunculusArm(Teleoperator):
             if self._ema[joint] is None:
                 self._ema[joint] = float(value)
             else:
-                self._ema[joint] = (
-                    self.alpha * value + (1 - self.alpha) * self._ema[joint]
-                )
+                self._ema[joint] = self.alpha * value + (1 - self.alpha) * self._ema[joint]
 
             smoothed[joint] = self._ema[joint]
         return smoothed
@@ -261,9 +251,7 @@ class HomunculusArm(Teleoperator):
         self.new_state_event.clear()
 
         if state is None:
-            raise RuntimeError(
-                f"{self} Internal error: Event set but no state available."
-            )
+            raise RuntimeError(f"{self} Internal error: Event set but no state available.")
 
         if joints is not None:
             state = {k: v for k, v in state.items() if k in joints}
@@ -294,9 +282,7 @@ class HomunculusArm(Teleoperator):
                         if lines:
                             raw_values = lines[-1]
 
-                if (
-                    raw_values is None or len(raw_values) != 21
-                ):  # 16 raw + 5 angle values
+                if raw_values is None or len(raw_values) != 21:  # 16 raw + 5 angle values
                     continue
 
                 joint_angles = {
@@ -314,9 +300,7 @@ class HomunculusArm(Teleoperator):
                 self.new_state_event.set()
 
             except Exception as e:
-                logger.debug(
-                    f"Error reading frame in background thread for {self}: {e}"
-                )
+                logger.debug(f"Error reading frame in background thread for {self}: {e}")
 
     def get_action(self) -> dict[str, float]:
         joint_positions = self._read()

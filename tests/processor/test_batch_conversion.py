@@ -51,17 +51,13 @@ def test_observation_grouping_roundtrip():
 
     # Check that all observation.* keys are preserved
     original_obs_keys = {k: v for k, v in batch_in.items() if k.startswith(OBS_PREFIX)}
-    reconstructed_obs_keys = {
-        k: v for k, v in batch_out.items() if k.startswith(OBS_PREFIX)
-    }
+    reconstructed_obs_keys = {k: v for k, v in batch_out.items() if k.startswith(OBS_PREFIX)}
 
     assert set(original_obs_keys.keys()) == set(reconstructed_obs_keys.keys())
 
     # Check tensor values
     assert torch.allclose(batch_out[f"{OBS_IMAGE}.left"], batch_in[f"{OBS_IMAGE}.left"])
-    assert torch.allclose(
-        batch_out[f"{OBS_IMAGE}.right"], batch_in[f"{OBS_IMAGE}.right"]
-    )
+    assert torch.allclose(batch_out[f"{OBS_IMAGE}.right"], batch_in[f"{OBS_IMAGE}.right"])
     assert torch.allclose(batch_out[OBS_STATE], batch_in[OBS_STATE])
 
     # Check other fields
@@ -105,9 +101,7 @@ def test_batch_to_transition_observation_grouping():
     assert transition[TransitionKey.OBSERVATION][OBS_STATE] == [1, 2, 3, 4]
 
     # Check other fields
-    assert torch.allclose(
-        transition[TransitionKey.ACTION], torch.tensor([0.1, 0.2, 0.3, 0.4])
-    )
+    assert torch.allclose(transition[TransitionKey.ACTION], torch.tensor([0.1, 0.2, 0.3, 0.4]))
     assert transition[TransitionKey.REWARD] == 1.5
     assert transition[TransitionKey.DONE]
     assert not transition[TransitionKey.TRUNCATED]
@@ -141,12 +135,8 @@ def test_transition_to_batch_observation_flattening():
     assert OBS_STATE in batch
 
     # Check values are preserved
-    assert torch.allclose(
-        batch[f"{OBS_IMAGE}.top"], observation_dict[f"{OBS_IMAGE}.top"]
-    )
-    assert torch.allclose(
-        batch[f"{OBS_IMAGE}.left"], observation_dict[f"{OBS_IMAGE}.left"]
-    )
+    assert torch.allclose(batch[f"{OBS_IMAGE}.top"], observation_dict[f"{OBS_IMAGE}.top"])
+    assert torch.allclose(batch[f"{OBS_IMAGE}.left"], observation_dict[f"{OBS_IMAGE}.left"])
     assert batch[OBS_STATE] == [1, 2, 3, 4]
 
     # Check other fields are mapped to next.* format
@@ -263,9 +253,7 @@ def test_complex_nested_observation():
 
     # Check that all observation keys are preserved
     original_obs_keys = {k for k in batch if k.startswith(OBS_PREFIX)}
-    reconstructed_obs_keys = {
-        k for k in reconstructed_batch if k.startswith(OBS_PREFIX)
-    }
+    reconstructed_obs_keys = {k for k in reconstructed_batch if k.startswith(OBS_PREFIX)}
 
     assert original_obs_keys == reconstructed_obs_keys
 

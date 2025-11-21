@@ -62,9 +62,7 @@ def to_tensor(
 
 
 @to_tensor.register(torch.Tensor)
-def _(
-    value: torch.Tensor, *, dtype=torch.float32, device=None, **kwargs
-) -> torch.Tensor:
+def _(value: torch.Tensor, *, dtype=torch.float32, device=None, **kwargs) -> torch.Tensor:
     """Handle conversion for existing PyTorch tensors."""
     if dtype is not None:
         value = value.to(dtype=dtype)
@@ -177,9 +175,7 @@ def _extract_complementary_data(batch: dict[str, Any]) -> dict[str, Any]:
     pad_keys = {k: v for k, v in batch.items() if "_is_pad" in k}
     task_key = {"task": batch["task"]} if "task" in batch else {}
     index_key = {"index": batch["index"]} if "index" in batch else {}
-    task_index_key = (
-        {"task_index": batch["task_index"]} if "task_index" in batch else {}
-    )
+    task_index_key = {"task_index": batch["task_index"]} if "task_index" in batch else {}
 
     return {**pad_keys, **task_key, **index_key, **task_index_key}
 
@@ -215,9 +211,7 @@ def create_transition(
         TransitionKey.DONE: done,
         TransitionKey.TRUNCATED: truncated,
         TransitionKey.INFO: info if info is not None else {},
-        TransitionKey.COMPLEMENTARY_DATA: (
-            complementary_data if complementary_data is not None else {}
-        ),
+        TransitionKey.COMPLEMENTARY_DATA: (complementary_data if complementary_data is not None else {}),
     }
 
 
@@ -235,9 +229,7 @@ def robot_action_observation_to_transition(
         An `EnvTransition` containing the formatted observation.
     """
     if not isinstance(action_observation, tuple):
-        raise ValueError(
-            "action_observation should be a tuple type with an action and observation"
-        )
+        raise ValueError("action_observation should be a tuple type with an action and observation")
 
     action, observation = action_observation
 
@@ -245,9 +237,7 @@ def robot_action_observation_to_transition(
         raise ValueError(f"Action should be a RobotAction type got {type(action)}")
 
     if observation is not None and not isinstance(observation, dict):
-        raise ValueError(
-            f"Observation should be a RobotObservation type got {type(observation)}"
-        )
+        raise ValueError(f"Observation should be a RobotObservation type got {type(observation)}")
 
     return create_transition(action=action, observation=observation)
 
@@ -278,9 +268,7 @@ def observation_to_transition(observation: RobotObservation) -> EnvTransition:
         An `EnvTransition` containing the formatted observation.
     """
     if not isinstance(observation, dict):
-        raise ValueError(
-            f"Observation should be a RobotObservation type got {type(observation)}"
-        )
+        raise ValueError(f"Observation should be a RobotObservation type got {type(observation)}")
     return create_transition(observation=observation)
 
 
@@ -298,15 +286,11 @@ def transition_to_robot_action(transition: EnvTransition) -> RobotAction:
         A dictionary representing the raw robot action.
     """
     if not isinstance(transition, dict):
-        raise ValueError(
-            f"Transition should be a EnvTransition type (dict) got {type(transition)}"
-        )
+        raise ValueError(f"Transition should be a EnvTransition type (dict) got {type(transition)}")
 
     action = transition.get(TransitionKey.ACTION)
     if not isinstance(action, dict):
-        raise ValueError(
-            f"Action should be a RobotAction type (dict) got {type(action)}"
-        )
+        raise ValueError(f"Action should be a RobotAction type (dict) got {type(action)}")
     return transition.get(TransitionKey.ACTION)
 
 
@@ -315,9 +299,7 @@ def transition_to_policy_action(transition: EnvTransition) -> PolicyAction:
     Convert an `EnvTransition` to a `PolicyAction`.
     """
     if not isinstance(transition, dict):
-        raise ValueError(
-            f"Transition should be a EnvTransition type (dict) got {type(transition)}"
-        )
+        raise ValueError(f"Transition should be a EnvTransition type (dict) got {type(transition)}")
 
     action = transition.get(TransitionKey.ACTION)
     if not isinstance(action, PolicyAction):
@@ -330,15 +312,11 @@ def transition_to_observation(transition: EnvTransition) -> RobotObservation:
     Convert an `EnvTransition` to a `RobotObservation`.
     """
     if not isinstance(transition, dict):
-        raise ValueError(
-            f"Transition should be a EnvTransition type (dict) got {type(transition)}"
-        )
+        raise ValueError(f"Transition should be a EnvTransition type (dict) got {type(transition)}")
 
     observation = transition.get(TransitionKey.OBSERVATION)
     if not isinstance(observation, dict):
-        raise ValueError(
-            f"Observation should be a RobotObservation (dict) type got {type(observation)}"
-        )
+        raise ValueError(f"Observation should be a RobotObservation (dict) type got {type(observation)}")
     return observation
 
 
@@ -370,9 +348,7 @@ def batch_to_transition(batch: dict[str, Any]) -> EnvTransition:
 
     # Validate input type.
     if not isinstance(batch, dict):
-        raise ValueError(
-            f"EnvTransition must be a dictionary. Got {type(batch).__name__}"
-        )
+        raise ValueError(f"EnvTransition must be a dictionary. Got {type(batch).__name__}")
 
     action = batch.get(ACTION)
     if action is not None and not isinstance(action, PolicyAction):
@@ -406,9 +382,7 @@ def transition_to_batch(transition: EnvTransition) -> dict[str, Any]:
         A batch dictionary with canonical LeRobot field names.
     """
     if not isinstance(transition, dict):
-        raise ValueError(
-            f"Transition should be a EnvTransition type (dict) got {type(transition)}"
-        )
+        raise ValueError(f"Transition should be a EnvTransition type (dict) got {type(transition)}")
 
     batch = {
         ACTION: transition.get(TransitionKey.ACTION),

@@ -55,9 +55,7 @@ kinematics_solver = RobotKinematics(
 )
 
 # Build pipeline to convert phone action to ee pose action to joint action
-phone_to_robot_joints_processor = RobotProcessorPipeline[
-    tuple[RobotAction, RobotObservation], RobotAction
-](
+phone_to_robot_joints_processor = RobotProcessorPipeline[tuple[RobotAction, RobotObservation], RobotAction](
     steps=[
         MapPhoneActionToRobotAction(platform=teleop_config.phone_os),
         EEReferenceAndDelta(

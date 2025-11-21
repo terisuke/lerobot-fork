@@ -27,9 +27,7 @@ def valid_delta_timestamps_factory():
         keys: list = DUMMY_MOTOR_FEATURES,
         min_max_range: tuple[int, int] = (-10, 10),
     ) -> dict:
-        delta_timestamps = {
-            key: [i * (1 / fps) for i in range(*min_max_range)] for key in keys
-        }
+        delta_timestamps = {key: [i * (1 / fps) for i in range(*min_max_range)] for key in keys}
         return delta_timestamps
 
     return _create_valid_delta_timestamps
@@ -66,9 +64,7 @@ def slightly_off_delta_timestamps_factory(valid_delta_timestamps_factory):
 
 @pytest.fixture(scope="module")
 def delta_indices_factory():
-    def _delta_indices(
-        keys: list = DUMMY_MOTOR_FEATURES, min_max_range: tuple[int, int] = (-10, 10)
-    ) -> dict:
+    def _delta_indices(keys: list = DUMMY_MOTOR_FEATURES, min_max_range: tuple[int, int] = (-10, 10)) -> dict:
         return {key: list(range(*min_max_range)) for key in keys}
 
     return _delta_indices
@@ -89,9 +85,7 @@ def test_check_delta_timestamps_valid(valid_delta_timestamps_factory):
 def test_check_delta_timestamps_slightly_off(slightly_off_delta_timestamps_factory):
     fps = 30
     tolerance_s = 1e-4
-    slightly_off_delta_timestamps = slightly_off_delta_timestamps_factory(
-        fps, tolerance_s
-    )
+    slightly_off_delta_timestamps = slightly_off_delta_timestamps_factory(fps, tolerance_s)
     result = check_delta_timestamps(
         delta_timestamps=slightly_off_delta_timestamps,
         fps=fps,

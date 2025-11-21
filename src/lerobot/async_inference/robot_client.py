@@ -59,8 +59,10 @@ from lerobot.robots import (  # noqa: F401
     so100_follower,
     so101_follower,
 )
-from lerobot.transport import services_pb2  # type: ignore
-from lerobot.transport import services_pb2_grpc  # type: ignore
+from lerobot.transport import (
+    services_pb2,  # type: ignore
+    services_pb2_grpc,  # type: ignore
+)
 from lerobot.transport.utils import grpc_channel_options, send_bytes_in_chunks
 
 from .configs import RobotClientConfig
@@ -111,9 +113,7 @@ class RobotClient:
             grpc_channel_options(initial_backoff=f"{config.environment_dt:.4f}s"),
         )
         self.stub = services_pb2_grpc.AsyncInferenceStub(self.channel)
-        self.logger.info(
-            f"Initializing client to connect to server at {self.server_address}"
-        )
+        self.logger.info(f"Initializing client to connect to server at {self.server_address}")
 
         self.shutdown_event = threading.Event()
 
@@ -127,9 +127,7 @@ class RobotClient:
         self.action_queue = Queue()
         self.action_queue_lock = threading.Lock()  # Protect queue operations
         self.action_queue_size = []
-        self.start_barrier = threading.Barrier(
-            2
-        )  # 2 threads: action receiver, control loop
+        self.start_barrier = threading.Barrier(2)  # 2 threads: action receiver, control loop
 
         # FPS measurement
         self.fps_tracker = FPSTracker(target_fps=self.config.fps)
@@ -151,9 +149,7 @@ class RobotClient:
             start_time = time.perf_counter()
             self.stub.Ready(services_pb2.Empty())
             end_time = time.perf_counter()
-            self.logger.debug(
-                f"Connected to policy server in {end_time - start_time:.4f}s"
-            )
+            self.logger.debug(f"Connected to policy server in {end_time - start_time:.4f}s")
 
             # send policy instructions
             policy_config_bytes = pickle.dumps(self.policy_config)
@@ -193,9 +189,7 @@ class RobotClient:
         """Send observation to the policy server.
         Returns True if the observation was sent successfully, False otherwise."""
         if not self.running:
-            raise RuntimeError(
-                "Client not running. Run RobotClient.start() before sending observations."
-            )
+            raise RuntimeError("Client not running. Run RobotClient.start() before sending observations.")
 
         if not isinstance(obs, TimedObservation):
             raise ValueError("Input observation needs to be a TimedObservation!")
@@ -225,18 +219,14 @@ class RobotClient:
     def _inspect_action_queue(self):
         with self.action_queue_lock:
             queue_size = self.action_queue.qsize()
-            timestamps = sorted(
-                [action.get_timestep() for action in self.action_queue.queue]
-            )
+            timestamps = sorted([action.get_timestep() for action in self.action_queue.queue])
         self.logger.debug(f"Queue size: {queue_size}, Queue contents: {timestamps}")
         return queue_size, timestamps
 
     def _aggregate_action_queues(
         self,
         incoming_actions: list[TimedAction],
-        aggregate_fn: (
-            Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None
-        ) = None,
+        aggregate_fn: (Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None) = None,
     ):
         """Finds the same timestep actions in the queue and aggregates them using the aggregate_fn"""
         if aggregate_fn is None:
@@ -248,9 +238,7 @@ class RobotClient:
         with self.action_queue_lock:
             internal_queue = self.action_queue.queue
 
-        current_action_queue = {
-            action.get_timestep(): action.get_action() for action in internal_queue
-        }
+        current_action_queue = {action.get_timestep(): action.get_action() for action in internal_queue}
 
         for new_action in incoming_actions:
             with self.latest_action_lock:
@@ -319,9 +307,7 @@ class RobotClient:
                     incoming_timesteps = [a.get_timestep() for a in timed_actions]
 
                     first_action_timestep = timed_actions[0].get_timestep()
-                    server_to_client_latency = (
-                        receive_time - timed_actions[0].get_timestamp()
-                    ) * 1000
+                    server_to_client_latency = (receive_time - timed_actions[0].get_timestamp()) * 1000
 
                     self.logger.info(
                         f"Received action chunk for step #{first_action_timestep} | "
@@ -365,13 +351,8 @@ class RobotClient:
         with self.action_queue_lock:
             return not self.action_queue.empty()
 
-    def _action_tensor_to_action_dict(
-        self, action_tensor: torch.Tensor
-    ) -> dict[str, float]:
-        action = {
-            key: action_tensor[i].item()
-            for i, key in enumerate(self.robot.action_features)
-        }
+    def _action_tensor_to_action_dict(self, action_tensor: torch.Tensor) -> dict[str, float]:
+        action = {key: action_tensor[i].item() for i, key in enumerate(self.robot.action_features)}
         return action
 
     def control_loop_action(self, verbose: bool = False) -> dict[str, Any]:
@@ -410,14 +391,9 @@ class RobotClient:
     def _ready_to_send_observation(self):
         """Flags when the client is ready to send an observation"""
         with self.action_queue_lock:
-            return (
-                self.action_queue.qsize() / self.action_chunk_size
-                <= self._chunk_size_threshold
-            )
+            return self.action_queue.qsize() / self.action_chunk_size <= self._chunk_size_threshold
 
-    def control_loop_observation(
-        self, task: str, verbose: bool = False
-    ) -> RawObservation:
+    def control_loop_observation(self, task: str, verbose: bool = False) -> RawObservation:
         try:
             # Get serialized observation bytes from the function
             start_time = time.perf_counter()
@@ -438,25 +414,19 @@ class RobotClient:
 
             # If there are no actions left in the queue, the observation must go through processing!
             with self.action_queue_lock:
-                observation.must_go = (
-                    self.must_go.is_set() and self.action_queue.empty()
-                )
+                observation.must_go = self.must_go.is_set() and self.action_queue.empty()
                 current_queue_size = self.action_queue.qsize()
 
             _ = self.send_observation(observation)
 
-            self.logger.debug(
-                f"QUEUE SIZE: {current_queue_size} (Must go: {observation.must_go})"
-            )
+            self.logger.debug(f"QUEUE SIZE: {current_queue_size} (Must go: {observation.must_go})")
             if observation.must_go:
                 # must-go event will be set again after receiving actions
                 self.must_go.clear()
 
             if verbose:
                 # Calculate comprehensive FPS metrics
-                fps_metrics = self.fps_tracker.calculate_fps_metrics(
-                    observation.get_timestamp()
-                )
+                fps_metrics = self.fps_tracker.calculate_fps_metrics(observation.get_timestamp())
 
                 self.logger.info(
                     f"Obs #{observation.get_timestep()} | "
@@ -473,9 +443,7 @@ class RobotClient:
         except Exception as e:
             self.logger.error(f"Error in observation sender: {e}")
 
-    def control_loop(
-        self, task: str, verbose: bool = False
-    ) -> tuple[Observation, Action]:
+    def control_loop(self, task: str, verbose: bool = False) -> tuple[Observation, Action]:
         """Combined function for executing actions and streaming observations"""
         # Wait at barrier for synchronized start
         self.start_barrier.wait()
@@ -494,15 +462,12 @@ class RobotClient:
             if self._ready_to_send_observation():
                 _captured_observation = self.control_loop_observation(task, verbose)
 
-            self.logger.debug(
-                f"Control loop (ms): {(time.perf_counter() - control_loop_start) * 1000:.2f}"
-            )
+            self.logger.debug(f"Control loop (ms): {(time.perf_counter() - control_loop_start) * 1000:.2f}")
             # Dynamically adjust sleep time to maintain the desired control frequency
             time.sleep(
                 max(
                     0,
-                    self.config.environment_dt
-                    - (time.perf_counter() - control_loop_start),
+                    self.config.environment_dt - (time.perf_counter() - control_loop_start),
                 )
             )
 
@@ -522,9 +487,7 @@ def async_client(cfg: RobotClientConfig):
         client.logger.info("Starting action receiver thread...")
 
         # Create and start action receiver thread
-        action_receiver_thread = threading.Thread(
-            target=client.receive_actions, daemon=True
-        )
+        action_receiver_thread = threading.Thread(target=client.receive_actions, daemon=True)
 
         # Start action receiver thread
         action_receiver_thread.start()

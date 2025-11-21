@@ -107,13 +107,9 @@ def make_groot_pre_post_processors(
     # Define feature specs for optional normalization steps
     _features: dict[str, PolicyFeature] = {
         # Observation features (only add those we may normalize)
-        "observation.state": PolicyFeature(
-            type=FeatureType.STATE, shape=(state_horizon, max_state_dim)
-        ),
+        "observation.state": PolicyFeature(type=FeatureType.STATE, shape=(state_horizon, max_state_dim)),
         # Action feature
-        "action": PolicyFeature(
-            type=FeatureType.ACTION, shape=(action_horizon, max_action_dim)
-        ),
+        "action": PolicyFeature(type=FeatureType.ACTION, shape=(action_horizon, max_action_dim)),
     }
 
     # Normalize STATE and ACTION with min_max (SO100-like default)
@@ -209,9 +205,7 @@ def _build_eagle_processor(
             "Vendor files are copied during model creation. Create the policy/model first, "
             "or call ensure_eagle_cache_ready() before building processors."
         )
-    proc = AutoProcessor.from_pretrained(
-        str(cache_dir), trust_remote_code=True, use_fast=True
-    )
+    proc = AutoProcessor.from_pretrained(str(cache_dir), trust_remote_code=True, use_fast=True)
     proc.tokenizer.padding_side = "left"
     return proc
 
@@ -257,9 +251,7 @@ class GrootPackInputsStep(ProcessorStep):
             if d == target_dim:
                 return t
             if d < target_dim:
-                pad = torch.full(
-                    (target_dim - d,), default, dtype=t.dtype, device=t.device
-                )
+                pad = torch.full((target_dim - d,), default, dtype=t.dtype, device=t.device)
                 return torch.cat([t, pad], dim=0)
             return t[:target_dim]
 
@@ -270,12 +262,8 @@ class GrootPackInputsStep(ProcessorStep):
                 return x
             stats_k = self.stats[key]
             last_dim = x.shape[-1]
-            min_v = _align_vec(
-                stats_k.get("min", torch.zeros(last_dim)), last_dim, default=0.0
-            )
-            max_v = _align_vec(
-                stats_k.get("max", torch.ones(last_dim)), last_dim, default=1.0
-            )
+            min_v = _align_vec(stats_k.get("min", torch.zeros(last_dim)), last_dim, default=0.0)
+            max_v = _align_vec(stats_k.get("max", torch.ones(last_dim)), last_dim, default=1.0)
             denom = max_v - min_v
             mask = denom != 0
             safe_denom = torch.where(mask, denom, torch.ones_like(denom))
@@ -330,9 +318,7 @@ class GrootPackInputsStep(ProcessorStep):
                     device=state.device,
                 )
                 state = torch.cat([state, pad], dim=2)
-            state_mask = torch.zeros(
-                bsz, 1, self.max_state_dim, dtype=torch.bool, device=state.device
-            )
+            state_mask = torch.zeros(bsz, 1, self.max_state_dim, dtype=torch.bool, device=state.device)
             state_mask[:, :, :d] = True
             obs["state"] = state
             obs["state_mask"] = state_mask
@@ -360,9 +346,7 @@ class GrootPackInputsStep(ProcessorStep):
                 elif t > self.action_horizon:
                     action = action[:, : self.action_horizon, :]
             else:
-                raise ValueError(
-                    f"action must be (B, D) or (B, T, D), got {tuple(action.shape)}"
-                )
+                raise ValueError(f"action must be (B, D) or (B, T, D), got {tuple(action.shape)}")
 
             b, t, d = action.shape
             if d > self.max_action_dim:
@@ -377,9 +361,7 @@ class GrootPackInputsStep(ProcessorStep):
                     device=action.device,
                 )
                 action = torch.cat([action, pad], dim=2)
-            action_mask = torch.zeros(
-                b, t, self.max_action_dim, dtype=torch.bool, device=action.device
-            )
+            action_mask = torch.zeros(b, t, self.max_action_dim, dtype=torch.bool, device=action.device)
             action_mask[:, :, :d] = True
             transition[TransitionKey.ACTION] = action
             comp["action_mask"] = action_mask
@@ -398,9 +380,7 @@ class GrootPackInputsStep(ProcessorStep):
             bsz = obs["video"].shape[0]
         if bsz is None:
             bsz = 1
-        comp["embodiment_id"] = torch.full(
-            (bsz,), emb_id, dtype=torch.long, device=device
-        )
+        comp["embodiment_id"] = torch.full((bsz,), emb_id, dtype=torch.long, device=device)
 
         transition[TransitionKey.OBSERVATION] = obs
         transition[TransitionKey.COMPLEMENTARY_DATA] = comp
@@ -506,11 +486,7 @@ class GrootEagleEncodeStep(ProcessorStep):
             text_content = [{"type": "text", "text": lang_formatted}]
             image_content = [{"type": "image", "image": img} for img in images]
             conv = [{"role": "user", "content": image_content + text_content}]
-            text_list = [
-                self.proc.apply_chat_template(
-                    conv, tokenize=False, add_generation_prompt=True
-                )
-            ]
+            text_list = [self.proc.apply_chat_template(conv, tokenize=False, add_generation_prompt=True)]
             img_inputs, vid_inputs = self.proc.process_vision_info(conv)
             eagle_contents.append(
                 {
@@ -531,9 +507,7 @@ class GrootEagleEncodeStep(ProcessorStep):
 
 
 # Original GR00T-style collate: converts eagle_content -> eagle_* tensors
-def collate(
-    features: list[dict[str, Any]], eagle_processor: ProcessorMixin
-) -> dict[str, Any]:
+def collate(features: list[dict[str, Any]], eagle_processor: ProcessorMixin) -> dict[str, Any]:
     batch: dict[str, Any] = {}
     keys = features[0].keys()
 
@@ -648,14 +622,10 @@ class GrootActionUnpackUnnormalizeStep(ProcessorStep):
                 device=action.device,
             )
             if min_v.numel() != d:
-                min_v = torch.nn.functional.pad(
-                    min_v.flatten()[:d], (0, max(0, d - min_v.numel()))
-                )
+                min_v = torch.nn.functional.pad(min_v.flatten()[:d], (0, max(0, d - min_v.numel())))
                 min_v = min_v.to(action.device, dtype=action.dtype)
             if max_v.numel() != d:
-                max_v = torch.nn.functional.pad(
-                    max_v.flatten()[:d], (0, max(0, d - max_v.numel()))
-                )
+                max_v = torch.nn.functional.pad(max_v.flatten()[:d], (0, max(0, d - max_v.numel())))
                 max_v = max_v.to(action.device, dtype=action.dtype)
             denom = max_v - min_v
             mask = denom != 0

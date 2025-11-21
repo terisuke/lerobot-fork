@@ -90,9 +90,7 @@ def main(cfg: LeKiwiServerConfig):
                 logging.error("Message fetching failed: %s", e)
 
             now = time.time()
-            if (
-                now - last_cmd_time > host.watchdog_timeout_ms / 1000
-            ) and not watchdog_active:
+            if (now - last_cmd_time > host.watchdog_timeout_ms / 1000) and not watchdog_active:
                 logging.warning(
                     f"Command not received for more than {host.watchdog_timeout_ms} milliseconds. Stopping the base."
                 )
@@ -115,9 +113,7 @@ def main(cfg: LeKiwiServerConfig):
 
             # Send the observation to the remote agent
             try:
-                host.zmq_observation_socket.send_string(
-                    json.dumps(last_observation), flags=zmq.NOBLOCK
-                )
+                host.zmq_observation_socket.send_string(json.dumps(last_observation), flags=zmq.NOBLOCK)
             except zmq.Again:
                 logging.info("Dropping observation, no client connected")
 

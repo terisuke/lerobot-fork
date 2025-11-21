@@ -90,9 +90,7 @@ class IOSPhone(BasePhone, Teleoperator):
         time.sleep(2.0)
         group = lookup.get_group_from_names(["HEBI"], ["mobileIO"])
         if group is None:
-            raise RuntimeError(
-                "Mobile I/O not found — check name/family settings in the app."
-            )
+            raise RuntimeError("Mobile I/O not found — check name/family settings in the app.")
         self._group = group
         logger.info(f"{self} connected to HEBI group with {group.size} module(s).")
 

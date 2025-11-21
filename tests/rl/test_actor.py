@@ -186,8 +186,7 @@ def test_interactions_stream():
 
     # Serialize the interaction data as it would be in practice
     test_data = [
-        interactions_queue.put(python_object_to_bytes(interaction))
-        for interaction in test_interactions
+        interactions_queue.put(python_object_to_bytes(interaction)) for interaction in test_interactions
     ]
 
     # Collect streamed data

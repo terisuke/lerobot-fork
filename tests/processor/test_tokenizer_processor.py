@@ -195,9 +195,7 @@ def test_custom_keys(mock_auto_tokenizer):
     mock_tokenizer = MockTokenizer(vocab_size=100)
     mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
 
-    processor = TokenizerProcessorStep(
-        tokenizer_name="test-tokenizer", task_key="instruction", max_length=5
-    )
+    processor = TokenizerProcessorStep(tokenizer_name="test-tokenizer", task_key="instruction", max_length=5)
 
     transition = create_transition(
         observation={"state": torch.tensor([1.0, 2.0])},
@@ -241,9 +239,7 @@ def test_missing_task_key(mock_auto_tokenizer):
 
     processor = TokenizerProcessorStep(tokenizer_name="test-tokenizer")
 
-    transition = create_transition(
-        observation={}, complementary_data={"other_field": "some value"}
-    )
+    transition = create_transition(observation={}, complementary_data={"other_field": "some value"})
 
     with pytest.raises(KeyError, match="task"):
         processor(transition)
@@ -280,9 +276,7 @@ def test_unsupported_task_type(mock_auto_tokenizer):
         processor(transition)
 
     # Test with mixed list - get_task returns None, observation raises ValueError
-    transition = create_transition(
-        observation={}, complementary_data={"task": ["text", 123, "more text"]}
-    )
+    transition = create_transition(observation={}, complementary_data={"task": ["text", 123, "more text"]})
 
     with pytest.raises(ValueError, match="Task cannot be None"):
         processor(transition)
@@ -298,9 +292,7 @@ def test_no_tokenizer_error():
 @require_package("transformers")
 def test_invalid_tokenizer_name_error():
     """Test that error is raised when invalid tokenizer_name is provided."""
-    with patch(
-        "lerobot.processor.tokenizer_processor.AutoTokenizer"
-    ) as mock_auto_tokenizer:
+    with patch("lerobot.processor.tokenizer_processor.AutoTokenizer") as mock_auto_tokenizer:
         # Mock import error
         mock_auto_tokenizer.from_pretrained.side_effect = Exception("Model not found")
 
@@ -402,9 +394,7 @@ def test_integration_with_robot_processor(mock_auto_tokenizer):
     mock_tokenizer = MockTokenizer(vocab_size=100)
     mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
 
-    tokenizer_processor = TokenizerProcessorStep(
-        tokenizer_name="test-tokenizer", max_length=6
-    )
+    tokenizer_processor = TokenizerProcessorStep(tokenizer_name="test-tokenizer", max_length=6)
     robot_processor = DataProcessorPipeline(
         [tokenizer_processor],
         to_transition=identity_transition,
@@ -540,12 +530,8 @@ def test_features_basic():
     processor = TokenizerProcessorStep(tokenizer=mock_tokenizer, max_length=128)
 
     input_features = {
-        PipelineFeatureType.OBSERVATION: {
-            OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))
-        },
-        PipelineFeatureType.ACTION: {
-            ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(5,))
-        },
+        PipelineFeatureType.OBSERVATION: {OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))},
+        PipelineFeatureType.ACTION: {ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(5,))},
     }
 
     output_features = processor.transform_features(input_features)
@@ -556,15 +542,10 @@ def test_features_basic():
 
     # Check that tokenized features are added
     assert f"{OBS_LANGUAGE}.tokens" in output_features[PipelineFeatureType.OBSERVATION]
-    assert (
-        f"{OBS_LANGUAGE}.attention_mask"
-        in output_features[PipelineFeatureType.OBSERVATION]
-    )
+    assert f"{OBS_LANGUAGE}.attention_mask" in output_features[PipelineFeatureType.OBSERVATION]
 
     # Check feature properties
-    tokens_feature = output_features[PipelineFeatureType.OBSERVATION][
-        f"{OBS_LANGUAGE}.tokens"
-    ]
+    tokens_feature = output_features[PipelineFeatureType.OBSERVATION][f"{OBS_LANGUAGE}.tokens"]
     attention_mask_feature = output_features[PipelineFeatureType.OBSERVATION][
         f"{OBS_LANGUAGE}.attention_mask"
     ]
@@ -586,14 +567,9 @@ def test_features_with_custom_max_length():
 
     # Check that features use correct max_length
     assert f"{OBS_LANGUAGE}.tokens" in output_features[PipelineFeatureType.OBSERVATION]
-    assert (
-        f"{OBS_LANGUAGE}.attention_mask"
-        in output_features[PipelineFeatureType.OBSERVATION]
-    )
+    assert f"{OBS_LANGUAGE}.attention_mask" in output_features[PipelineFeatureType.OBSERVATION]
 
-    tokens_feature = output_features[PipelineFeatureType.OBSERVATION][
-        f"{OBS_LANGUAGE}.tokens"
-    ]
+    tokens_feature = output_features[PipelineFeatureType.OBSERVATION][f"{OBS_LANGUAGE}.tokens"]
     attention_mask_feature = output_features[PipelineFeatureType.OBSERVATION][
         f"{OBS_LANGUAGE}.attention_mask"
     ]
@@ -610,26 +586,18 @@ def test_features_existing_features():
 
     input_features = {
         PipelineFeatureType.OBSERVATION: {
-            f"{OBS_LANGUAGE}.tokens": PolicyFeature(
-                type=FeatureType.LANGUAGE, shape=(100,)
-            ),
-            f"{OBS_LANGUAGE}.attention_mask": PolicyFeature(
-                type=FeatureType.LANGUAGE, shape=(100,)
-            ),
+            f"{OBS_LANGUAGE}.tokens": PolicyFeature(type=FeatureType.LANGUAGE, shape=(100,)),
+            f"{OBS_LANGUAGE}.attention_mask": PolicyFeature(type=FeatureType.LANGUAGE, shape=(100,)),
         }
     }
 
     output_features = processor.transform_features(input_features)
 
     # Should not overwrite existing features
-    assert output_features[PipelineFeatureType.OBSERVATION][
-        f"{OBS_LANGUAGE}.tokens"
-    ].shape == (
+    assert output_features[PipelineFeatureType.OBSERVATION][f"{OBS_LANGUAGE}.tokens"].shape == (
         100,
     )  # Original shape preserved
-    assert output_features[PipelineFeatureType.OBSERVATION][
-        f"{OBS_LANGUAGE}.attention_mask"
-    ].shape == (100,)
+    assert output_features[PipelineFeatureType.OBSERVATION][f"{OBS_LANGUAGE}.attention_mask"].shape == (100,)
 
 
 @require_package("transformers")
@@ -734,13 +702,9 @@ def test_deterministic_tokenization(mock_auto_tokenizer):
     result2 = processor(transition)
 
     tokens1 = result1[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.tokens"]
-    attention_mask1 = result1[TransitionKey.OBSERVATION][
-        f"{OBS_LANGUAGE}.attention_mask"
-    ]
+    attention_mask1 = result1[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.attention_mask"]
     tokens2 = result2[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.tokens"]
-    attention_mask2 = result2[TransitionKey.OBSERVATION][
-        f"{OBS_LANGUAGE}.attention_mask"
-    ]
+    attention_mask2 = result2[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.attention_mask"]
 
     # Results should be identical
     assert torch.equal(tokens1, tokens2)
@@ -778,9 +742,7 @@ def test_very_long_task(mock_auto_tokenizer):
     mock_tokenizer = MockTokenizer(vocab_size=100)
     mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
 
-    processor = TokenizerProcessorStep(
-        tokenizer_name="test-tokenizer", max_length=5, truncation=True
-    )
+    processor = TokenizerProcessorStep(tokenizer_name="test-tokenizer", max_length=5, truncation=True)
 
     long_task = " ".join(["word"] * 100)  # Very long task
     transition = create_transition(
@@ -971,9 +933,7 @@ def test_device_detection_mixed_devices():
         # The device detection should use the first tensor found
         # (iteration order depends on dict, but result should be consistent)
         tokens = result[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.tokens"]
-        attention_mask = result[TransitionKey.OBSERVATION][
-            f"{OBS_LANGUAGE}.attention_mask"
-        ]
+        attention_mask = result[TransitionKey.OBSERVATION][f"{OBS_LANGUAGE}.attention_mask"]
 
         # Both should be on the same device
         assert tokens.device == attention_mask.device
@@ -1013,9 +973,7 @@ def test_device_detection_preserves_dtype():
 
     # Create transition with float tensor (to test dtype isn't affected)
     observation = {OBS_STATE: torch.randn(10, dtype=torch.float16)}
-    transition = create_transition(
-        observation=observation, complementary_data={"task": "dtype test"}
-    )
+    transition = create_transition(observation=observation, complementary_data={"task": "dtype test"})
 
     result = processor(transition)
 
@@ -1038,9 +996,7 @@ def test_integration_with_device_processor(mock_auto_tokenizer):
     mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
 
     # Create pipeline with TokenizerProcessorStep then DeviceProcessorStep
-    tokenizer_processor = TokenizerProcessorStep(
-        tokenizer_name="test-tokenizer", max_length=6
-    )
+    tokenizer_processor = TokenizerProcessorStep(tokenizer_name="test-tokenizer", max_length=6)
     device_processor = DeviceProcessorStep(device="cuda:0")
     robot_processor = DataProcessorPipeline(
         [tokenizer_processor, device_processor],

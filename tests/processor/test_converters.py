@@ -271,12 +271,8 @@ def testtransition_to_batch_with_index_fields():
     assert "task" in batch
 
     # Verify values
-    assert torch.equal(
-        batch["index"], transition[TransitionKey.COMPLEMENTARY_DATA]["index"]
-    )
-    assert torch.equal(
-        batch["task_index"], transition[TransitionKey.COMPLEMENTARY_DATA]["task_index"]
-    )
+    assert torch.equal(batch["index"], transition[TransitionKey.COMPLEMENTARY_DATA]["index"])
+    assert torch.equal(batch["task_index"], transition[TransitionKey.COMPLEMENTARY_DATA]["task_index"])
     assert batch["task"] == transition[TransitionKey.COMPLEMENTARY_DATA]["task"]
 
 

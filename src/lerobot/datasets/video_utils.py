@@ -68,9 +68,7 @@ def decode_video_frames(
     if backend == "torchcodec":
         return decode_video_frames_torchcodec(video_path, timestamps, tolerance_s)
     elif backend in ["pyav", "video_reader"]:
-        return decode_video_frames_torchvision(
-            video_path, timestamps, tolerance_s, backend
-        )
+        return decode_video_frames_torchvision(video_path, timestamps, tolerance_s, backend)
     else:
         raise ValueError(f"Unsupported video backend: {backend}")
 
@@ -317,9 +315,7 @@ def encode_video_frames(
     """More info on ffmpeg arguments tuning on `benchmark/video/README.md`"""
     # Check encoder availability
     if vcodec not in ["h264", "hevc", "libsvtav1"]:
-        raise ValueError(
-            f"Unsupported video codec: {vcodec}. Supported codecs are: h264, hevc, libsvtav1."
-        )
+        raise ValueError(f"Unsupported video codec: {vcodec}. Supported codecs are: h264, hevc, libsvtav1.")
 
     video_path = Path(video_path)
     imgs_dir = Path(imgs_dir)
@@ -422,9 +418,7 @@ def concatenate_video_files(
     output_video_path = Path(output_video_path)
 
     if output_video_path.exists() and not overwrite:
-        logging.warning(
-            f"Video file already exists: {output_video_path}. Skipping concatenation."
-        )
+        logging.warning(f"Video file already exists: {output_video_path}. Skipping concatenation.")
         return
 
     output_video_path.parent.mkdir(parents=True, exist_ok=True)
@@ -433,9 +427,7 @@ def concatenate_video_files(
         raise FileNotFoundError("No input video paths provided.")
 
     # Create a temporary .ffconcat file to list the input video paths
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".ffconcat", delete=False
-    ) as tmp_concatenate_file:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".ffconcat", delete=False) as tmp_concatenate_file:
         tmp_concatenate_file.write("ffconcat version 1.0\n")
         for input_path in input_video_paths:
             tmp_concatenate_file.write(f"file '{str(input_path.resolve())}'\n")
@@ -540,9 +532,7 @@ def get_audio_info(video_path: Path | str) -> dict:
         # In an ideal loseless case : bit depth x sample rate x channels = bit rate.
         # In an actual compressed case, the bit rate is set according to the compression level : the lower the bit rate, the more compression is applied.
         audio_info["audio.bit_rate"] = audio_stream.bit_rate
-        audio_info["audio.sample_rate"] = (
-            audio_stream.sample_rate
-        )  # Number of samples per second
+        audio_info["audio.sample_rate"] = audio_stream.sample_rate  # Number of samples per second
         # In an ideal loseless case : fixed number of bits per sample.
         # In an actual compressed case : variable number of bits per sample (often reduced to match a given depth rate).
         audio_info["audio.bit_depth"] = audio_stream.format.bits
@@ -646,15 +636,11 @@ class VideoEncodingManager:
         # Handle any remaining episodes that haven't been batch encoded
         if self.dataset.episodes_since_last_encoding > 0:
             if exc_type is not None:
-                logging.info(
-                    "Exception occurred. Encoding remaining episodes before exit..."
-                )
+                logging.info("Exception occurred. Encoding remaining episodes before exit...")
             else:
                 logging.info("Recording stopped. Encoding remaining episodes...")
 
-            start_ep = (
-                self.dataset.num_episodes - self.dataset.episodes_since_last_encoding
-            )
+            start_ep = self.dataset.num_episodes - self.dataset.episodes_since_last_encoding
             end_ep = self.dataset.num_episodes
             logging.info(
                 f"Encoding remaining {self.dataset.episodes_since_last_encoding} episodes, "
@@ -690,8 +676,6 @@ class VideoEncodingManager:
                 shutil.rmtree(img_dir)
                 logging.debug("Cleaned up empty images directory")
         else:
-            logging.debug(
-                f"Images directory is not empty, containing {len(png_files)} PNG files"
-            )
+            logging.debug(f"Images directory is not empty, containing {len(png_files)} PNG files")
 
         return False  # Don't suppress the original exception

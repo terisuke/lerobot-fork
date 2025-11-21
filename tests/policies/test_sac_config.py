@@ -199,21 +199,19 @@ def test_validate_features():
 
 def test_validate_features_missing_observation():
     config = SACConfig(
-        input_features={
-            "wrong_key": PolicyFeature(type=FeatureType.STATE, shape=(10,))
-        },
+        input_features={"wrong_key": PolicyFeature(type=FeatureType.STATE, shape=(10,))},
         output_features={ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(3,))},
     )
-    with pytest.raises(ValueError, match="You must provide either 'observation.state' or an image observation"):
+    with pytest.raises(
+        ValueError, match="You must provide either 'observation.state' or an image observation"
+    ):
         config.validate_features()
 
 
 def test_validate_features_missing_action():
     config = SACConfig(
         input_features={OBS_STATE: PolicyFeature(type=FeatureType.STATE, shape=(10,))},
-        output_features={
-            "wrong_key": PolicyFeature(type=FeatureType.ACTION, shape=(3,))
-        },
+        output_features={"wrong_key": PolicyFeature(type=FeatureType.ACTION, shape=(3,))},
     )
     with pytest.raises(ValueError, match="You must provide 'action' in the output features"):
         config.validate_features()

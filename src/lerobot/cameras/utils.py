@@ -49,9 +49,7 @@ def make_cameras_from_configs(
             try:
                 cameras[key] = cast(Camera, make_device_from_device_class(cfg))
             except Exception as e:
-                raise ValueError(
-                    f"Error creating camera {key} with config {cfg}: {e}"
-                ) from e
+                raise ValueError(f"Error creating camera {key} with config {cfg}: {e}") from e
 
     return cameras
 

@@ -197,9 +197,7 @@ def test_save_multi_optimizer_state(multi_optimizers, tmp_path):
         assert (tmp_path / name / OPTIMIZER_PARAM_GROUPS).is_file()
 
 
-def test_save_and_load_multi_optimizer_state(
-    base_params_dict, multi_optimizers, tmp_path
-):
+def test_save_and_load_multi_optimizer_state(base_params_dict, multi_optimizers, tmp_path):
     # Option 1: Add a minimal backward pass to populate optimizer states
     for name, params in base_params_dict.items():
         if name in multi_optimizers:
@@ -230,9 +228,7 @@ def test_save_and_load_multi_optimizer_state(
 
     # Verify state dictionaries match
     for name in multi_optimizers:
-        torch.testing.assert_close(
-            multi_optimizers[name].state_dict(), loaded_optimizers[name].state_dict()
-        )
+        torch.testing.assert_close(multi_optimizers[name].state_dict(), loaded_optimizers[name].state_dict())
 
 
 def test_save_and_load_empty_multi_optimizer_state(base_params_dict, tmp_path):
@@ -260,10 +256,7 @@ def test_save_and_load_empty_multi_optimizer_state(base_params_dict, tmp_path):
     # Verify hyperparameters match even with empty state
     for name, optimizer in optimizers.items():
         assert optimizer.defaults["lr"] == loaded_optimizers[name].defaults["lr"]
-        assert (
-            optimizer.defaults["weight_decay"]
-            == loaded_optimizers[name].defaults["weight_decay"]
-        )
+        assert optimizer.defaults["weight_decay"] == loaded_optimizers[name].defaults["weight_decay"]
         assert optimizer.defaults["betas"] == loaded_optimizers[name].defaults["betas"]
 
         # Verify state dictionaries match (they will be empty)
