@@ -1,0 +1,13 @@
+robot:
+  type: so101_follower
+  port: /dev/tty.usbmodem585A0076841
+  # cameras: {}  # Add camera configuration here if needed
+
+teleop:
+  type: so101_leader
+  port: /dev/tty.usbmodem58760431551
+
+display_data: true
+
+
+
