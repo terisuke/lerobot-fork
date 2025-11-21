@@ -20,6 +20,7 @@ from lerobot.configs.policies import PreTrainedConfig
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.optim.optimizers import AdamWConfig
 from lerobot.optim.schedulers import CosineDecayWithWarmupSchedulerConfig
+from lerobot.policies.rtc.configuration_rtc import RTCConfig
 from lerobot.utils.constants import OBS_IMAGES
 
 
@@ -31,9 +32,7 @@ class PI0Config(PreTrainedConfig):
     dtype: str = "float32"  # Options: "bfloat16", "float32"
 
     n_obs_steps: int = 1
-    chunk_size: int = (
-        50  # Number of action steps to predict, in openpi called "action_horizon"
-    )
+    chunk_size: int = 50  # Number of action steps to predict, in openpi called "action_horizon"
     n_action_steps: int = 50  # Number of action steps to execute
 
     # Shorter state and action vectors will be padded to these dimensions
@@ -49,10 +48,10 @@ class PI0Config(PreTrainedConfig):
     min_period: float = 4e-3
     max_period: float = 4.0
 
-    image_resolution: tuple[int, int] = (
-        224,
-        224,
-    )  # see openpi `preprocessing_pytorch.py`
+    # Real-Time Chunking (RTC) configuration
+    rtc_config: RTCConfig | None = None
+
+    image_resolution: tuple[int, int] = (224, 224)  # see openpi `preprocessing_pytorch.py`
 
     # Add empty images. Used to add empty cameras when no image features are present.
     empty_cameras: int = 0
@@ -67,9 +66,7 @@ class PI0Config(PreTrainedConfig):
     )
 
     # Training settings
-    gradient_checkpointing: bool = (
-        False  # Enable gradient checkpointing for memory optimization
-    )
+    gradient_checkpointing: bool = False  # Enable gradient checkpointing for memory optimization
     compile_model: bool = False  # Whether to use torch.compile for model optimization
     compile_mode: str = "max-autotune"  # Torch compile mode
     device: str | None = None  # Device to use for the model (None = auto-detect)
@@ -103,9 +100,7 @@ class PI0Config(PreTrainedConfig):
             raise ValueError(f"Invalid paligemma_variant: {self.paligemma_variant}")
 
         if self.action_expert_variant not in ["gemma_300m", "gemma_2b"]:
-            raise ValueError(
-                f"Invalid action_expert_variant: {self.action_expert_variant}"
-            )
+            raise ValueError(f"Invalid action_expert_variant: {self.action_expert_variant}")
 
         if self.dtype not in ["bfloat16", "float32"]:
             raise ValueError(f"Invalid dtype: {self.dtype}")
