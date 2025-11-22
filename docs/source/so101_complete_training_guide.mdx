@@ -32,6 +32,16 @@
 > [!TIP]
 > カメラの数は1台でも動作しますが、2台のカメラ（例：正面カメラと横カメラ）を使用することで、モデルの性能が向上します。公式ドキュメントや実践的な報告では、正面と横の組み合わせが精度向上に効果的とされています。
 
+### よくある問題と事前準備
+
+このガイドを進める際に、以下の問題が発生する可能性があります。事前に確認しておくとスムーズに進められます：
+
+- **macOSでのOpenMPエラー**: `KMP_DUPLICATE_LIB_OK=TRUE`環境変数の設定が必要な場合があります（[詳細](#問題-omp-error-15-initializing-libompdylib-but-found-libompdylib-already-initialized)）
+- **FFmpegライブラリエラー**: `--dataset.video_backend=pyav`を指定することで回避できます（[詳細](#問題-runtimeerror-could-not-load-libtorchcodecトレーニング中)）
+- **カメラ接続エラー**: カメラの解像度やFPS設定を調整する必要がある場合があります（[詳細](#問題-runtimeerror-opencvcamera0-read-failed-statusfalse)）
+
+これらの問題は、このガイドの[トラブルシューティング](#トラブルシューティング)セクションで詳しく説明しています。
+
 ## ステップ1: カメラのセットアップ
 
 ### 1.1 カメラの検出
@@ -90,28 +100,80 @@ Camera #1:
 
 データセットを記録する前に、以下を確認してください：
 
-1. **USBポートの接続**: Follower、Leader、カメラ2台がすべて接続されている
-2. **カメラIDの確認**: `lerobot-find-cameras opencv`でカメラIDを確認
-3. **ポート番号の確認**: `lerobot-find-port`でFollowerとLeaderのポートを確認
+1. **Hugging Face環境変数の設定**: まず、Hugging Faceのユーザー名を環境変数に設定します：
+   ```bash
+   export HF_USER=$(hf auth whoami | head -n 1 | sed 's/user: //')
+   echo $HF_USER
+   ```
+   これで`HF_USER`環境変数が設定されます。ターミナルを閉じると設定が消えるため、毎回設定するか、`~/.zshrc`や`~/.bashrc`に追加してください。
+
+2. **USBポートの接続**: Follower、Leader、カメラ2台がすべて接続されている
+3. **カメラIDの確認**: `lerobot-find-cameras opencv`でカメラIDを確認
+4. **ポート番号の確認**: `lerobot-find-port`でFollowerとLeaderのポートを確認
+   ```bash
+   lerobot-find-port
+   ```
+   このコマンドを実行すると、接続されているポートのリストが表示されます。FollowerとLeaderのUSBケーブルを順番に抜いて、どのポートがどちらに対応するかを確認してください。
+   
+   > [!IMPORTANT]
+   > FollowerとLeaderのポートを間違えると、エラーが発生します。必ず確認してください。
 
 ### 2.2 データセット記録コマンド
 
 以下のコマンドでデータセットを記録します：
 
 ```bash
+# まず、HF_USER環境変数を設定（毎回実行するか、~/.zshrcに追加）
+# 方法1: hfコマンドから取得（推奨）
+export HF_USER=$(hf auth whoami 2>&1 | grep -oP 'user:\s*\K\S+' | tr -d '[:space:]')
+# 方法2: 直接ユーザー名を指定（環境変数が展開されない場合）
+# export HF_USER="Terisuke"
+echo "HF_USER is set to: '${HF_USER}'"  # 確認用（クォートで囲むと特殊文字が見える）
+
+# データセット記録コマンド（同じシェルで実行）
+# 注意: width、height、fpsの指定が必須です。カメラがサポートしている解像度とFPSを使用してください
+# 注意: ポート番号は、lerobot-find-portで確認した実際のポートに置き換えてください
+
+# 完全版コマンド（ポート番号を実際の値に置き換えてください）
 lerobot-record \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.port=/dev/tty.wchusbserial5AB90691861 \
     --robot.id=my_awesome_follower_arm \
-    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 1280, "height": 960, "fps": 25}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
     --teleop.type=so101_leader \
-    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.port=/dev/tty.wchusbserial5AB90684961 \
     --teleop.id=my_awesome_leader_arm \
     --display_data=true \
-    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
     --dataset.num_episodes=50 \
-    --dataset.single_task="Pick up the red cube and place it in the box"
+    --dataset.single_task="Put a white cat next to a black cat"
 ```
+
+> [!WARNING]
+> **ポート番号の確認**:
+> - ポート番号は、`lerobot-find-port`コマンドで確認してください
+> - FollowerとLeaderのポートが逆になっていると、エラーが発生します
+> - 一般的に、Followerは`/dev/tty.wchusbserial5AB90691861`、Leaderは`/dev/tty.wchusbserial5AB90684961`ですが、環境によって異なる場合があります
+
+> [!IMPORTANT]
+> **カメラ設定の必須項目**:
+> - ロボットで使用するカメラには、`width`、`height`、`fps`の指定が**必須**です
+> - カメラがサポートしていない解像度やFPSを指定すると、エラーが発生する可能性があります
+> - カメラのサポート解像度を確認するには、`lerobot-find-cameras opencv`を実行してください
+> - カメラ0が読み込めない場合は、カメラ1と2を試してください（`index_or_path: 1`と`index_or_path: 2`）
+> - 一般的に、640x480@30fpsは多くのカメラでサポートされています
+
+> [!WARNING]
+> **重要**: `HF_USER`環境変数は、`lerobot-record`コマンドを実行する**同じシェル**で設定する必要があります。新しいターミナルウィンドウやタブでコマンドを実行する場合は、そのシェルでも環境変数を設定してください。
+>
+> 環境変数が設定されていない場合、以下のエラーが発生します：
+> - `OSError: [Errno 30] Read-only file system: '/my_so101_dataset'`（絶対パスとして解釈される）
+> - `yaml.reader.ReaderError: unacceptable character`（特殊文字エラー）
+
+> [!NOTE]
+> - `front`カメラは720p（1280x720）@30fps、`fourcc="MJPG"`を指定して高FPSを確保
+> - `side`カメラは640x480@30fps（必要に応じて調整可能）
+> - 環境変数の代わりに、直接ユーザー名を指定することもできます：`--dataset.repo_id=Terisuke/my_so101_dataset`
 
 **パラメータの説明**：
 
@@ -141,11 +203,28 @@ lerobot-record \
 
 記録中は以下のキーボード操作が可能です：
 
-- **右矢印キー（→）**: 現在のエピソードを完了して保存
+- **右矢印キー（→）**: 現在のエピソードを完了して保存（またはリセット時間をスキップ）
 - **左矢印キー（←）**: 現在のエピソードを破棄して再記録
 - **Escキー**: 記録を停止
 
-各エピソードの記録が完了すると、音声で通知されます。次のエピソードを記録する前に、環境をリセットする時間が与えられます。
+**エピソード記録の流れ**:
+
+1. **エピソード記録**: 各エピソードは最大60秒（`--dataset.episode_time_s`で変更可能）記録されます
+   - 右矢印キーを押すと、エピソードを早期に完了して保存できます
+   - 右矢印キーを押さない場合、60秒経過すると自動的にエピソードが完了します
+
+2. **環境リセット**: エピソード保存後、環境をリセットする時間が最大60秒（`--dataset.reset_time_s`で変更可能）与えられます
+   - 右矢印キーを押すと、リセット時間をスキップして次のエピソードに進みます
+   - 右矢印キーを押さない場合、60秒経過すると自動的に次のエピソードに進みます
+
+3. **次のエピソード**: 上記の流れが`--dataset.num_episodes`で指定した回数（デフォルト50回）繰り返されます
+
+> [!TIP]
+> **効率的な記録方法**:
+> - エピソードが完了したら、すぐに右矢印キーを押して保存します
+> - 環境をリセットしたら、すぐに右矢印キーを押して次のエピソードに進みます
+> - 50エピソードを記録する場合、合計で約100回（エピソード完了50回 + リセットスキップ49回）右矢印キーを押すことになります
+> - ただし、右矢印キーを押さなくても、時間が経過すれば自動的に次のステップに進みます
 
 ### 2.4 データセット記録の完了
 
@@ -153,13 +232,28 @@ lerobot-record \
 
 ## ステップ3: データセットの確認
 
-記録したデータセットを確認するには、Hugging Face Hubでデータセットのページを開くか、以下のコマンドでデータセットをリプレイできます：
+記録したデータセットを確認するには、Hugging Face Hubでデータセットのページを開くか、以下のコマンドでデータセットを可視化できます：
+
+### 3.1 データセットの可視化
+
+```bash
+lerobot-dataset-viz \
+    --repo-id=Terisuke/my_so101_dataset \
+    --episode-index=0
+```
+
+> [!NOTE]
+> macOSでFFmpegライブラリのエラーが発生する場合は、`lerobot-dataset-viz`スクリプトが自動的に`pyav`バックエンドを使用するように修正されています。エラーが発生する場合は、[トラブルシューティング](#データセット可視化の問題)セクションを参照してください。
+
+### 3.2 データセットのリプレイ
+
+記録したデータセットをロボットで再現するには：
 
 ```bash
 lerobot-replay \
-    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.port=/dev/tty.wchusbserial5AB90691861 \
     --robot.id=my_awesome_follower_arm \
     --episode_idx=0
 ```
@@ -168,19 +262,23 @@ lerobot-replay \
 
 ## ステップ4: ポリシーのトレーニング（ACT）
 
-### 4.1 トレーニングコマンド
+### 4.1 基本的なトレーニングコマンド
 
 記録したデータセットを使ってACTポリシーをトレーニングします：
 
 ```bash
+# Hugging Faceユーザー名を設定（必要に応じて）
+export HF_USER="Terisuke"
+
+# 基本的なトレーニングコマンド
 lerobot-train \
-    --dataset.repo_id=${HF_USER}/my_so101_dataset \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
     --policy.type=act \
     --output_dir=outputs/train/act_my_so101_dataset \
     --job_name=act_my_so101_dataset \
-    --policy.device=cuda \
-    --wandb.enable=true \
-    --policy.repo_id=${HF_USER}/my_act_policy
+    --policy.device=mps \
+    --wandb.enable=false \
+    --policy.repo_id=Terisuke/my_act_policy
 ```
 
 **パラメータの説明**：
@@ -191,7 +289,7 @@ lerobot-train \
 - `--job_name`: ジョブ名（ログに表示される）
 - `--policy.device`: 使用するデバイス（`cuda`、`mps`、`cpu`）
   - `cuda`: NVIDIA GPU
-  - `mps`: Apple Silicon（M1/M2/M3 Mac）
+  - `mps`: Apple Silicon（M1/M2/M3/M4 Mac）
   - `cpu`: CPUのみ
 - `--wandb.enable`: Weights & Biasesを使用するか（`true`/`false`）
 - `--policy.repo_id`: トレーニングしたポリシーをアップロードするHugging Face HubのリポジトリID
@@ -199,16 +297,71 @@ lerobot-train \
 > [!TIP]
 > Weights & Biasesを使用する場合は、事前に`wandb login`でログインしてください。
 
-### 4.2 トレーニング時間
+### 4.2 macOS向けの最適化設定（M4 Maxなど高メモリ環境）
+
+M4 Max（128GBメモリなど）のような高メモリ環境では、以下の最適化設定を使用することで、トレーニング速度を大幅に向上させることができます：
+
+```bash
+# OpenMPエラーを回避するための環境変数設定
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+# 最適化されたトレーニングコマンド
+lerobot-train \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
+    --dataset.video_backend=pyav \
+    --policy.type=act \
+    --output_dir=outputs/train/act_my_so101_dataset \
+    --job_name=act_my_so101_dataset \
+    --policy.device=mps \
+    --wandb.enable=false \
+    --policy.repo_id=Terisuke/my_act_policy \
+    --batch_size=64 \
+    --num_workers=12 \
+    --policy.optimizer_lr=3e-5
+```
+
+**最適化パラメータの説明**：
+
+- `KMP_DUPLICATE_LIB_OK=TRUE`: OpenMPライブラリの重複エラーを回避（macOSのconda環境で必要）
+- `--dataset.video_backend=pyav`: ビデオデコーディングに`pyav`バックエンドを使用（FFmpegライブラリの問題を回避）
+- `--batch_size=64`: デフォルト8から64に増加（メモリが許す範囲で調整可能）
+- `--num_workers=12`: データローディングの並列化を強化（デフォルト4から増加）
+- `--policy.optimizer_lr=3e-5`: 学習率を調整（バッチサイズを増やす場合は学習率も調整）
+
+> [!TIP]
+> **バッチサイズの調整**:
+> - メモリが十分な場合: `--batch_size=64`（推奨）
+> - メモリが限られている場合: `--batch_size=32`または`--batch_size=16`
+> - メモリ不足エラーが発生した場合: `--batch_size=8`（デフォルト）に戻す
+
+> [!TIP]
+> **num_workersの調整**:
+> - CPUコア数が多い場合: `--num_workers=12`または`--num_workers=16`
+> - 問題が発生する場合: `--num_workers=8`または`--num_workers=4`に減らす
+
+### 4.3 トレーニング時間
 
 ACTのトレーニングは通常、以下の時間がかかります：
 
-- **100kステップ**: 約1-3時間（GPUによる）
+- **100kステップ**: 約1-3時間（デバイスとバッチサイズによる）
 - **デフォルトのバッチサイズ**: 8（GPUメモリに応じて調整可能）
+- **最適化設定（batch_size=64）**: 約30分-1時間（M4 Maxの場合）
 
 トレーニング中は、`outputs/train/act_my_so101_dataset/checkpoints/`にチェックポイントが保存されます。
 
-### 4.3 Google Colabでのトレーニング
+### 4.4 トレーニングの進行状況を確認
+
+トレーニングの進行状況を確認するには：
+
+```bash
+# チェックポイントの確認
+ls -lh outputs/train/act_my_so101_dataset/checkpoints/
+
+# ログファイルの確認
+tail -f outputs/train/act_my_so101_dataset/logs/*.log
+```
+
+### 4.5 Google Colabでのトレーニング
 
 ローカルコンピュータに強力なGPUがない場合は、Google Colabを使用してトレーニングできます。詳細は[ACTトレーニングノートブック](./notebooks#training-act)を参照してください。
 
@@ -219,23 +372,36 @@ ACTのトレーニングは通常、以下の時間がかかります：
 トレーニングしたポリシーを評価するには、以下のコマンドを使用します：
 
 ```bash
+# Hugging Faceユーザー名を設定（必要に応じて）
+export HF_USER="Terisuke"
+
+# 評価コマンド（ポリシーを使用してロボットを制御）
 lerobot-record \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem585A0076841 \
+    --robot.port=/dev/tty.wchusbserial5AB90691861 \
     --robot.id=my_awesome_follower_arm \
-    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 1280, "height": 960, "fps": 25}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
     --display_data=true \
-    --dataset.repo_id=${HF_USER}/eval_my_so101_dataset \
+    --dataset.repo_id=Terisuke/eval_my_so101_dataset \
     --dataset.num_episodes=10 \
-    --dataset.single_task="Pick up the red cube and place it in the box" \
-    --policy.path=${HF_USER}/my_act_policy
+    --dataset.single_task="Put a white cat next to a black cat" \
+    --policy.path=Terisuke/my_act_policy
 ```
 
 このコマンドは、トレーニングしたポリシーを使用してロボットを制御し、評価エピソードを記録します。
 
+> [!NOTE]
+> 評価時はテレオペレーター（Leaderアーム）は不要です。ポリシーが自動的にロボットを制御します。
+
 ### 5.2 評価結果の確認
 
-評価エピソードは`${HF_USER}/eval_my_so101_dataset`に保存されます。Hugging Face Hubで確認するか、`lerobot-replay`コマンドで再生できます。
+評価エピソードは`Terisuke/eval_my_so101_dataset`に保存されます。Hugging Face Hubで確認するか、`lerobot-replay`コマンドで再生できます：
+
+```bash
+lerobot-replay \
+    --dataset.repo_id=Terisuke/eval_my_so101_dataset \
+    --episode-index=0
+```
 
 ## トラブルシューティング
 
@@ -257,7 +423,82 @@ lerobot-record \
 - カメラを再接続する
 - 他のアプリケーションがカメラを使用していないか確認
 
+### キャリブレーション関連の問題
+
+#### 問題: ロボットアームの動きが鈍い、またはキャリブレーションをやり直したい
+
+**解決策1: プロンプトで再キャリブレーションを選択**
+
+`lerobot-calibrate`コマンドを実行すると、既存のキャリブレーションファイルがある場合、以下のプロンプトが表示されます：
+
+```
+Press ENTER to use provided calibration file associated with the id my_awesome_leader_arm, or type 'c' and press ENTER to run calibration:
+```
+
+このプロンプトで**`c`と入力してEnterを押す**と、新しいキャリブレーションが実行されます。
+
+**解決策2: キャリブレーションファイルを削除してから再実行**
+
+キャリブレーションファイルを削除してから、`lerobot-calibrate`コマンドを再実行します：
+
+```bash
+# キャリブレーションファイルの場所を確認
+# デフォルト: ~/.cache/huggingface/lerobot/calibration/teleoperators/so101_leader/{id}.json
+
+# Leaderアームのキャリブレーションファイルを削除
+rm ~/.cache/huggingface/lerobot/calibration/teleoperators/so101_leader/my_awesome_leader_arm.json
+
+# Followerアームのキャリブレーションファイルを削除（必要に応じて）
+rm ~/.cache/huggingface/lerobot/calibration/robots/so101_follower/my_awesome_follower_arm.json
+
+# キャリブレーションを再実行
+lerobot-calibrate \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5AB90684961 \
+    --teleop.id=my_awesome_leader_arm
+```
+
+**キャリブレーション手順**:
+
+1. **中間位置に移動**: すべての関節を可動範囲の中間位置に移動し、Enterを押します
+2. **全可動範囲を動かす**: 各関節を順番に全可動範囲で動かします
+3. **記録を停止**: すべての関節を動かし終えたら、Enterを押して記録を停止します
+
+> [!TIP]
+> キャリブレーションは、ロボットアームの動きの精度に大きく影響します。動きが鈍い、または不正確な場合は、キャリブレーションをやり直すことをお勧めします。
+
 ### ロボット関連の問題
+
+#### 問題: `RuntimeError: [RxPacketError] Input voltage error!`
+
+**原因**: モーターへの電源供給が不十分、または電圧が適切でない
+
+**解決策**:
+1. **電源アダプターを確認**:
+   - モーターに適切な電圧（通常7.4V〜12V）が供給されているか確認
+   - 電源アダプターの出力電圧と電流容量を確認
+   - 推奨: 7.4V 2A以上、または12V 2A以上の電源アダプター
+
+2. **USBケーブルを確認**:
+   - USBケーブルがしっかり接続されているか確認
+   - USB 3.0対応のケーブルを使用（データ転送が安定）
+   - ケーブルを別のものに交換して試す
+
+3. **モーターの接続を確認**:
+   - モーターへの電源ケーブルがしっかり接続されているか確認
+   - モーターバスの接続を確認
+   - モーターのID設定が正しいか確認（`lerobot-setup-motors`で確認）
+
+4. **電源を再起動**:
+   - モーターの電源を一度切って、数秒待ってから再度投入
+   - USBケーブルを抜いて再度接続
+
+5. **ポートを確認**:
+   - 正しいポートを使用しているか確認（`lerobot-find-port`で確認）
+   - 他のアプリケーションが同じポートを使用していないか確認
+
+> [!WARNING]
+> 電圧エラーが続く場合、モーターやコントローラーボードの故障の可能性があります。電源アダプターの仕様を確認し、推奨電圧・電流範囲内で使用してください。
 
 #### 問題: `ConnectionError: Failed to sync read 'Present_Position'`
 
@@ -277,6 +518,41 @@ lerobot-record \
 - カメラの解像度やFPSを下げる
 - `--display_data=false`に設定する
 
+### カメラ接続の問題
+
+#### 問題: `RuntimeError: OpenCVCamera(0) read failed (status=False)`
+
+カメラが読み込めない場合の解決策：
+
+1. **MJPG形式を削除して試す**:
+   ```bash
+   --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}'
+   ```
+   `fourcc: "MJPG"`を削除します。カメラがMJPGをサポートしていない場合があります。
+
+2. **解像度を下げる**:
+   1280x720がサポートされていない場合は、640x480に下げます：
+   ```bash
+   --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}'
+   ```
+
+3. **カメラが他のアプリで使用されていないか確認**:
+   - 他のアプリケーション（Zoom、Skype、Photo Boothなど）を閉じる
+   - カメラの権限を確認（macOSの場合はシステム環境設定で確認）
+
+4. **カメラIDを再確認**:
+   ```bash
+   lerobot-find-cameras opencv
+   ```
+   カメラIDが0と1で正しいか確認してください。
+
+5. **カメラを再接続**:
+   USBケーブルを抜いて再度接続し、カメラIDを再確認してください。
+
+#### 問題: `OpenCVCamera(0) failed to set fourcc=MJPG`
+
+MJPG形式がサポートされていない場合の警告です。これは問題ありませんが、FPSが低い場合は`fourcc`を削除してください。
+
 ### データセット記録の問題
 
 #### 問題: エピソードが保存されない
@@ -293,21 +569,85 @@ lerobot-record \
 - インターネット接続を確認
 - データセットサイズが大きすぎる場合は、ローカルに保存してから手動でアップロード
 
+### データセット可視化の問題
+
+#### 問題: `RuntimeError: Could not load libtorchcodec` または FFmpegライブラリエラー
+
+**原因**: `torchcodec`がFFmpegライブラリを見つけられない（macOSでよく発生）
+
+**解決策**:
+- `lerobot-dataset-viz`スクリプトは既に`pyav`バックエンドを使用するように修正されています
+- エラーが発生する場合は、最新のコードを使用しているか確認してください
+
 ### トレーニング関連の問題
+
+#### 問題: `OMP: Error #15: Initializing libomp.dylib, but found libomp.dylib already initialized`
+
+**原因**: macOSのconda環境でOpenMPライブラリが重複してリンクされている
+
+**解決策**:
+トレーニングコマンドの前に環境変数を設定：
+
+```bash
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+lerobot-train \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
+    --dataset.video_backend=pyav \
+    --policy.type=act \
+    ...
+```
+
+または、1行で実行：
+
+```bash
+KMP_DUPLICATE_LIB_OK=TRUE lerobot-train \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
+    --dataset.video_backend=pyav \
+    ...
+```
+
+> [!TIP]
+> 永続的に設定するには、`~/.zshrc`または`~/.bashrc`に追加：
+> ```bash
+> echo 'export KMP_DUPLICATE_LIB_OK=TRUE' >> ~/.zshrc
+> source ~/.zshrc
+> ```
+
+#### 問題: `RuntimeError: Could not load libtorchcodec`（トレーニング中）
+
+**原因**: トレーニング中に`torchcodec`がFFmpegライブラリを見つけられない
+
+**解決策**:
+トレーニングコマンドに`--dataset.video_backend=pyav`を追加：
+
+```bash
+lerobot-train \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
+    --dataset.video_backend=pyav \
+    --policy.type=act \
+    ...
+```
 
 #### 問題: GPUメモリ不足
 
 **解決策**:
-- バッチサイズを減らす（`--policy.batch_size=4`）
+- バッチサイズを減らす（`--batch_size=32`または`--batch_size=16`）
 - 画像の解像度を下げる（データセット記録時に640x480を使用）
 - より小さいモデルを使用する
 
 #### 問題: トレーニングが遅い
 
 **解決策**:
-- GPUが正しく認識されているか確認（`nvidia-smi`または`torch.cuda.is_available()`）
-- バッチサイズを増やす（GPUメモリが許す範囲で）
-- データセットをローカルにダウンロードして使用
+- **Apple Silicon（M1/M2/M3/M4）の場合**:
+  - `--batch_size=64`に増やす（メモリが許す範囲で）
+  - `--num_workers=12`に増やす（データローディングの並列化）
+  - `--policy.optimizer_lr=3e-5`に調整（バッチサイズを増やす場合）
+- **NVIDIA GPUの場合**:
+  - GPUが正しく認識されているか確認（`nvidia-smi`または`torch.cuda.is_available()`）
+  - バッチサイズを増やす（GPUメモリが許す範囲で）
+- **共通**:
+  - データセットをローカルにダウンロードして使用
 
 ## 次のステップ
 
