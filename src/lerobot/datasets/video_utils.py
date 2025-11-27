@@ -32,6 +32,15 @@ import torchvision
 from datasets.features.features import register_feature
 from PIL import Image
 
+# Suppress torchvision video deprecation warnings
+# These warnings are expected when using pyav backend and don't affect functionality
+warnings.filterwarnings(
+    "ignore",
+    message=".*video decoding and encoding capabilities.*deprecated.*",
+    category=UserWarning,
+    module="torchvision.io._video_deprecation_warning",
+)
+
 
 def get_safe_default_codec():
     if importlib.util.find_spec("torchcodec"):
@@ -311,6 +320,7 @@ def encode_video_frames(
     fast_decode: int = 0,
     log_level: int | None = av.logging.ERROR,
     overwrite: bool = False,
+    preset: int | None = None,
 ) -> None:
     """More info on ffmpeg arguments tuning on `benchmark/video/README.md`"""
     # Check encoder availability
@@ -359,6 +369,9 @@ def encode_video_frames(
         key = "svtav1-params" if vcodec == "libsvtav1" else "tune"
         value = f"fast-decode={fast_decode}" if vcodec == "libsvtav1" else "fastdecode"
         video_options[key] = value
+
+    if vcodec == "libsvtav1":
+        video_options["preset"] = str(preset) if preset is not None else "12"
 
     # Set logging level
     if log_level is not None:
