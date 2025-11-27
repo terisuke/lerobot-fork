@@ -62,6 +62,39 @@ def update_last_checkpoint(checkpoint_dir: Path) -> Path:
     last_checkpoint_dir.symlink_to(relative_target)
 
 
+def save_lightweight_checkpoint(
+    checkpoint_dir: Path,
+    step: int,
+    cfg: TrainPipelineConfig,
+    policy: PreTrainedPolicy,
+    preprocessor: PolicyProcessorPipeline | None = None,
+    postprocessor: PolicyProcessorPipeline | None = None,
+) -> None:
+    """Save a lightweight checkpoint containing only model weights and configs (no optimizer state).
+
+    This is faster and uses less disk space than a full checkpoint, useful for frequent saves.
+
+    Args:
+        checkpoint_dir: Directory to save the checkpoint.
+        step: Current training step.
+        cfg: Training configuration.
+        policy: Policy model to save.
+        preprocessor: Optional preprocessor pipeline.
+        postprocessor: Optional postprocessor pipeline.
+    """
+    pretrained_dir = checkpoint_dir / PRETRAINED_MODEL_DIR
+    policy.save_pretrained(pretrained_dir)
+    cfg.save_pretrained(pretrained_dir)
+    if preprocessor is not None:
+        preprocessor.save_pretrained(pretrained_dir)
+    if postprocessor is not None:
+        postprocessor.save_pretrained(pretrained_dir)
+    # Save only the training step (no optimizer/scheduler state)
+    save_dir = checkpoint_dir / TRAINING_STATE_DIR
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_training_step(step, save_dir)
+
+
 def save_checkpoint(
     checkpoint_dir: Path,
     step: int,

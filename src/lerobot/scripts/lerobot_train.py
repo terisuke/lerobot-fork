@@ -24,6 +24,11 @@ from accelerate import Accelerator
 from termcolor import colored
 from torch.optim import Optimizer
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 from lerobot.configs import parser
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
@@ -43,6 +48,7 @@ from lerobot.utils.train_utils import (
     get_step_identifier,
     load_training_state,
     save_checkpoint,
+    save_lightweight_checkpoint,
     update_last_checkpoint,
 )
 from lerobot.utils.utils import (
@@ -329,42 +335,217 @@ def train(cfg: TrainPipelineConfig, accelerator: Accelerator | None = None):
     if is_main_process:
         logging.info("Start offline training on a fixed dataset")
 
-    for _ in range(step, cfg.steps):
-        start_time = time.perf_counter()
-        batch = next(dl_iter)
-        batch = preprocessor(batch)
-        train_tracker.dataloading_s = time.perf_counter() - start_time
+    # Track previous update time for speed monitoring
+    previous_updt_s = None
+    # Track memory usage
+    memory_mb = None
 
-        train_tracker, output_dict = update_policy(
-            train_tracker,
-            policy,
-            batch,
-            optimizer,
-            cfg.optimizer.grad_clip_norm,
-            accelerator=accelerator,
-            lr_scheduler=lr_scheduler,
-        )
+    try:
+        for _ in range(step, cfg.steps):
+            start_time = time.perf_counter()
+            batch = next(dl_iter)
+            batch = preprocessor(batch)
+            train_tracker.dataloading_s = time.perf_counter() - start_time
 
-        # Note: eval and checkpoint happens *after* the `step`th training update has completed, so we
-        # increment `step` here.
-        step += 1
-        train_tracker.step()
-        is_log_step = cfg.log_freq > 0 and step % cfg.log_freq == 0 and is_main_process
-        is_saving_step = step % cfg.save_freq == 0 or step == cfg.steps
-        is_eval_step = cfg.eval_freq > 0 and step % cfg.eval_freq == 0
+            train_tracker, output_dict = update_policy(
+                train_tracker,
+                policy,
+                batch,
+                optimizer,
+                cfg.optimizer.grad_clip_norm,
+                accelerator=accelerator,
+                lr_scheduler=lr_scheduler,
+            )
 
-        if is_log_step:
-            logging.info(train_tracker)
-            if wandb_logger:
-                wandb_log_dict = train_tracker.to_dict()
-                if output_dict:
-                    wandb_log_dict.update(output_dict)
-                wandb_logger.log_dict(wandb_log_dict, step)
-            train_tracker.reset_averages()
+            # Note: eval and checkpoint happens *after* the `step`th training update has completed, so we
+            # increment `step` here.
+            step += 1
+            train_tracker.step()
+            is_log_step = cfg.log_freq > 0 and step % cfg.log_freq == 0 and is_main_process
+            is_saving_step = step % cfg.save_freq == 0 or step == cfg.steps
+            is_saving_minor = (
+                cfg.save_checkpoint
+                and cfg.save_freq_minor > 0
+                and step % cfg.save_freq_minor == 0
+                and not is_saving_step
+            )
+            is_eval_step = cfg.eval_freq > 0 and step % cfg.eval_freq == 0
 
-        if cfg.save_checkpoint and is_saving_step:
-            if is_main_process:
-                logging.info(f"Checkpoint policy after step {step}")
+            if is_log_step:
+                # Monitor memory usage if psutil is available
+                if psutil is not None and is_main_process:
+                    try:
+                        process = psutil.Process()
+                        memory_mb = process.memory_info().rss / 1024 / 1024
+                        logging.info(f"Memory usage: {memory_mb:.1f} MB")
+                    except Exception:
+                        pass  # Ignore errors in memory monitoring
+
+                # Monitor training speed degradation
+                if is_main_process:
+                    current_updt_s = train_tracker.update_s.avg
+                    if previous_updt_s is not None and current_updt_s > previous_updt_s * 2.0:
+                        logging.warning(
+                            colored(
+                                f"Training speed significantly decreased: {previous_updt_s:.2f}s -> {current_updt_s:.2f}s per step",
+                                "yellow",
+                            )
+                        )
+                    previous_updt_s = current_updt_s
+
+                logging.info(train_tracker)
+                if wandb_logger:
+                    wandb_log_dict = train_tracker.to_dict()
+                    if output_dict:
+                        wandb_log_dict.update(output_dict)
+                    if memory_mb is not None:
+                        wandb_log_dict["memory_mb"] = memory_mb
+                    wandb_logger.log_dict(wandb_log_dict, step)
+                train_tracker.reset_averages()
+
+            # Save lightweight checkpoint (model weights only, no optimizer state)
+            if is_saving_minor:
+                if is_main_process:
+                    logging.info(f"Saving lightweight checkpoint at step {step}")
+                    checkpoint_dir = get_step_checkpoint_dir(cfg.output_dir, cfg.steps, step)
+                    save_lightweight_checkpoint(
+                        checkpoint_dir=checkpoint_dir,
+                        step=step,
+                        cfg=cfg,
+                        policy=accelerator.unwrap_model(policy),
+                        preprocessor=preprocessor,
+                        postprocessor=postprocessor,
+                    )
+                    # Update last checkpoint symlink to point to lightweight checkpoint
+                    update_last_checkpoint(checkpoint_dir)
+                accelerator.wait_for_everyone()
+
+            if cfg.save_checkpoint and is_saving_step:
+                if is_main_process:
+                    logging.info(f"Checkpoint policy after step {step}")
+                    checkpoint_dir = get_step_checkpoint_dir(cfg.output_dir, cfg.steps, step)
+                    save_checkpoint(
+                        checkpoint_dir=checkpoint_dir,
+                        step=step,
+                        cfg=cfg,
+                        policy=accelerator.unwrap_model(policy),
+                        optimizer=optimizer,
+                        scheduler=lr_scheduler,
+                        preprocessor=preprocessor,
+                        postprocessor=postprocessor,
+                    )
+                    update_last_checkpoint(checkpoint_dir)
+                    if wandb_logger:
+                        wandb_logger.log_policy(checkpoint_dir)
+
+                accelerator.wait_for_everyone()
+
+            if cfg.env and is_eval_step:
+                if is_main_process:
+                    step_id = get_step_identifier(step, cfg.steps)
+                    logging.info(f"Eval policy at step {step}")
+                    with torch.no_grad(), accelerator.autocast():
+                        eval_info = eval_policy_all(
+                            envs=eval_env,  # dict[suite][task_id] -> vec_env
+                            policy=accelerator.unwrap_model(policy),
+                            env_preprocessor=env_preprocessor,
+                            env_postprocessor=env_postprocessor,
+                            preprocessor=preprocessor,
+                            postprocessor=postprocessor,
+                            n_episodes=cfg.eval.n_episodes,
+                            videos_dir=cfg.output_dir / "eval" / f"videos_step_{step_id}",
+                            max_episodes_rendered=4,
+                            start_seed=cfg.seed,
+                            max_parallel_tasks=cfg.env.max_parallel_tasks,
+                        )
+                    # overall metrics (suite-agnostic)
+                    aggregated = eval_info["overall"]
+
+                    # optional: per-suite logging
+                    for suite, suite_info in eval_info.items():
+                        logging.info("Suite %s aggregated: %s", suite, suite_info)
+
+                    # meters/tracker
+                    eval_metrics = {
+                        "avg_sum_reward": AverageMeter("∑rwrd", ":.3f"),
+                        "pc_success": AverageMeter("success", ":.1f"),
+                        "eval_s": AverageMeter("eval_s", ":.3f"),
+                    }
+                    eval_tracker = MetricsTracker(
+                        cfg.batch_size,
+                        dataset.num_frames,
+                        dataset.num_episodes,
+                        eval_metrics,
+                        initial_step=step,
+                        accelerator=accelerator,
+                    )
+                    eval_tracker.eval_s = aggregated.pop("eval_s")
+                    eval_tracker.avg_sum_reward = aggregated.pop("avg_sum_reward")
+                    eval_tracker.pc_success = aggregated.pop("pc_success")
+                    if wandb_logger:
+                        wandb_log_dict = {**eval_tracker.to_dict(), **eval_info}
+                        wandb_logger.log_dict(wandb_log_dict, step, mode="eval")
+                        wandb_logger.log_video(eval_info["overall"]["video_paths"][0], step, mode="eval")
+
+                accelerator.wait_for_everyone()
+
+    except KeyboardInterrupt:
+        if is_main_process:
+            logging.info(
+                colored(
+                    f"\nKeyboardInterrupt detected. Saving checkpoint at step {step} before exiting...",
+                    "yellow",
+                    attrs=["bold"],
+                )
+            )
+            # Calculate the next round step (1000 step intervals)
+            round_step = ((step // 1000) + 1) * 1000
+            # Only wait for round step if we're close (within 100 steps)
+            if round_step - step <= 100 and step < cfg.steps:
+                logging.info(
+                    colored(
+                        f"Waiting to reach round step {round_step} (current: {step}) before saving...",
+                        "yellow",
+                    )
+                )
+                # Continue training until we reach the round step
+                while step < round_step and step < cfg.steps:
+                    try:
+                        start_time = time.perf_counter()
+                        batch = next(dl_iter)
+                        batch = preprocessor(batch)
+                        train_tracker.dataloading_s = time.perf_counter() - start_time
+
+                        train_tracker, output_dict = update_policy(
+                            train_tracker,
+                            policy,
+                            batch,
+                            optimizer,
+                            cfg.optimizer.grad_clip_norm,
+                            accelerator=accelerator,
+                            lr_scheduler=lr_scheduler,
+                        )
+
+                        step += 1
+                        train_tracker.step()
+
+                        if cfg.log_freq > 0 and step % cfg.log_freq == 0:
+                            logging.info(train_tracker)
+                            train_tracker.reset_averages()
+                    except KeyboardInterrupt:
+                        # Second Ctrl+C: save immediately
+                        logging.info(
+                            colored(
+                                "Second KeyboardInterrupt detected. Saving immediately at current step...",
+                                "red",
+                                attrs=["bold"],
+                            )
+                        )
+                        break
+
+            # Save checkpoint at current step
+            if cfg.save_checkpoint:
+                logging.info(f"Saving checkpoint at step {step}")
                 checkpoint_dir = get_step_checkpoint_dir(cfg.output_dir, cfg.steps, step)
                 save_checkpoint(
                     checkpoint_dir=checkpoint_dir,
@@ -379,57 +560,17 @@ def train(cfg: TrainPipelineConfig, accelerator: Accelerator | None = None):
                 update_last_checkpoint(checkpoint_dir)
                 if wandb_logger:
                     wandb_logger.log_policy(checkpoint_dir)
-
-            accelerator.wait_for_everyone()
-
-        if cfg.env and is_eval_step:
-            if is_main_process:
-                step_id = get_step_identifier(step, cfg.steps)
-                logging.info(f"Eval policy at step {step}")
-                with torch.no_grad(), accelerator.autocast():
-                    eval_info = eval_policy_all(
-                        envs=eval_env,  # dict[suite][task_id] -> vec_env
-                        policy=accelerator.unwrap_model(policy),
-                        env_preprocessor=env_preprocessor,
-                        env_postprocessor=env_postprocessor,
-                        preprocessor=preprocessor,
-                        postprocessor=postprocessor,
-                        n_episodes=cfg.eval.n_episodes,
-                        videos_dir=cfg.output_dir / "eval" / f"videos_step_{step_id}",
-                        max_episodes_rendered=4,
-                        start_seed=cfg.seed,
-                        max_parallel_tasks=cfg.env.max_parallel_tasks,
+                logging.info(
+                    colored(
+                        f"Checkpoint saved successfully at {checkpoint_dir}",
+                        "green",
+                        attrs=["bold"],
                     )
-                # overall metrics (suite-agnostic)
-                aggregated = eval_info["overall"]
-
-                # optional: per-suite logging
-                for suite, suite_info in eval_info.items():
-                    logging.info("Suite %s aggregated: %s", suite, suite_info)
-
-                # meters/tracker
-                eval_metrics = {
-                    "avg_sum_reward": AverageMeter("∑rwrd", ":.3f"),
-                    "pc_success": AverageMeter("success", ":.1f"),
-                    "eval_s": AverageMeter("eval_s", ":.3f"),
-                }
-                eval_tracker = MetricsTracker(
-                    cfg.batch_size,
-                    dataset.num_frames,
-                    dataset.num_episodes,
-                    eval_metrics,
-                    initial_step=step,
-                    accelerator=accelerator,
                 )
-                eval_tracker.eval_s = aggregated.pop("eval_s")
-                eval_tracker.avg_sum_reward = aggregated.pop("avg_sum_reward")
-                eval_tracker.pc_success = aggregated.pop("pc_success")
-                if wandb_logger:
-                    wandb_log_dict = {**eval_tracker.to_dict(), **eval_info}
-                    wandb_logger.log_dict(wandb_log_dict, step, mode="eval")
-                    wandb_logger.log_video(eval_info["overall"]["video_paths"][0], step, mode="eval")
 
-            accelerator.wait_for_everyone()
+        accelerator.wait_for_everyone()
+        if is_main_process:
+            logging.info(colored("Training interrupted and checkpoint saved. Exiting gracefully.", "yellow", attrs=["bold"]))
 
     if eval_env:
         close_envs(eval_env)

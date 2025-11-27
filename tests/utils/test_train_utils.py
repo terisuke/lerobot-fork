@@ -33,6 +33,7 @@ from lerobot.utils.train_utils import (
     load_training_state,
     load_training_step,
     save_checkpoint,
+    save_lightweight_checkpoint,
     save_training_state,
     save_training_step,
     update_last_checkpoint,
@@ -98,3 +99,17 @@ def test_save_load_training_state(tmp_path, optimizer, scheduler):
     assert loaded_step == 10
     assert loaded_optimizer is optimizer
     assert loaded_scheduler is scheduler
+
+
+@patch("lerobot.utils.train_utils.save_training_state")
+def test_save_lightweight_checkpoint(mock_save_training_state, tmp_path):
+    """Test that lightweight checkpoint saves model and config but not optimizer state."""
+    policy = Mock()
+    cfg = Mock()
+    save_lightweight_checkpoint(tmp_path, 10, cfg, policy)
+    policy.save_pretrained.assert_called_once()
+    cfg.save_pretrained.assert_called_once()
+    # Should not call save_training_state (which saves optimizer)
+    mock_save_training_state.assert_not_called()
+    # But should save training step
+    assert (tmp_path / TRAINING_STATE_DIR / TRAINING_STEP).is_file()

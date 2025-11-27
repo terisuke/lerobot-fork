@@ -137,8 +137,12 @@ class MetricsTracker:
         self.epochs = self.samples / self._num_frames
 
     def __str__(self) -> str:
+        # Show both formatted and raw step number for clarity
+        step_display = f"step:{format_big_number(self.steps)}"
+        if self.steps >= 1000:
+            step_display += f"({self.steps})"
         display_list = [
-            f"step:{format_big_number(self.steps)}",
+            step_display,
             # number of samples seen during training
             f"smpl:{format_big_number(self.samples)}",
             # number of episodes seen during training

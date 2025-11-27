@@ -59,6 +59,9 @@ class TrainPipelineConfig(HubMixin):
     save_checkpoint: bool = True
     # Checkpoint is saved every `save_freq` training iterations and after the last training step.
     save_freq: int = 20_000
+    # Lightweight checkpoint (model weights only, no optimizer state) saved every `save_freq_minor` steps.
+    # Set to 0 to disable. Useful for frequent saves without the overhead of full checkpoints.
+    save_freq_minor: int = 0
     use_policy_training_preset: bool = True
     optimizer: OptimizerConfig | None = None
     scheduler: LRSchedulerConfig | None = None

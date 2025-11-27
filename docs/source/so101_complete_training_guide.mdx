@@ -315,29 +315,38 @@ lerobot-train \
     --policy.device=mps \
     --wandb.enable=false \
     --policy.repo_id=Terisuke/my_act_policy \
-    --batch_size=64 \
-    --num_workers=12 \
-    --policy.optimizer_lr=3e-5
+    --batch_size=32 \
+    --num_workers=8 \
+    --policy.optimizer_lr=3e-5 \
+    --save_freq_minor=5000
 ```
 
 **最適化パラメータの説明**：
 
 - `KMP_DUPLICATE_LIB_OK=TRUE`: OpenMPライブラリの重複エラーを回避（macOSのconda環境で必要）
 - `--dataset.video_backend=pyav`: ビデオデコーディングに`pyav`バックエンドを使用（FFmpegライブラリの問題を回避）
-- `--batch_size=64`: デフォルト8から64に増加（メモリが許す範囲で調整可能）
-- `--num_workers=12`: データローディングの並列化を強化（デフォルト4から増加）
+- `--batch_size=32`: デフォルト8から32に増加（メモリが許す範囲で調整可能）
+- `--num_workers=8`: データローディングの並列化を強化（デフォルト4から増加）
 - `--policy.optimizer_lr=3e-5`: 学習率を調整（バッチサイズを増やす場合は学習率も調整）
+- `--save_freq_minor=5000`: 軽量チェックポイント（モデルのみ）を5,000ステップごとに保存（推奨）
 
 > [!TIP]
 > **バッチサイズの調整**:
-> - メモリが十分な場合: `--batch_size=64`（推奨）
-> - メモリが限られている場合: `--batch_size=32`または`--batch_size=16`
+> - メモリが十分な場合: `--batch_size=32`または`--batch_size=64`（推奨）
+> - メモリが限られている場合: `--batch_size=16`
 > - メモリ不足エラーが発生した場合: `--batch_size=8`（デフォルト）に戻す
 
 > [!TIP]
 > **num_workersの調整**:
-> - CPUコア数が多い場合: `--num_workers=12`または`--num_workers=16`
-> - 問題が発生する場合: `--num_workers=8`または`--num_workers=4`に減らす
+> - CPUコア数が多い場合: `--num_workers=8`または`--num_workers=12`
+> - 問題が発生する場合: `--num_workers=4`に減らす
+
+> [!TIP]
+> **チェックポイント保存の設定**:
+> - `--save_freq=20000`: 完全なチェックポイント（モデル+最適化状態）を20,000ステップごとに保存（デフォルト）
+> - `--save_freq_minor=5000`: 軽量チェックポイント（モデルのみ）を5,000ステップごとに保存（推奨）
+> - 軽量チェックポイントは再開には使用できませんが、モデルの評価には使用できます
+> - Ctrl+Cで停止した場合、自動的にチェックポイントが保存されます
 
 ### 4.3 トレーニング時間
 
