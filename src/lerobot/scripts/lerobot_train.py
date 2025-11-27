@@ -378,8 +378,8 @@ def train(cfg: TrainPipelineConfig, accelerator: Accelerator | None = None):
                         process = psutil.Process()
                         memory_mb = process.memory_info().rss / 1024 / 1024
                         logging.info(f"Memory usage: {memory_mb:.1f} MB")
-                    except Exception:
-                        pass  # Ignore errors in memory monitoring
+                    except Exception as e:
+                        logging.warning(f"Failed to monitor memory usage: {e}")
 
                 # Monitor training speed degradation
                 if is_main_process:
@@ -570,7 +570,11 @@ def train(cfg: TrainPipelineConfig, accelerator: Accelerator | None = None):
 
         accelerator.wait_for_everyone()
         if is_main_process:
-            logging.info(colored("Training interrupted and checkpoint saved. Exiting gracefully.", "yellow", attrs=["bold"]))
+            logging.info(
+                colored(
+                    "Training interrupted and checkpoint saved. Exiting gracefully.", "yellow", attrs=["bold"]
+                )
+            )
 
     if eval_env:
         close_envs(eval_env)
