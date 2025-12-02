@@ -46,23 +46,10 @@ def main():
     task = ""  # something like "pick the red block"
     robot_type = ""  # something like "so100_follower" for multi-embodiment datasets
 
-<<<<<<< HEAD
-for _ in range(MAX_EPISODES):
-    for _ in range(MAX_STEPS_PER_EPISODE):
-        obs = robot.get_observation()
-        obs_frame = build_inference_frame(
-            observation=obs,
-            ds_features=dataset_features,
-            device=device,
-            task=task,
-            robot_type=robot_type,
-        )
-=======
     # This is used to match the raw observation keys to the keys expected by the policy
     action_features = hw_to_dataset_features(robot.action_features, "action")
     obs_features = hw_to_dataset_features(robot.observation_features, "observation")
     dataset_features = {**action_features, **obs_features}
->>>>>>> upstream/main
 
     for _ in range(MAX_EPISODES):
         for _ in range(MAX_STEPS_PER_EPISODE):
