@@ -56,12 +56,26 @@ def main():
         joint_names=list(follower.bus.motors.keys()),
     )
 
+<<<<<<< HEAD
+# Build pipeline to convert teleop joints to EE action
+leader_to_ee = RobotProcessorPipeline[RobotAction, RobotAction](
+    steps=[
+        ForwardKinematicsJointsToEE(
+            kinematics=leader_kinematics_solver,
+            motor_names=list(leader.bus.motors.keys()),
+        ),
+    ],
+    to_transition=robot_action_to_transition,
+    to_output=transition_to_robot_action,
+)
+=======
     # NOTE: It is highly recommended to use the urdf in the SO-ARM100 repo: https://github.com/TheRobotStudio/SO-ARM100/blob/main/Simulation/SO101/so101_new_calib.urdf
     leader_kinematics_solver = RobotKinematics(
         urdf_path="./SO101/so101_new_calib.urdf",
         target_frame_name="gripper_frame_link",
         joint_names=list(leader.bus.motors.keys()),
     )
+>>>>>>> upstream/main
 
     # Build pipeline to convert teleop joints to EE action
     leader_to_ee = RobotProcessorPipeline[RobotAction, RobotAction](

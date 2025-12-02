@@ -32,15 +32,6 @@ import torchvision
 from datasets.features.features import register_feature
 from PIL import Image
 
-# Suppress torchvision video deprecation warnings
-# These warnings are expected when using pyav backend and don't affect functionality
-warnings.filterwarnings(
-    "ignore",
-    message=".*video decoding and encoding capabilities.*deprecated.*",
-    category=UserWarning,
-    module="torchvision.io._video_deprecation_warning",
-)
-
 
 def get_safe_default_codec():
     if importlib.util.find_spec("torchcodec"):

@@ -114,8 +114,16 @@ def save_decoded_frames(
     for i, ts in enumerate(timestamps):
         idx = int(ts * fps)
         frame_hwc = (frames[i].permute((1, 2, 0)) * 255).type(torch.uint8).cpu().numpy()
+<<<<<<< HEAD
+        PIL.Image.fromarray(frame_hwc).save(save_dir / f"frame_{idx:06d}_decoded.png")
+        shutil.copyfile(
+            imgs_dir / f"frame_{idx:06d}.png",
+            save_dir / f"frame_{idx:06d}_original.png",
+        )
+=======
         PIL.Image.fromarray(frame_hwc).save(save_dir / f"frame-{idx:06d}_decoded.png")
         shutil.copyfile(imgs_dir / f"frame-{idx:06d}.png", save_dir / f"frame-{idx:06d}_original.png")
+>>>>>>> upstream/main
 
 
 def save_first_episode(imgs_dir: Path, dataset: LeRobotDataset) -> None:

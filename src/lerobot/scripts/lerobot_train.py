@@ -378,8 +378,8 @@ def train(cfg: TrainPipelineConfig, accelerator: Accelerator | None = None):
                         process = psutil.Process()
                         memory_mb = process.memory_info().rss / 1024 / 1024
                         logging.info(f"Memory usage: {memory_mb:.1f} MB")
-                    except Exception as e:
-                        logging.warning(f"Failed to monitor memory usage: {e}")
+                    except Exception:
+                        pass  # Ignore errors in memory monitoring
 
                 # Monitor training speed degradation
                 if is_main_process:
