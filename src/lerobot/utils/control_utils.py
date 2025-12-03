@@ -189,11 +189,16 @@ def init_keyboard_listener():
                     "  - Press ENTER during recording to exit early and save the episode\n"
                     "  - Press 'q' + ENTER to quit recording\n"
                     "  - Press 'r' + ENTER to re-record the current episode\n"
-                    "\nNote: These commands will only be checked at the start of each episode.\n"
+                    "\nNote: These commands will be checked continuously during recording.\n"
                     + "="*80
                 )
                 events["use_fallback_input"] = True
             return None, events
+        # Even if listener appears alive, enable fallback mode as a backup
+        # This is especially important on macOS where listener can be "alive" but not receiving events
+        import sys
+        if sys.stdin.isatty():
+            events["use_fallback_input"] = True
     except Exception as e:
         logging.warning(
             f"Failed to start keyboard listener: {e}. This is expected in headless environments."
@@ -208,7 +213,7 @@ def init_keyboard_listener():
                 "  - Press ENTER during recording to exit early and save the episode\n"
                 "  - Press 'q' + ENTER to quit recording\n"
                 "  - Press 'r' + ENTER to re-record the current episode\n"
-                "\nNote: These commands will only be checked at the start of each episode.\n"
+                "\nNote: These commands will be checked continuously during recording.\n"
                 + "="*80
             )
             events["use_fallback_input"] = True

@@ -242,27 +242,66 @@ def check_fallback_input(events: dict):
     """Check for keyboard input when pynput listener is unavailable (e.g., no accessibility permissions on macOS)."""
     import sys
     import select
+    import termios
+    import tty
     
     # Use select to check if stdin has data available (Unix-like systems including macOS)
     try:
+        # Check if stdin is a TTY (not a pipe or redirected)
+        if not sys.stdin.isatty():
+            return
+        
         # Check if there's input available without blocking (0 second timeout)
         ready, _, _ = select.select([sys.stdin], [], [], 0)
         if ready:
-            line = sys.stdin.readline().strip().lower()
-            if line == '':
-                # Just Enter pressed - exit early
-                print("\nEnter pressed. Exiting episode early...")
-                events["exit_early"] = True
-            elif line == 'q':
-                print("\n'q' entered. Stopping recording...")
-                events["stop_recording"] = True
-                events["exit_early"] = True
-            elif line == 'r':
-                print("\n'r' entered. Will re-record this episode...")
-                events["rerecord_episode"] = True
-                events["exit_early"] = True
+            # Save terminal settings
+            old_settings = termios.tcgetattr(sys.stdin)
+            try:
+                # Set terminal to raw mode to read single characters
+                tty.setraw(sys.stdin.fileno())
+                # Read a single character
+                char = sys.stdin.read(1)
+                
+                if char == '\r' or char == '\n':
+                    # Enter key pressed - exit early
+                    print("\nEnter pressed. Exiting episode early...")
+                    events["exit_early"] = True
+                elif char == 'q':
+                    print("\n'q' entered. Stopping recording...")
+                    events["stop_recording"] = True
+                    events["exit_early"] = True
+                elif char == 'r':
+                    print("\n'r' entered. Will re-record this episode...")
+                    events["rerecord_episode"] = True
+                    events["exit_early"] = True
+                # Ignore other characters
+            finally:
+                # Restore terminal settings
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    except (ImportError, OSError, termios.error):
+        # termios may not be available on all systems, or stdin may not be a TTY
+        # Fall back to line-based input
+        try:
+            ready, _, _ = select.select([sys.stdin], [], [], 0)
+            if ready:
+                line = sys.stdin.readline().strip().lower()
+                if line == '':
+                    # Just Enter pressed - exit early
+                    print("\nEnter pressed. Exiting episode early...")
+                    events["exit_early"] = True
+                elif line == 'q':
+                    print("\n'q' entered. Stopping recording...")
+                    events["stop_recording"] = True
+                    events["exit_early"] = True
+                elif line == 'r':
+                    print("\n'r' entered. Will re-record this episode...")
+                    events["rerecord_episode"] = True
+                    events["exit_early"] = True
+        except Exception:
+            # select may not work in all environments, silently ignore
+            pass
     except Exception:
-        # select may not work in all environments, silently ignore
+        # Any other error, silently ignore
         pass
 
 
@@ -330,9 +369,9 @@ def record_loop(
     while control_time_s is None or timestamp < control_time_s:
         start_loop_t = time.perf_counter()
 
-        # Check fallback input if keyboard listener is not available
-        if events.get("use_fallback_input", False):
-            check_fallback_input(events)
+        # Always check fallback input (non-blocking, safe to call even if not needed)
+        # This ensures it works even if keyboard listener appears to be alive but isn't actually receiving events
+        check_fallback_input(events)
 
         if events["exit_early"]:
             events["exit_early"] = False
