@@ -238,6 +238,34 @@ class RecordConfig:
 """
 
 
+def check_fallback_input(events: dict):
+    """Check for keyboard input when pynput listener is unavailable (e.g., no accessibility permissions on macOS)."""
+    import sys
+    import select
+    
+    # Use select to check if stdin has data available (Unix-like systems including macOS)
+    try:
+        # Check if there's input available without blocking (0 second timeout)
+        ready, _, _ = select.select([sys.stdin], [], [], 0)
+        if ready:
+            line = sys.stdin.readline().strip().lower()
+            if line == '':
+                # Just Enter pressed - exit early
+                print("\nEnter pressed. Exiting episode early...")
+                events["exit_early"] = True
+            elif line == 'q':
+                print("\n'q' entered. Stopping recording...")
+                events["stop_recording"] = True
+                events["exit_early"] = True
+            elif line == 'r':
+                print("\n'r' entered. Will re-record this episode...")
+                events["rerecord_episode"] = True
+                events["exit_early"] = True
+    except Exception:
+        # select may not work in all environments, silently ignore
+        pass
+
+
 @safe_stop_image_writer
 def record_loop(
     robot: Robot,
@@ -301,6 +329,10 @@ def record_loop(
 
     while control_time_s is None or timestamp < control_time_s:
         start_loop_t = time.perf_counter()
+
+        # Check fallback input if keyboard listener is not available
+        if events.get("use_fallback_input", False):
+            check_fallback_input(events)
 
         if events["exit_early"]:
             events["exit_early"] = False
