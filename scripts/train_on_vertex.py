@@ -192,10 +192,23 @@ def main():
     # Step 2: Download config if it's on GCS
     if args.config.startswith("gs://"):
         logging.info("Step 2: Downloading config from Cloud Storage")
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp_file:
-            local_config_path = tmp_file.name
-        download_from_gcs(args.config, os.path.dirname(local_config_path))
-        config_path = local_config_path
+        # Create temp directory for config
+        temp_dir = tempfile.mkdtemp()
+        # Download the config file
+        blob_client = storage.Client()
+        
+        # Parse GCS path
+        path_parts = args.config[5:].split("/", 1)
+        bucket_name = path_parts[0]
+        blob_name = path_parts[1]
+        
+        bucket = blob_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        
+        # Download to temp file
+        config_path = os.path.join(temp_dir, "config.yaml")
+        blob.download_to_filename(config_path)
+        logging.info(f"Downloaded config to {config_path}")
     else:
         config_path = args.config
         logging.info(f"Using local config at {config_path}")
@@ -205,12 +218,27 @@ def main():
 
     # Load config from YAML file
     import yaml
+    
+    logging.info(f"Loading config from: {config_path}")
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    
     with open(config_path, 'r') as f:
         config_dict = yaml.safe_load(f)
     
+    if config_dict is None:
+        raise ValueError(f"Config file is empty or invalid: {config_path}")
+    
+    logging.info(f"Loaded config keys: {list(config_dict.keys())}")
+    
     # Override dataset and output paths
+    if 'training' not in config_dict:
+        raise ValueError(f"Config must contain 'training' section. Got keys: {list(config_dict.keys())}")
+    
     config_dict['training']['dataset_repo_id'] = dataset_path
     config_dict['training']['output_dir'] = args.local_output_dir
+    
+    logging.info(f"Config after overrides: dataset={dataset_path}, output={args.local_output_dir}")
     
     # Create config object
     cfg = TrainPipelineConfig(**config_dict)
