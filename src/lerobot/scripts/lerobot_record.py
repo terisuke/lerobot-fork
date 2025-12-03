@@ -359,6 +359,10 @@ def record_loop(
                 "This is likely to happen when resetting the environment without a teleop device."
                 "The robot won't be at its rest position at the start of the next episode."
             )
+            # Check for exit_early before continuing (important for reset phase)
+            if events["exit_early"]:
+                events["exit_early"] = False
+                break
             # Update timestamp even when skipping action generation to ensure loop termination
             dt_s = time.perf_counter() - start_loop_t
             precise_sleep(1 / fps - dt_s)

@@ -144,7 +144,11 @@ def init_keyboard_listener():
         return listener, events
 
     # Only import pynput if not in a headless environment
-    from pynput import keyboard
+    try:
+        from pynput import keyboard
+    except ImportError:
+        logging.warning("pynput not available. Keyboard shortcuts will not work.")
+        return None, events
 
     def on_press(key):
         try:
@@ -162,8 +166,25 @@ def init_keyboard_listener():
         except Exception as e:
             print(f"Error handling key press: {e}")
 
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
+    try:
+        listener = keyboard.Listener(on_press=on_press)
+        listener.start()
+        # Give the listener a moment to start and check if it's actually working
+        import time as time_module
+        time_module.sleep(0.1)
+        if not listener.is_alive():
+            logging.warning(
+                "Keyboard listener failed to start. On macOS, you may need to grant "
+                "accessibility permissions in System Settings > Privacy & Security > Accessibility. "
+                "Keyboard shortcuts will not work until permissions are granted."
+            )
+            return None, events
+    except Exception as e:
+        logging.warning(
+            f"Failed to start keyboard listener: {e}. On macOS, you may need to grant "
+            "accessibility permissions in System Settings > Privacy & Security > Accessibility."
+        )
+        return None, events
 
     return listener, events
 
