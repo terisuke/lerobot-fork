@@ -244,13 +244,13 @@ def check_fallback_input(events: dict):
     import select
     import termios
     import tty
-    
+
     # Use select to check if stdin has data available (Unix-like systems including macOS)
     try:
         # Check if stdin is a TTY (not a pipe or redirected)
         if not sys.stdin.isatty():
             return
-        
+
         # Check if there's input available without blocking (0 second timeout)
         ready, _, _ = select.select([sys.stdin], [], [], 0)
         if ready:
@@ -261,7 +261,7 @@ def check_fallback_input(events: dict):
                 tty.setraw(sys.stdin.fileno())
                 # Read a single character
                 char = sys.stdin.read(1)
-                
+
                 if char == '\r' or char == '\n':
                     # Enter key pressed - exit early
                     print("\nEnter pressed. Exiting episode early...")
@@ -297,12 +297,12 @@ def check_fallback_input(events: dict):
                     print("\n'r' entered. Will re-record this episode...")
                     events["rerecord_episode"] = True
                     events["exit_early"] = True
-        except Exception:
-            # select may not work in all environments, silently ignore
-            pass
-    except Exception:
-        # Any other error, silently ignore
-        pass
+            except Exception as e:
+                # select may not work in all environments; log for diagnostics and continue
+                logging.debug("select() or stdin read failed while waiting for input: %s", e)
+    except Exception as e:
+        # Any other error: log and continue (do not silently swallow)
+        logging.debug("Unexpected error in check_fallback_input: %s", e)
 
 
 @safe_stop_image_writer
