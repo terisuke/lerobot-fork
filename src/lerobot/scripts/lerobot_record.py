@@ -65,6 +65,8 @@ from pathlib import Path
 from pprint import pformat
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig  # noqa: F401
 from lerobot.cameras.realsense.configuration_realsense import (  # noqa: F401
     RealSenseCameraConfig,
