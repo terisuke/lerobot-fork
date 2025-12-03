@@ -1,0 +1,61 @@
+# Dockerfile for Vertex AI Training
+# Builds a container image with LeRobot and all dependencies for cloud training
+
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=$CUDA_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    git \
+    cmake \
+    build-essential \
+    pkg-config \
+    libavformat-dev \
+    libavcodec-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libavfilter-dev \
+    ffmpeg \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.10 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Install Google Cloud Storage client
+RUN pip install google-cloud-storage google-cloud-aiplatform
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements-ubuntu.txt /app/
+RUN pip install -r requirements-ubuntu.txt
+
+# Copy source code
+COPY . /app/
+
+# Install LeRobot in editable mode
+RUN pip install -e .
+
+# Create directories for datasets and outputs
+RUN mkdir -p /app/data /app/outputs
+
+# Set the entrypoint to the training script
+ENTRYPOINT ["python", "scripts/train_on_vertex.py"]

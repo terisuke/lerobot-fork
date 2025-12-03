@@ -156,6 +156,10 @@ nautilus/*.yaml
 *.key
 sbatch*.sh
 
+### Google Cloud ###
+vertex-ai-key.json
+*.json.key
+
 ### Miscellaneous ###
 # W&B
 wandb/

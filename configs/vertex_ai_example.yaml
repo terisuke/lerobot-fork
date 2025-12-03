@@ -1,0 +1,119 @@
+# Example configuration for training on Vertex AI
+# This config is based on the standard LeRobot training config
+# but adapted for cloud training workflows
+
+training:
+  # Dataset configuration
+  dataset_repo_id: "gs://lerobot-datasets-480101/your-dataset"
+  # Will be overridden by command line arguments
+  
+  # Output configuration
+  output_dir: "gs://lerobot-models-480101/outputs"
+  # Will be overridden by command line arguments
+  
+  # Training hyperparameters
+  num_epochs: 100
+  batch_size: 32
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  
+  # Checkpointing
+  save_checkpoint_steps: 1000
+  save_checkpoint: true
+  
+  # Evaluation during training
+  eval_steps: 500
+  eval_episodes: 10
+  
+  # Logging
+  log_steps: 10
+  
+  # Resume from checkpoint
+  resume: false
+  # resume_from: "gs://lerobot-models-480101/outputs/checkpoint-1000"
+  
+  # Mixed precision training
+  use_amp: true
+  
+  # Gradient clipping
+  grad_clip_norm: 1.0
+  
+  # Number of data loading workers
+  num_workers: 4
+
+# Policy configuration
+policy:
+  name: "act"  # ACT (Action Chunking Transformer)
+  
+  # Model architecture
+  input_shapes:
+    observation.images.cam_high: [3, 480, 640]
+    observation.state: [6]
+  
+  output_shapes:
+    action: [6]
+  
+  # ACT-specific parameters
+  chunk_size: 100
+  n_obs_steps: 1
+  
+  # Vision backbone
+  vision_backbone: "resnet18"
+  pretrained_backbone: true
+  
+  # Transformer
+  n_encoder_layers: 4
+  n_decoder_layers: 1
+  n_heads: 8
+  dim_feedforward: 3200
+  
+  # Latent action space
+  use_vae: true
+  latent_dim: 32
+  
+  # Training
+  dropout: 0.1
+  kl_weight: 10.0
+
+# Environment configuration (for evaluation)
+env:
+  name: "so101"
+  task: "pickup_cube"
+  
+  # Episode settings
+  max_episode_steps: 500
+  
+  # Observation configuration
+  fps: 30
+  observation_type: "pixels_agent_pos"
+
+# Optional: WandB logging configuration
+wandb:
+  enable: false
+  project: "lerobot-vertex-ai"
+  entity: null  # Your WandB username/team
+  run_name: null  # Will be auto-generated if not specified
+  tags:
+    - vertex-ai
+    - cloud-training
+  notes: "Training on Vertex AI"
+
+# Optimizer configuration
+optimizer:
+  name: "adamw"
+  lr: 1e-4
+  betas: [0.9, 0.999]
+  eps: 1e-8
+  weight_decay: 1e-4
+
+# Learning rate scheduler
+lr_scheduler:
+  name: "cosine"
+  warmup_steps: 1000
+  total_steps: 100000  # Will be calculated based on num_epochs
+
+# Random seed for reproducibility
+seed: 42
+
+# Device configuration (automatically handled by Accelerate)
+# device: "cuda"  # Will be auto-detected

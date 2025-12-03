@@ -129,6 +129,31 @@ This fork includes SO101 robot arm integration with Intel RealSense D435 depth c
   </tr>
 </table>
 
+## Cloud Training with Vertex AI
+
+This repository includes support for training models on Google Cloud Vertex AI. This allows you to:
+- Train on powerful GPU instances without local hardware
+- Scale training with distributed computing
+- Automatically sync datasets and models with Cloud Storage
+
+See the [Vertex AI Training Guide](docs/VERTEX_AI_TRAINING.md) for complete setup instructions.
+
+**Quick Start:**
+```bash
+# Upload your dataset
+gsutil -m cp -r ./data/your-dataset gs://lerobot-datasets-480101/
+
+# Submit training job
+./scripts/vertex_ai_train.sh \
+  --job-name="my-training-job" \
+  --dataset-path="gs://lerobot-datasets-480101/your-dataset" \
+  --output-path="gs://lerobot-models-480101/outputs" \
+  --config="configs/vertex_ai_example.yaml" \
+  --machine-type="n1-standard-8" \
+  --accelerator-type="NVIDIA_TESLA_T4" \
+  --accelerator-count=1
+```
+
 ## Installation
 
 LeRobot works with Python 3.10+ and PyTorch 2.2+.
