@@ -184,7 +184,30 @@ class SO101Follower(Robot):
         # Capture images from cameras
         for cam_key, cam in self.cameras.items():
             start = time.perf_counter()
-            obs_dict[cam_key] = cam.async_read()
+            try:
+                obs_dict[cam_key] = cam.async_read()
+            except TimeoutError as e:
+                logger.warning(
+                    f"{self} camera {cam_key} timeout: {e}. "
+                    "Attempting to restart read thread and retry once..."
+                )
+                # Try to restart the read thread and retry once
+                try:
+                    if hasattr(cam, '_stop_read_thread'):
+                        cam._stop_read_thread()
+                    if hasattr(cam, '_start_read_thread'):
+                        cam._start_read_thread()
+                    # Wait a bit for the thread to start
+                    import time as time_module
+                    time_module.sleep(0.1)
+                    obs_dict[cam_key] = cam.async_read(timeout_ms=500)  # Longer timeout for retry
+                    logger.info(f"{self} camera {cam_key} recovered after restart.")
+                except Exception as retry_error:
+                    logger.error(
+                        f"{self} camera {cam_key} failed to recover: {retry_error}. "
+                        "This may indicate a hardware issue. Consider checking camera connections."
+                    )
+                    raise
             dt_ms = (time.perf_counter() - start) * 1e3
             logger.debug(f"{self} read {cam_key}: {dt_ms:.1f}ms")
 
