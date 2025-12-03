@@ -240,8 +240,8 @@ class RecordConfig:
 
 def check_fallback_input(events: dict):
     """Check for keyboard input when pynput listener is unavailable (e.g., no accessibility permissions on macOS)."""
-    import sys
     import select
+    import sys
     import termios
     import tty
 
@@ -262,15 +262,15 @@ def check_fallback_input(events: dict):
                 # Read a single character
                 char = sys.stdin.read(1)
 
-                if char == '\r' or char == '\n':
+                if char == "\r" or char == "\n":
                     # Enter key pressed - exit early
                     print("\nEnter pressed. Exiting episode early...")
                     events["exit_early"] = True
-                elif char == 'q':
+                elif char == "q":
                     print("\n'q' entered. Stopping recording...")
                     events["stop_recording"] = True
                     events["exit_early"] = True
-                elif char == 'r':
+                elif char == "r":
                     print("\n'r' entered. Will re-record this episode...")
                     events["rerecord_episode"] = True
                     events["exit_early"] = True
@@ -278,28 +278,29 @@ def check_fallback_input(events: dict):
             finally:
                 # Restore terminal settings
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-    except (ImportError, OSError, termios.error):
+    except (ImportError, OSError, termios.error) as e:
         # termios may not be available on all systems, or stdin may not be a TTY
         # Fall back to line-based input
+        logging.debug("termios not available or stdin not a TTY, falling back to line-based input: %s", e)
         try:
             ready, _, _ = select.select([sys.stdin], [], [], 0)
             if ready:
                 line = sys.stdin.readline().strip().lower()
-                if line == '':
+                if line == "":
                     # Just Enter pressed - exit early
                     print("\nEnter pressed. Exiting episode early...")
                     events["exit_early"] = True
-                elif line == 'q':
+                elif line == "q":
                     print("\n'q' entered. Stopping recording...")
                     events["stop_recording"] = True
                     events["exit_early"] = True
-                elif line == 'r':
+                elif line == "r":
                     print("\n'r' entered. Will re-record this episode...")
                     events["rerecord_episode"] = True
                     events["exit_early"] = True
-            except Exception as e:
-                # select may not work in all environments; log for diagnostics and continue
-                logging.debug("select() or stdin read failed while waiting for input: %s", e)
+        except Exception as e2:
+            # select may not work in all environments; log for diagnostics and continue
+            logging.debug("select() or stdin read failed while waiting for input: %s", e2)
     except Exception as e:
         # Any other error: log and continue (do not silently swallow)
         logging.debug("Unexpected error in check_fallback_input: %s", e)
