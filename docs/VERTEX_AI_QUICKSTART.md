@@ -120,13 +120,62 @@ gsutil -m cp -r gs://lerobot-models-480101/outputs/YOUR_JOB_TIMESTAMP/checkpoint
 
 ## Step 7: Evaluate Your Model
 
-Evaluate your trained model locally:
+### Option 1: Evaluate on Real Robot
+
+Use the trained policy to control your robot:
 
 ```bash
-# Use the standard LeRobot evaluation script
+# Download the checkpoint if not already downloaded
+gsutil -m cp -r gs://lerobot-models-480101/outputs/YOUR_JOB_TIMESTAMP/checkpoints/final ./outputs/checkpoint-final/
+
+# Evaluate on real robot
+export KMP_DUPLICATE_LIB_OK=TRUE
+lerobot-record \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AB90691861 \
+    --robot.id=my_awesome_follower_arm \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 1280, "height": 960, "fps": 25, "fourcc": "MJPG"}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --display_data=true \
+    --dataset.repo_id=YOUR_USERNAME/eval_my_so101_dataset \
+    --dataset.num_episodes=10 \
+    --dataset.single_task="Your task description" \
+    --policy.path=./outputs/checkpoint-final/pretrained_model
+```
+
+### Option 2: Upload to Hugging Face Hub and Use
+
+Upload the trained model to Hugging Face Hub for easier access:
+
+```bash
+# Upload checkpoint to Hugging Face Hub
+huggingface-cli upload YOUR_USERNAME/my_act_policy \
+    ./outputs/YOUR_JOB_TIMESTAMP/checkpoints/final/pretrained_model
+
+# Then use it directly from the hub
+lerobot-record \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AB90691861 \
+    --robot.id=my_awesome_follower_arm \
+    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 1280, "height": 960, "fps": 25, "fourcc": "MJPG"}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+    --display_data=true \
+    --dataset.repo_id=YOUR_USERNAME/eval_my_so101_dataset \
+    --dataset.num_episodes=10 \
+    --dataset.single_task="Your task description" \
+    --policy.path=YOUR_USERNAME/my_act_policy
+```
+
+### Option 3: Use Standard Evaluation Script
+
+For simulation environments, use the standard evaluation script:
+
+```bash
 lerobot-eval \
-  --config_path=./outputs/YOUR_JOB_TIMESTAMP/config.yaml \
-  --checkpoint_path=./outputs/YOUR_JOB_TIMESTAMP/checkpoints/final
+  --policy.path=./outputs/YOUR_JOB_TIMESTAMP/checkpoints/final/pretrained_model \
+  --env.type=pusht \
+  --eval.batch_size=10 \
+  --eval.n_episodes=10 \
+  --policy.use_amp=false \
+  --policy.device=cuda
 ```
 
 ## Cost Optimization Tips

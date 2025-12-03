@@ -29,6 +29,9 @@ from lerobot.configs.policies import PreTrainedConfig
 from lerobot.optim import OptimizerConfig
 from lerobot.optim.schedulers import LRSchedulerConfig
 from lerobot.utils.hub import HubMixin
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 TRAIN_CONFIG_NAME = "train_config.json"
 
@@ -110,9 +113,15 @@ class TrainPipelineConfig(HubMixin):
                 self.job_name = f"{self.env.type}_{self.policy.type}"
 
         if not self.resume and isinstance(self.output_dir, Path) and self.output_dir.is_dir():
-            raise FileExistsError(
-                f"Output directory {self.output_dir} already exists and resume is {self.resume}. "
-                f"Please change your output directory so that {self.output_dir} is not overwritten."
+            # If output directory exists and not resuming, automatically append timestamp to avoid overwriting
+            now = dt.datetime.now()
+            timestamp_suffix = f"_{now:%Y%m%d_%H%M%S}"
+            original_output_dir = self.output_dir
+            self.output_dir = Path(str(self.output_dir) + timestamp_suffix)
+            logger.warning(
+                f"Output directory {original_output_dir} already exists. "
+                f"Automatically renaming to {self.output_dir} to avoid overwriting. "
+                f"To resume training, use --resume=true"
             )
         elif not self.output_dir:
             now = dt.datetime.now()

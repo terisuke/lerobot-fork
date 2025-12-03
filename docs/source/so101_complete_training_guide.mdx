@@ -2,6 +2,9 @@
 
 このガイドでは、SO-101ロボットアームを使って、テレオペレーションができる状態から始めて、2台のwebカメラでデータセットを作成し、ACTポリシーをトレーニングして評価するまでの完全な流れを初心者向けに説明します。
 
+> [!TIP]
+> **新しい開発者向け**: このガイドには[開発者向けクイックスタート](#開発者向けクイックスタート)セクションが含まれています。迅速にセットアップを開始したい場合は、このセクションを参照してください。
+
 ## はじめに
 
 このガイドを完了すると、以下のことができるようになります：
@@ -38,9 +41,53 @@
 
 - **macOSでのOpenMPエラー**: `KMP_DUPLICATE_LIB_OK=TRUE`環境変数の設定が必要な場合があります（[詳細](#問題-omp-error-15-initializing-libompdylib-but-found-libompdylib-already-initialized)）
 - **FFmpegライブラリエラー**: `--dataset.video_backend=pyav`を指定することで回避できます（[詳細](#問題-runtimeerror-could-not-load-libtorchcodecトレーニング中)）
-- **カメラ接続エラー**: カメラの解像度やFPS設定を調整する必要がある場合があります（[詳細](#問題-runtimeerror-opencvcamera0-read-failed-statusfalse)）
+- **カメラ接続エラー**: カメラの解像度やFPS設定を調整する必要がある場合があります（[詳細](#問題パターン1-runtimeerror-opencvcamera0-read-failed-statusfalse)）
+- **トレーニング出力ディレクトリの競合**: 既存のディレクトリがある場合、自動的にタイムスタンプが追加されます（[詳細](#トレーニング出力ディレクトリの管理)）
 
 これらの問題は、このガイドの[トラブルシューティング](#トラブルシューティング)セクションで詳しく説明しています。
+
+### 開発者向けクイックスタート
+
+新しい開発者がこのプロジェクトに参加する場合、以下の手順で迅速にセットアップできます：
+
+1. **環境のセットアップ**:
+   ```bash
+   # リポジトリのクローン
+   git clone <repository-url>
+   cd lerobot
+   
+   # 依存関係のインストール
+   uv sync --extra dev --extra test
+   # または
+   poetry sync --extras "dev test"
+   
+   # 開発モードでインストール
+   uv pip install -e .
+   ```
+
+2. **カメラの確認**:
+   ```bash
+   lerobot-find-cameras opencv
+   ```
+
+3. **基本的なトレーニングの実行**:
+   ```bash
+   export KMP_DUPLICATE_LIB_OK=TRUE
+   lerobot-train \
+       --dataset.repo_id=Terisuke/my_so101_dataset \
+       --dataset.video_backend=pyav \
+       --policy.type=act \
+       --output_dir=outputs/train/act_my_so101_dataset \
+       --job_name=act_my_so101_dataset \
+       --policy.device=mps \
+       --wandb.enable=false \
+       --policy.repo_id=Terisuke/my_act_policy \
+       --batch_size=32 \
+       --num_workers=8 \
+       --policy.optimizer_lr=3e-5
+   ```
+
+4. **よくある問題の確認**: [トラブルシューティング](#トラブルシューティング)セクションを参照
 
 ## ステップ1: カメラのセットアップ
 
@@ -383,9 +430,115 @@ ls -lh outputs/train/act_my_so101_dataset/checkpoints/
 tail -f outputs/train/act_my_so101_dataset/logs/*.log
 ```
 
-### 4.5 Google Colabでのトレーニング
+### 4.5 トレーニング出力ディレクトリの管理
+
+#### 自動的な名前更新機能
+
+既存の出力ディレクトリがある場合、システムは自動的にタイムスタンプを追加して新しいディレクトリ名を生成します。これにより、既存のチェックポイントを削除せずに新しいトレーニングを開始できます。
+
+**動作例**:
+
+```bash
+# 既存のディレクトリ: outputs/train/act_my_so101_dataset
+# 新しいトレーニングを開始すると:
+# → outputs/train/act_my_so101_dataset_20241203_101530
+```
+
+**警告メッセージ**:
+
+既存のディレクトリが検出された場合、以下のような警告が表示されます：
+
+```
+WARNING: Output directory outputs/train/act_my_so101_dataset already exists. 
+Automatically renaming to outputs/train/act_my_so101_dataset_20241203_101530 to avoid overwriting. 
+To resume training, use --resume=true
+```
+
+#### トレーニングの再開
+
+既存のトレーニングを再開する場合は、`--resume=true`を使用してください：
+
+```bash
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+lerobot-train \
+    --dataset.repo_id=Terisuke/my_so101_dataset \
+    --dataset.video_backend=pyav \
+    --policy.type=act \
+    --output_dir=outputs/train/act_my_so101_dataset \
+    --job_name=act_my_so101_dataset \
+    --policy.device=mps \
+    --wandb.enable=false \
+    --policy.repo_id=Terisuke/my_act_policy \
+    --batch_size=32 \
+    --num_workers=8 \
+    --policy.optimizer_lr=3e-5 \
+    --save_freq=20000 \
+    --save_freq_minor=5000 \
+    --resume=true \
+    --policy.push_to_hub=false
+```
+
+> [!NOTE]
+> - `--resume=true`を使用する場合、既存のディレクトリがそのまま使用されます
+> - 自動的な名前更新は行われません
+> - 最新のチェックポイントからトレーニングが再開されます
+
+#### チェックポイントの管理
+
+- **完全なチェックポイント**: `save_freq`（デフォルト: 20,000ステップ）ごとに保存。モデル、オプティマイザー、スケジューラーの状態を含む
+- **軽量チェックポイント**: `save_freq_minor`（設定した場合）ごとに保存。モデルの重みのみを含む
+- **Ctrl+Cでの自動保存**: トレーニングを中断した場合、自動的にチェックポイントが保存されます
+
+### 4.6 Google Colabでのトレーニング
 
 ローカルコンピュータに強力なGPUがない場合は、Google Colabを使用してトレーニングできます。詳細は[ACTトレーニングノートブック](./notebooks#training-act)を参照してください。
+
+### 4.7 Vertex AIでのトレーニング
+
+Google Cloud PlatformのVertex AIを使用してクラウド上でトレーニングすることもできます。詳細は以下のドキュメントを参照してください：
+
+- [Vertex AI クイックスタートガイド](../../VERTEX_AI_QUICKSTART.md)
+- [Vertex AI GPU クォータガイド](../../VERTEX_AI_QUOTA_GUIDE.md)
+
+**基本的な手順**:
+
+1. **データセットをGCSにアップロード**:
+   ```bash
+   gsutil -m cp -r ./data/your-dataset gs://lerobot-datasets-480101/
+   ```
+
+2. **トレーニングジョブを投入**:
+   ```bash
+   ./scripts/vertex_ai_train.sh \
+     --job-name="lerobot-training-$(date +%Y%m%d-%H%M%S)" \
+     --dataset-path="gs://lerobot-datasets-480101/your-dataset" \
+     --output-path="gs://lerobot-models-480101/outputs" \
+     --config="configs/vertex_ai_example.yaml" \
+     --machine-type="n1-standard-8" \
+     --accelerator-type="NVIDIA_TESLA_T4" \
+     --accelerator-count=1 \
+     --region="asia-northeast1"
+   ```
+
+3. **トレーニング完了後、ポリシーをダウンロード**:
+   ```bash
+   gsutil -m cp -r gs://lerobot-models-480101/outputs/YOUR_JOB_TIMESTAMP/checkpoints/final ./outputs/checkpoint-final/
+   ```
+
+4. **実ロボットで評価**:
+   ```bash
+   lerobot-record \
+       --robot.type=so101_follower \
+       --robot.port=/dev/tty.wchusbserial5AB90691861 \
+       --robot.id=my_awesome_follower_arm \
+       --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 1280, "height": 960, "fps": 25, "fourcc": "MJPG"}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}' \
+       --display_data=true \
+       --dataset.repo_id=YOUR_USERNAME/eval_my_so101_dataset \
+       --dataset.num_episodes=10 \
+       --dataset.single_task="Your task description" \
+       --policy.path=./outputs/checkpoint-final/pretrained_model
+   ```
 
 ## ステップ5: ポリシーの評価
 
@@ -547,43 +700,82 @@ lerobot-calibrate \
 
 ### カメラ接続の問題
 
-#### 問題: `RuntimeError: OpenCVCamera(0) read failed (status=False)`
+カメラ関連の問題には、いくつかの決まったパターンがあります。以下の順序で対処することで、ほとんどの問題を解決できます。
 
-カメラが読み込めない場合の解決策：
+#### 問題パターン1: `RuntimeError: OpenCVCamera(0) read failed (status=False)`
 
-1. **MJPG形式を削除して試す**:
+**症状**: カメラが読み込めない、またはフレーム取得に失敗する
 
+**原因と解決策（順番に試してください）**:
+
+1. **FOURCC設定の問題**:
+   - `fourcc: "MJPG"`を削除して試す
+   - カメラがMJPGをサポートしていない場合があります
    ```bash
+   # MJPGを削除した設定
    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}'
    ```
 
-   `fourcc: "MJPG"`を削除します。カメラがMJPGをサポートしていない場合があります。
-
-2. **解像度を下げる**:
-   1280x720がサポートされていない場合は、640x480に下げます：
-
+2. **解像度/FPS設定の問題**:
+   - カメラがサポートしていない解像度やFPSを指定している可能性があります
+   - 解像度を下げる（例：1280x960 → 640x480）
+   - FPSを下げる（例：30fps → 15fps）
    ```bash
-   --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}'
+   # 低解像度・低FPS設定
+   --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 15}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 15}}'
    ```
 
-3. **カメラが他のアプリで使用されていないか確認**:
-   - 他のアプリケーション（Zoom、Skype、Photo Boothなど）を閉じる
-   - カメラの権限を確認（macOSの場合はシステム環境設定で確認）
+3. **カメラリソースの解放問題**:
+   - 前回のセッションが完全に終了していない可能性があります
+   - 解決策:
+     - 他のプロセスがカメラを使用していないか確認: `ps aux | grep lerobot`
+     - カメラを物理的に再接続（USBケーブルを抜いて再度接続）
+     - システムを再起動（macOSの場合、カメラリソースが適切に解放されない場合がある）
 
-4. **カメラIDを再確認**:
-
+4. **カメラIDの変更**:
+   - 再起動や再接続でカメラIDが変わっている可能性があります
    ```bash
+   # カメラIDを再確認
    lerobot-find-cameras opencv
    ```
+   - 出力されたカメラIDを使用してください
 
-   カメラIDが0と1で正しいか確認してください。
+5. **macOS固有の問題**:
+   - カメラの権限を確認（システム環境設定 > セキュリティとプライバシー > カメラ）
+   - 他のアプリケーション（Zoom、Skype、Photo Boothなど）を閉じる
+   - 仮想webカメラ（例：AndroidのCamo）を使用している場合は、直接USB接続のwebカメラに切り替える
 
-5. **カメラを再接続**:
-   USBケーブルを抜いて再度接続し、カメラIDを再確認してください。
+#### 問題パターン2: `OpenCVCamera(0) failed to set fourcc=MJPG`
 
-#### 問題: `OpenCVCamera(0) failed to set fourcc=MJPG`
+**症状**: MJPG形式の設定に失敗する警告が表示される
 
-MJPG形式がサポートされていない場合の警告です。これは問題ありませんが、FPSが低い場合は`fourcc`を削除してください。
+**原因**: カメラがMJPG形式をサポートしていない
+
+**解決策**:
+- 警告のみで動作する場合は問題ありません
+- FPSが低い場合は`fourcc`を削除してください
+- 高FPSが必要な場合は、カメラの仕様を確認してMJPGをサポートしているカメラを使用してください
+
+#### 問題パターン3: カメラ設定変更後の読み取り失敗
+
+**症状**: 解像度やFPSを設定した直後にカメラの読み取りが失敗する
+
+**原因**: カメラの設定変更後にカメラが一時的に不安定になる
+
+**解決策**:
+- コードが自動的にカメラをリセットして再試行するようになっています
+- それでも失敗する場合は、カメラを物理的に再接続してください
+
+#### 推奨されるトラブルシューティング手順
+
+カメラの問題が発生した場合、以下の順序で対処してください：
+
+1. **カメラIDの確認**: `lerobot-find-cameras opencv`でカメラIDを確認
+2. **FOURCCの削除**: `fourcc: "MJPG"`を削除して試す
+3. **解像度/FPSの調整**: 640x480 @ 15fpsなどの低設定で試す
+4. **カメラの再接続**: USBケーブルを抜いて再度接続
+5. **プロセスの確認**: 他のプロセスがカメラを使用していないか確認（`ps aux | grep lerobot`）
+6. **システムの再起動**: 上記で解決しない場合、システムを再起動
 
 ### データセット記録の問題
 
@@ -687,6 +879,50 @@ lerobot-train \
 - **共通**:
   - データセットをローカルにダウンロードして使用
 
+#### 問題: 既存の出力ディレクトリがある場合のエラー
+
+**症状**: `FileExistsError: Output directory ... already exists`
+
+**原因**: 既存の出力ディレクトリがある場合、デフォルトではエラーが発生します
+
+**解決策**:
+
+1. **自動的な名前更新（推奨）**: 
+   - システムが自動的にタイムスタンプを追加して新しいディレクトリ名を生成します
+   - 既存のチェックポイントは保持されます
+   - 警告メッセージが表示されますが、トレーニングは続行されます
+
+2. **トレーニングの再開**:
+   - `--resume=true`を使用して既存のトレーニングを再開
+   ```bash
+   lerobot-train \
+       --output_dir=outputs/train/act_my_so101_dataset \
+       --resume=true \
+       ...
+   ```
+
+3. **手動でのディレクトリ名変更**:
+   - `--output_dir`に別の名前を指定
+   ```bash
+   lerobot-train \
+       --output_dir=outputs/train/act_my_so101_dataset_v2 \
+       ...
+   ```
+
+> [!TIP]
+> 自動的な名前更新機能により、既存のチェックポイントを削除せずに新しいトレーニングを開始できます。タイムスタンプは秒単位なので、同じ秒に複数のトレーニングを開始すると競合する可能性があります（稀）。
+
+#### 問題: エピソード終了時に自動停止しない
+
+**症状**: 評価時にエピソードが終了してもCtrl+Cを押さないと停止しない
+
+**原因**: リセットフェーズでポリシーやテレオペレーターが提供されていない場合、タイムスタンプの更新がスキップされていた
+
+**解決策**:
+- コードが修正され、エピソード終了時に自動的に停止するようになりました
+- エピソード時間（`episode_time_s`）が経過すると自動的に停止します
+- リセット時間（`reset_time_s`）が経過すると自動的にリセットフェーズが終了します
+
 ## 次のステップ
 
 データセットの作成とトレーニングが完了したら、以下を試してみてください：
@@ -696,12 +932,71 @@ lerobot-train \
 3. **他のポリシー**: SmolVLAやDiffusion Policyなど、他のポリシーも試してみる
 4. **マルチタスク学習**: 複数のタスクを1つのモデルで学習する
 
+## 開発者向けの追加情報
+
+### よくある問題パターンのまとめ
+
+このガイドで説明されている問題パターンは、以下のように体系的に整理されています：
+
+1. **カメラ関連の問題**:
+   - FOURCC設定の問題
+   - 解像度/FPS設定の問題
+   - カメラリソースの解放問題
+   - カメラIDの変更
+   - macOS固有の問題
+   - 設定変更後の読み取り失敗
+
+2. **トレーニング関連の問題**:
+   - OpenMPエラー（macOS）
+   - FFmpegライブラリエラー
+   - GPUメモリ不足
+   - トレーニング速度の問題
+   - 出力ディレクトリの競合
+   - エピソード終了時の自動停止
+
+3. **ロボット関連の問題**:
+   - 電圧エラー
+   - 通信エラー
+   - アームの不安定な動作
+
+### コードの改善履歴
+
+このガイドで説明されている機能は、以下の改善が実装されています：
+
+- ✅ カメラ設定変更後の自動リセット機能
+- ✅ トレーニング出力ディレクトリの自動名前更新
+- ✅ Ctrl+Cでの自動チェックポイント保存
+- ✅ エピソード終了時の自動停止
+- ✅ 軽量チェックポイント機能（`save_freq_minor`）
+
+### 開発環境のセットアップ
+
+新しい開発者が参加する場合、以下のコマンドで開発環境をセットアップできます：
+
+```bash
+# リポジトリのクローン
+git clone <repository-url>
+cd lerobot
+
+# 依存関係のインストール
+uv sync --extra dev --extra test
+
+# 開発モードでインストール
+uv pip install -e .
+
+# テストの実行
+pytest tests/<area> -m "not slow"
+```
+
+詳細は[CONTRIBUTING.md](../CONTRIBUTING.md)を参照してください。
+
 ## 参考資料
 
 - [SO-101セットアップガイド](./so101)
 - [ACTポリシーの詳細](./act)
 - [カメラのセットアップ](./cameras)
 - [実世界ロボットでの模倣学習](./il_robots)
+- [コントリビューションガイド](../CONTRIBUTING.md)
 
 ## サポート
 

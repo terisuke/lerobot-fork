@@ -9,7 +9,8 @@
 #     --config="configs/train_config.yaml" \
 #     --machine-type="n1-standard-8" \
 #     --accelerator-type="NVIDIA_TESLA_T4" \
-#     --accelerator-count=1
+#     --accelerator-count=1 \
+#     --region="asia-northeast1"
 
 set -e
 
@@ -57,6 +58,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --worker-count)
       WORKER_COUNT="$2"
+      shift 2
+      ;;
+    --region)
+      REGION="$2"
       shift 2
       ;;
     --preemptible)

@@ -177,6 +177,8 @@ class OpenCVCamera(Camera):
         self._configure_capture_settings()
 
         if warmup:
+            # Give camera a moment to stabilize after configuration changes
+            time.sleep(0.5)
             start_time = time.time()
             while time.time() - start_time < self.warmup_s:
                 self.read()
@@ -292,6 +294,34 @@ class OpenCVCamera(Camera):
             raise RuntimeError(
                 f"{self} failed to set capture_height={self.capture_height} ({actual_height=}, {height_success=})."
             )
+        
+        # Verify that the camera can actually read frames after setting resolution
+        # This helps catch cases where the resolution is set but the camera becomes unresponsive
+        ret, _ = self.videocapture.read()
+        if not ret:
+            logger.warning(
+                f"{self} cannot read frames after setting resolution {self.capture_width}x{self.capture_height}. "
+                f"Camera may need to be reset. Trying to recover..."
+            )
+            # Try to recover by releasing and reopening
+            self.videocapture.release()
+            time.sleep(0.5)
+            self.videocapture = cv2.VideoCapture(self.index_or_path, self.backend)
+            if not self.videocapture.isOpened():
+                raise RuntimeError(
+                    f"{self} failed to reopen after resolution change. "
+                    f"Please try disconnecting and reconnecting the camera."
+                )
+            # Re-apply settings
+            self.videocapture.set(cv2.CAP_PROP_FRAME_WIDTH, float(self.capture_width))
+            self.videocapture.set(cv2.CAP_PROP_FRAME_HEIGHT, float(self.capture_height))
+            # Verify again
+            ret, _ = self.videocapture.read()
+            if not ret:
+                raise RuntimeError(
+                    f"{self} cannot read frames even after recovery attempt. "
+                    f"Please check camera connection or try a different resolution."
+                )
 
     @staticmethod
     def find_cameras() -> list[dict[str, Any]]:
