@@ -178,8 +178,8 @@ Camera #1:
 
 ```bash
 # まず、HF_USER環境変数を設定（毎回実行するか、~/.zshrcに追加）
-# 方法1: hfコマンドから取得（推奨）
-export HF_USER=$(hf auth whoami 2>&1 | grep -oP 'user:\s*\K\S+' | tr -d '[:space:]')
+# 方法1: hfコマンドから取得（推奨、macOS/Linux対応）
+export HF_USER=$(hf auth whoami | head -n 1 | sed 's/user: //' | tr -d '[:space:]')
 # 方法2: 直接ユーザー名を指定（環境変数が展開されない場合）
 # export HF_USER="Terisuke"
 echo "HF_USER is set to: '${HF_USER}'"  # 確認用（クォートで囲むと特殊文字が見える）
