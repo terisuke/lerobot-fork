@@ -175,9 +175,32 @@ def init_keyboard_listener():
         time_module.sleep(0.1)
         if not listener.is_alive():
             logging.warning(
-                "Keyboard listener failed to start. On macOS, you may need to grant "
-                "accessibility permissions in System Settings > Privacy & Security > Accessibility."
+                "Keyboard listener failed to start. This is expected in headless environments (CI/CD, SSH, etc.). "
+                "On macOS with a display, you may need to grant accessibility permissions in "
+                "System Settings > Privacy & Security > Accessibility."
             )
+            # Only show fallback instructions if we have a TTY (not in automated tests)
+            import sys
+            if sys.stdin.isatty():
+                logging.info(
+                    "\n" + "="*80 + "\n"
+                    "FALLBACK INPUT MODE ENABLED\n"
+                    "Since keyboard shortcuts are not available, you can use these commands:\n"
+                    "  - Press ENTER during recording to exit early and save the episode\n"
+                    "  - Press 'q' + ENTER to quit recording\n"
+                    "  - Press 'r' + ENTER to re-record the current episode\n"
+                    "\nNote: These commands will only be checked at the start of each episode.\n"
+                    + "="*80
+                )
+                events["use_fallback_input"] = True
+            return None, events
+    except Exception as e:
+        logging.warning(
+            f"Failed to start keyboard listener: {e}. This is expected in headless environments."
+        )
+        # Only show fallback instructions if we have a TTY (not in automated tests)
+        import sys
+        if sys.stdin.isatty():
             logging.info(
                 "\n" + "="*80 + "\n"
                 "FALLBACK INPUT MODE ENABLED\n"
@@ -189,23 +212,6 @@ def init_keyboard_listener():
                 + "="*80
             )
             events["use_fallback_input"] = True
-            return None, events
-    except Exception as e:
-        logging.warning(
-            f"Failed to start keyboard listener: {e}. On macOS, you may need to grant "
-            "accessibility permissions in System Settings > Privacy & Security > Accessibility."
-        )
-        logging.info(
-            "\n" + "="*80 + "\n"
-            "FALLBACK INPUT MODE ENABLED\n"
-            "Since keyboard shortcuts are not available, you can use these commands:\n"
-            "  - Press ENTER during recording to exit early and save the episode\n"
-            "  - Press 'q' + ENTER to quit recording\n"
-            "  - Press 'r' + ENTER to re-record the current episode\n"
-            "\nNote: These commands will only be checked at the start of each episode.\n"
-            + "="*80
-        )
-        events["use_fallback_input"] = True
         return None, events
 
     return listener, events
