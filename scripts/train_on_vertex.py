@@ -26,9 +26,8 @@ from google.cloud import storage
 # Add lerobot to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lerobot.configs import parser
-from lerobot.configs.train import TrainPipelineConfig
 from lerobot.scripts.lerobot_train import train
+from lerobot.configs.train import TrainPipelineConfig
 
 
 def setup_logging():
@@ -204,15 +203,17 @@ def main():
     # Step 3: Load training configuration
     logging.info("Step 3: Loading training configuration")
 
-    # Parse config using lerobot's parser
+    # Load config from YAML file
+    import yaml
+    with open(config_path, 'r') as f:
+        config_dict = yaml.safe_load(f)
+    
     # Override dataset and output paths
-    override_args = [
-        f"--config={config_path}",
-        f"training.dataset_repo_id={dataset_path}",
-        f"training.output_dir={args.local_output_dir}",
-    ]
-
-    cfg = parser.parse(TrainPipelineConfig, args=override_args)
+    config_dict['training']['dataset_repo_id'] = dataset_path
+    config_dict['training']['output_dir'] = args.local_output_dir
+    
+    # Create config object
+    cfg = TrainPipelineConfig(**config_dict)
 
     # Step 4: Run training
     logging.info("Step 4: Starting training")

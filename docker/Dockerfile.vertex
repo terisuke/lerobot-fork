@@ -47,12 +47,14 @@ WORKDIR /app
 # Copy source code first (needed for editable install)
 COPY . /app/
 
-# Install Python dependencies, excluding problematic packages for cloud training
-# Skip decord (video decoding - not needed for training) and egl-probe (GPU visualization)
-RUN grep -v "decord\|egl-probe" requirements-ubuntu.txt > requirements-cloud.txt && \
-    pip install -r requirements-cloud.txt || \
-    (echo "Some optional packages failed to install, continuing..." && \
-     pip install -r requirements-cloud.txt --no-deps || true)
+# Install PyTorch with CUDA support first
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install LeRobot in editable mode (this will install all core dependencies including draccus)
+RUN pip install -e .
+
+# Try to install optional dependencies, skip if they fail
+RUN pip install flash-attn==2.8.3 || echo "flash-attn skipped (optional)"
 
 # Create directories for datasets and outputs
 RUN mkdir -p /app/data /app/outputs
