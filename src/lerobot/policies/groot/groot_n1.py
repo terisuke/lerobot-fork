@@ -78,7 +78,7 @@ class EagleBackbone(nn.Module):
         cache_dir = HF_LEROBOT_HOME / tokenizer_assets_repo
         try:
             ensure_eagle_cache_ready(vendor_dir, cache_dir, tokenizer_assets_repo)
-        except Exception as exc:  # nosec B110: Generic exception handling for model loading errors
+        except Exception as exc:  # nosec B110 - Generic exception handling for model loading errors
             print(f"[GROOT] Warning: failed to prepare Eagle cache for backbone: {exc}")
 
         config = AutoConfig.from_pretrained(str(cache_dir), trust_remote_code=True)

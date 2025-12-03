@@ -192,7 +192,8 @@ def main():
     # Step 2: Download config if it's on GCS
     if args.config.startswith("gs://"):
         logging.info("Step 2: Downloading config from Cloud Storage")
-        local_config_path = "/tmp/config.yaml"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp_file:
+            local_config_path = tmp_file.name
         download_from_gcs(args.config, os.path.dirname(local_config_path))
         config_path = local_config_path
     else:

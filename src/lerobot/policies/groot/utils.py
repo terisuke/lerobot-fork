@@ -17,7 +17,7 @@ def ensure_eagle_cache_ready(vendor_dir: Path, cache_dir: Path, assets_repo: str
         # Populate/refresh cache with vendor files to ensure a complete processor directory
         print(f"[GROOT] Copying vendor Eagle files to cache: {vendor_dir} -> {cache_dir}")
         copytree(vendor_dir, cache_dir, dirs_exist_ok=True)
-    except Exception as exc:  # nosec B110: Generic exception handling for model loading errors
+    except Exception as exc:  # nosec B110 - Generic exception handling for model loading errors
         print(f"[GROOT] Warning: Failed to copy vendor Eagle files to cache: {exc}")
 
     required_assets = [
