@@ -294,7 +294,7 @@ class OpenCVCamera(Camera):
             raise RuntimeError(
                 f"{self} failed to set capture_height={self.capture_height} ({actual_height=}, {height_success=})."
             )
-        
+
         # Verify that the camera can actually read frames after setting resolution
         # This helps catch cases where the resolution is set but the camera becomes unresponsive
         ret, _ = self.videocapture.read()

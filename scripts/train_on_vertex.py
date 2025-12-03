@@ -25,9 +25,9 @@ from google.cloud import storage
 # Add lerobot to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lerobot.scripts.lerobot_train import train
-from lerobot.configs.train import TrainPipelineConfig
 from lerobot.configs import parser
+from lerobot.configs.train import TrainPipelineConfig
+from lerobot.scripts.lerobot_train import train
 
 
 def setup_logging():
@@ -77,94 +77,94 @@ def parse_args():
 def download_from_gcs(gcs_path: str, local_path: str):
     """
     Download files from Google Cloud Storage.
-    
+
     Args:
         gcs_path: GCS path (gs://bucket/path)
         local_path: Local destination path
     """
     logging.info(f"Downloading from {gcs_path} to {local_path}")
-    
+
     # Parse GCS path
     if not gcs_path.startswith("gs://"):
         raise ValueError(f"Invalid GCS path: {gcs_path}")
-    
+
     path_parts = gcs_path[5:].split("/", 1)
     bucket_name = path_parts[0]
     blob_prefix = path_parts[1] if len(path_parts) > 1 else ""
-    
+
     # Initialize GCS client
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    
+
     # Create local directory
     os.makedirs(local_path, exist_ok=True)
-    
+
     # Download all blobs with the prefix
     blobs = bucket.list_blobs(prefix=blob_prefix)
     download_count = 0
-    
+
     for blob in blobs:
         # Skip directory markers
         if blob.name.endswith("/"):
             continue
-            
+
         # Calculate relative path
-        relative_path = blob.name[len(blob_prefix):].lstrip("/")
+        relative_path = blob.name[len(blob_prefix) :].lstrip("/")
         if not relative_path:
             relative_path = os.path.basename(blob.name)
-            
+
         local_file_path = os.path.join(local_path, relative_path)
-        
+
         # Create parent directories
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-        
+
         # Download blob
         logging.info(f"  Downloading {blob.name} -> {local_file_path}")
         blob.download_to_filename(local_file_path)
         download_count += 1
-    
+
     logging.info(f"Downloaded {download_count} files from {gcs_path}")
 
 
 def upload_to_gcs(local_path: str, gcs_path: str):
     """
     Upload files to Google Cloud Storage.
-    
+
     Args:
         local_path: Local source path
         gcs_path: GCS destination path (gs://bucket/path)
     """
     logging.info(f"Uploading from {local_path} to {gcs_path}")
-    
+
     # Parse GCS path
     if not gcs_path.startswith("gs://"):
         raise ValueError(f"Invalid GCS path: {gcs_path}")
-    
+
     path_parts = gcs_path[5:].split("/", 1)
     bucket_name = path_parts[0]
     blob_prefix = path_parts[1] if len(path_parts) > 1 else ""
-    
+
     # Initialize GCS client
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    
+
     # Upload all files recursively
     upload_count = 0
-    
-    for root, dirs, files in os.walk(local_path):
+
+    for root, _dirs, files in os.walk(local_path):
         for file in files:
             local_file_path = os.path.join(root, file)
-            
+
             # Calculate relative path
             relative_path = os.path.relpath(local_file_path, local_path)
             blob_name = os.path.join(blob_prefix, relative_path).replace("\\", "/")
-            
+
             # Upload blob
             logging.info(f"  Uploading {local_file_path} -> gs://{bucket_name}/{blob_name}")
             blob = bucket.blob(blob_name)
             blob.upload_from_filename(local_file_path)
             upload_count += 1
-    
+
     logging.info(f"Uploaded {upload_count} files to {gcs_path}")
 
 
@@ -172,14 +172,14 @@ def main():
     """Main training function."""
     setup_logging()
     args = parse_args()
-    
+
     logging.info("=" * 60)
     logging.info("Starting Vertex AI Training Job")
     logging.info("=" * 60)
     logging.info(f"Dataset path: {args.dataset_path}")
     logging.info(f"Output dir: {args.output_dir}")
     logging.info(f"Config: {args.config}")
-    
+
     # Step 1: Download dataset from GCS
     if args.dataset_path.startswith("gs://"):
         logging.info("Step 1: Downloading dataset from Cloud Storage")
@@ -188,7 +188,7 @@ def main():
     else:
         dataset_path = args.dataset_path
         logging.info(f"Using local dataset at {dataset_path}")
-    
+
     # Step 2: Download config if it's on GCS
     if args.config.startswith("gs://"):
         logging.info("Step 2: Downloading config from Cloud Storage")
@@ -198,10 +198,10 @@ def main():
     else:
         config_path = args.config
         logging.info(f"Using local config at {config_path}")
-    
+
     # Step 3: Load training configuration
     logging.info("Step 3: Loading training configuration")
-    
+
     # Parse config using lerobot's parser
     # Override dataset and output paths
     override_args = [
@@ -209,27 +209,27 @@ def main():
         f"training.dataset_repo_id={dataset_path}",
         f"training.output_dir={args.local_output_dir}",
     ]
-    
+
     cfg = parser.parse(TrainPipelineConfig, args=override_args)
-    
+
     # Step 4: Run training
     logging.info("Step 4: Starting training")
     logging.info("=" * 60)
-    
+
     try:
         train(cfg)
         logging.info("Training completed successfully")
     except Exception as e:
         logging.error(f"Training failed with error: {e}")
         raise
-    
+
     # Step 5: Upload outputs to GCS
     if args.output_dir.startswith("gs://"):
         logging.info("Step 5: Uploading outputs to Cloud Storage")
         upload_to_gcs(args.local_output_dir, args.output_dir)
     else:
         logging.info(f"Outputs saved locally at {args.local_output_dir}")
-    
+
     logging.info("=" * 60)
     logging.info("Vertex AI Training Job Completed Successfully")
     logging.info("=" * 60)

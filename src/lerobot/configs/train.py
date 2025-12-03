@@ -15,6 +15,7 @@ import builtins
 import datetime as dt
 import os
 from dataclasses import dataclass, field
+from logging import getLogger
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,6 @@ from lerobot.configs.policies import PreTrainedConfig
 from lerobot.optim import OptimizerConfig
 from lerobot.optim.schedulers import LRSchedulerConfig
 from lerobot.utils.hub import HubMixin
-from logging import getLogger
 
 logger = getLogger(__name__)
 

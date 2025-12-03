@@ -37,7 +37,7 @@ gcloud alpha services quota list \
 
 ### 重要な注意点
 
-1. **リージョンの一致**: 
+1. **リージョンの一致**:
    - クォータは `asia-northeast1` リージョンに設定されています
    - トレーニングジョブも同じリージョンで実行する必要があります
    - スクリプトに `--region="asia-northeast1"` を指定してください
@@ -72,11 +72,13 @@ gcloud alpha services quota list \
 もしクォータ不足エラーが発生した場合：
 
 1. **現在の使用状況を確認**:
+
    ```bash
    gcloud ai custom-jobs list --region=asia-northeast1
    ```
 
 2. **他のジョブをキャンセル**:
+
    ```bash
    gcloud ai custom-jobs cancel JOB_ID --region=asia-northeast1
    ```
@@ -88,10 +90,12 @@ gcloud alpha services quota list \
 ## リージョン別のクォータ
 
 ### asia-northeast1（東京）
+
 - **T4 GPU**: 6
 - **推奨**: 日本のユーザーには低レイテンシー
 
 ### us-central1（アイオワ）
+
 - **デフォルトリージョン**
 - **推奨**: グローバルな使用、より多くのリソースが利用可能
 
@@ -118,6 +122,7 @@ gcloud alpha services quota list \
 **原因**: リージョンのクォータが不足している
 
 **解決策**:
+
 1. 別のリージョンで実行（クォータがある場合）
 2. 既存のジョブをキャンセル
 3. クォータの増加をリクエスト
@@ -127,6 +132,7 @@ gcloud alpha services quota list \
 **原因**: リージョンが正しく指定されていない、またはリソースが存在しない
 
 **解決策**:
+
 1. `--region` オプションで正しいリージョンを指定
 2. データセットやバケットが同じリージョンにあるか確認
 
@@ -135,6 +141,7 @@ gcloud alpha services quota list \
 **原因**: 指定したリージョンでGPUタイプが利用できない
 
 **解決策**:
+
 1. 利用可能なGPUタイプを確認:
    ```bash
    gcloud compute accelerator-types list --filter="zone:asia-northeast1-*"
@@ -147,4 +154,3 @@ gcloud alpha services quota list \
 - [Vertex AI クォータ](https://cloud.google.com/vertex-ai/docs/general/quotas)
 - [GPU リージョン別の利用可能性](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones)
 - [クォータの増加リクエスト](https://cloud.google.com/docs/quota#request_increase)
-

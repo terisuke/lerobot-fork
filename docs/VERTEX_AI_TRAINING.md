@@ -12,6 +12,7 @@ This guide explains how to train LeRobot models on Google Cloud Vertex AI using 
 ## Architecture
 
 The training setup consists of:
+
 - **Cloud Storage Buckets**: Store datasets and trained models
 - **Vertex AI Custom Jobs**: Execute training on cloud infrastructure
 - **Service Account**: Manages permissions and authentication
@@ -22,16 +23,19 @@ The training setup consists of:
 The following infrastructure has been configured:
 
 ### 1. Authentication & Project
+
 ```bash
 gcloud config set project lerobot-480101
 gcloud auth application-default set-quota-project lerobot-480101
 ```
 
 ### 2. APIs Enabled
+
 - Vertex AI API (`aiplatform.googleapis.com`)
 - Cloud Storage API (`storage.googleapis.com`)
 
 ### 3. Service Account
+
 - **Email**: `vertex-ai-training@lerobot-480101.iam.gserviceaccount.com`
 - **Key Location**: `~/vertex-ai-key.json`
 - **Roles**:
@@ -40,10 +44,12 @@ gcloud auth application-default set-quota-project lerobot-480101
   - `roles/logging.logWriter` - Write training logs
 
 ### 4. Cloud Storage Buckets
+
 - `gs://lerobot-datasets-480101` - Training datasets
 - `gs://lerobot-models-480101` - Trained models and checkpoints
 
 ### 5. Default Region
+
 - Region: `us-central1`
 
 ## Training Workflow
@@ -61,6 +67,7 @@ gsutil -m rsync -r ./data gs://lerobot-datasets-480101/datasets/
 ```
 
 Verify the upload:
+
 ```bash
 gsutil ls gs://lerobot-datasets-480101/
 ```
@@ -96,6 +103,7 @@ Use the provided script to submit a training job:
 ```
 
 Available machine types:
+
 - CPU: `n1-standard-4`, `n1-standard-8`, `n1-highmem-8`
 - GPU: `n1-standard-8` + `NVIDIA_TESLA_T4`, `NVIDIA_TESLA_V100`, `NVIDIA_TESLA_A100`
 
@@ -136,18 +144,18 @@ Create a training configuration at `configs/vertex_ai_config.yaml`:
 training:
   dataset_repo_id: "gs://lerobot-datasets-480101/your-dataset"
   output_dir: "gs://lerobot-models-480101/outputs"
-  
+
   num_epochs: 100
   batch_size: 32
   learning_rate: 1e-4
-  
+
   save_checkpoint_steps: 1000
   eval_steps: 500
-  
+
 policy:
   name: "act"
   # Policy-specific configuration
-  
+
 env:
   name: "so101"
   # Environment-specific configuration
@@ -156,6 +164,7 @@ env:
 ## Cost Optimization
 
 ### Preemptible VMs
+
 Use preemptible instances to reduce costs by up to 80%:
 
 ```bash
@@ -166,18 +175,21 @@ Use preemptible instances to reduce costs by up to 80%:
 ```
 
 ### Instance Selection
+
 - **Development/Testing**: `n1-standard-4` (CPU only)
 - **Small models**: `n1-standard-8` + 1x T4 GPU
 - **Large models**: `n1-standard-16` + 1x V100 or A100 GPU
 - **Distributed training**: Multiple workers with A100 GPUs
 
 ### Storage
+
 - Use `STANDARD` storage class for active datasets
 - Move old datasets to `NEARLINE` or `COLDLINE` for archival
 
 ## Troubleshooting
 
 ### Authentication Issues
+
 ```bash
 # Re-authenticate
 gcloud auth application-default login
@@ -185,6 +197,7 @@ gcloud auth application-default set-quota-project lerobot-480101
 ```
 
 ### Permission Errors
+
 ```bash
 # Verify service account permissions
 gcloud projects get-iam-policy lerobot-480101 \
@@ -193,6 +206,7 @@ gcloud projects get-iam-policy lerobot-480101 \
 ```
 
 ### Container Build Failures
+
 ```bash
 # Test locally first
 docker build -f docker/Dockerfile.vertex -t test-image .
@@ -200,6 +214,7 @@ docker run --rm test-image python -c "import lerobot; print(lerobot.__version__)
 ```
 
 ### Job Failures
+
 ```bash
 # Check detailed logs
 gcloud logging read "resource.type=ml_job AND resource.labels.job_id=YOUR_JOB_ID" \
@@ -270,6 +285,7 @@ train.run(config_path='gs://lerobot-datasets-480101/config.yaml')
 ## Support
 
 For issues specific to this setup:
+
 1. Check the troubleshooting section above
 2. Review Cloud Logging for detailed error messages
 3. Verify IAM permissions and service account configuration

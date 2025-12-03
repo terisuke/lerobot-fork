@@ -51,26 +51,29 @@
 新しい開発者がこのプロジェクトに参加する場合、以下の手順で迅速にセットアップできます：
 
 1. **環境のセットアップ**:
+
    ```bash
    # リポジトリのクローン
    git clone <repository-url>
    cd lerobot
-   
+
    # 依存関係のインストール
    uv sync --extra dev --extra test
    # または
    poetry sync --extras "dev test"
-   
+
    # 開発モードでインストール
    uv pip install -e .
    ```
 
 2. **カメラの確認**:
+
    ```bash
    lerobot-find-cameras opencv
    ```
 
 3. **基本的なトレーニングの実行**:
+
    ```bash
    export KMP_DUPLICATE_LIB_OK=TRUE
    lerobot-train \
@@ -449,8 +452,8 @@ tail -f outputs/train/act_my_so101_dataset/logs/*.log
 既存のディレクトリが検出された場合、以下のような警告が表示されます：
 
 ```
-WARNING: Output directory outputs/train/act_my_so101_dataset already exists. 
-Automatically renaming to outputs/train/act_my_so101_dataset_20241203_101530 to avoid overwriting. 
+WARNING: Output directory outputs/train/act_my_so101_dataset already exists.
+Automatically renaming to outputs/train/act_my_so101_dataset_20241203_101530 to avoid overwriting.
 To resume training, use --resume=true
 ```
 
@@ -480,6 +483,7 @@ lerobot-train \
 ```
 
 > [!NOTE]
+>
 > - `--resume=true`を使用する場合、既存のディレクトリがそのまま使用されます
 > - 自動的な名前更新は行われません
 > - 最新のチェックポイントからトレーニングが再開されます
@@ -504,11 +508,13 @@ Google Cloud PlatformのVertex AIを使用してクラウド上でトレーニ�
 **基本的な手順**:
 
 1. **データセットをGCSにアップロード**:
+
    ```bash
    gsutil -m cp -r ./data/your-dataset gs://lerobot-datasets-480101/
    ```
 
 2. **トレーニングジョブを投入**:
+
    ```bash
    ./scripts/vertex_ai_train.sh \
      --job-name="lerobot-training-$(date +%Y%m%d-%H%M%S)" \
@@ -522,6 +528,7 @@ Google Cloud PlatformのVertex AIを使用してクラウド上でトレーニ�
    ```
 
 3. **トレーニング完了後、ポリシーをダウンロード**:
+
    ```bash
    gsutil -m cp -r gs://lerobot-models-480101/outputs/YOUR_JOB_TIMESTAMP/checkpoints/final ./outputs/checkpoint-final/
    ```
@@ -711,6 +718,7 @@ lerobot-calibrate \
 1. **FOURCC設定の問題**:
    - `fourcc: "MJPG"`を削除して試す
    - カメラがMJPGをサポートしていない場合があります
+
    ```bash
    # MJPGを削除した設定
    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 30}}'
@@ -720,6 +728,7 @@ lerobot-calibrate \
    - カメラがサポートしていない解像度やFPSを指定している可能性があります
    - 解像度を下げる（例：1280x960 → 640x480）
    - FPSを下げる（例：30fps → 15fps）
+
    ```bash
    # 低解像度・低FPS設定
    --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 15}, "side": {"type": "opencv", "index_or_path": 1, "width": 640, "height": 480, "fps": 15}}'
@@ -734,10 +743,12 @@ lerobot-calibrate \
 
 4. **カメラIDの変更**:
    - 再起動や再接続でカメラIDが変わっている可能性があります
+
    ```bash
    # カメラIDを再確認
    lerobot-find-cameras opencv
    ```
+
    - 出力されたカメラIDを使用してください
 
 5. **macOS固有の問題**:
@@ -752,6 +763,7 @@ lerobot-calibrate \
 **原因**: カメラがMJPG形式をサポートしていない
 
 **解決策**:
+
 - 警告のみで動作する場合は問題ありません
 - FPSが低い場合は`fourcc`を削除してください
 - 高FPSが必要な場合は、カメラの仕様を確認してMJPGをサポートしているカメラを使用してください
@@ -763,6 +775,7 @@ lerobot-calibrate \
 **原因**: カメラの設定変更後にカメラが一時的に不安定になる
 
 **解決策**:
+
 - コードが自動的にカメラをリセットして再試行するようになっています
 - それでも失敗する場合は、カメラを物理的に再接続してください
 
@@ -887,13 +900,14 @@ lerobot-train \
 
 **解決策**:
 
-1. **自動的な名前更新（推奨）**: 
+1. **自動的な名前更新（推奨）**:
    - システムが自動的にタイムスタンプを追加して新しいディレクトリ名を生成します
    - 既存のチェックポイントは保持されます
    - 警告メッセージが表示されますが、トレーニングは続行されます
 
 2. **トレーニングの再開**:
    - `--resume=true`を使用して既存のトレーニングを再開
+
    ```bash
    lerobot-train \
        --output_dir=outputs/train/act_my_so101_dataset \
@@ -919,6 +933,7 @@ lerobot-train \
 **原因**: リセットフェーズでポリシーやテレオペレーターが提供されていない場合、タイムスタンプの更新がスキップされていた
 
 **解決策**:
+
 - コードが修正され、エピソード終了時に自動的に停止するようになりました
 - エピソード時間（`episode_time_s`）が経過すると自動的に停止します
 - リセット時間（`reset_time_s`）が経過すると自動的にリセットフェーズが終了します

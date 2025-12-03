@@ -290,13 +290,13 @@ def record_loop(
 
     timestamp = 0
     start_episode_t = time.perf_counter()
-    
+
     # Handle None control_time_s (infinite loop case)
     if control_time_s is None:
         logger.warning(
             "control_time_s is None. The record loop will run indefinitely until manually stopped."
         )
-    
+
     while control_time_s is None or timestamp < control_time_s:
         start_loop_t = time.perf_counter()
 
@@ -327,10 +327,15 @@ def record_loop(
             )
 
             act_processed_policy: RobotAction = make_robot_action(action_values, dataset.features)
-            
+
             # Debug: Log policy action values (only first few steps to avoid spam)
             if timestamp < 2.0:  # Log only first 2 seconds
-                action_str = ", ".join([f"{k}: {v:.4f}" if isinstance(v, (int, float)) else f"{k}: {v}" for k, v in act_processed_policy.items()])
+                action_str = ", ".join(
+                    [
+                        f"{k}: {v:.4f}" if isinstance(v, (int, float)) else f"{k}: {v}"
+                        for k, v in act_processed_policy.items()
+                    ]
+                )
                 logging.debug(f"Policy action at {timestamp:.2f}s: {action_str}")
 
         elif policy is None and isinstance(teleop, Teleoperator):
@@ -356,7 +361,7 @@ def record_loop(
             dt_s = time.perf_counter() - start_loop_t
             precise_sleep(1 / fps - dt_s)
             timestamp = time.perf_counter() - start_episode_t
-            
+
             # Check if episode time has elapsed
             if control_time_s is not None and timestamp >= control_time_s:
                 if dataset is not None:
@@ -393,7 +398,7 @@ def record_loop(
         precise_sleep(1 / fps - dt_s)
 
         timestamp = time.perf_counter() - start_episode_t
-        
+
         # Check if episode time has elapsed
         if control_time_s is not None and timestamp >= control_time_s:
             if dataset is not None:

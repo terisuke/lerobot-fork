@@ -132,6 +132,7 @@ This fork includes SO101 robot arm integration with Intel RealSense D435 depth c
 ## Cloud Training with Vertex AI
 
 This repository includes support for training models on Google Cloud Vertex AI. This allows you to:
+
 - Train on powerful GPU instances without local hardware
 - Scale training with distributed computing
 - Automatically sync datasets and models with Cloud Storage
@@ -139,6 +140,7 @@ This repository includes support for training models on Google Cloud Vertex AI. 
 See the [Vertex AI Training Guide](docs/VERTEX_AI_TRAINING.md) for complete setup instructions.
 
 **Quick Start:**
+
 ```bash
 # Upload your dataset
 gsutil -m cp -r ./data/your-dataset gs://lerobot-datasets-480101/

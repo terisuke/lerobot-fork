@@ -5,6 +5,7 @@ This is a step-by-step guide to get you started with training LeRobot models on 
 ## Prerequisites
 
 ✅ The following has already been configured:
+
 - Google Cloud project: `lerobot-480101`
 - Service account with proper permissions
 - Cloud Storage buckets for datasets and models
@@ -40,6 +41,7 @@ cp configs/vertex_ai_example.yaml configs/my_training.yaml
 ```
 
 Key settings to adjust in `my_training.yaml`:
+
 - `policy.name`: Choose your policy (e.g., "act", "diffusion")
 - `policy.input_shapes`: Match your observation space
 - `policy.output_shapes`: Match your action space
@@ -80,6 +82,7 @@ Submit your training job to Vertex AI:
 ```
 
 **Machine Type Recommendations:**
+
 - **Quick test (CPU)**: `n1-standard-4` (no accelerator)
 - **Small model**: `n1-standard-8` + `NVIDIA_TESLA_T4` x1
 - **Large model**: `n1-standard-16` + `NVIDIA_TESLA_V100` x1
@@ -181,6 +184,7 @@ lerobot-eval \
 ## Cost Optimization Tips
 
 ### 1. Use Preemptible Instances (up to 80% savings)
+
 ```bash
 ./scripts/vertex_ai_train.sh \
   --preemptible \
@@ -190,7 +194,9 @@ lerobot-eval \
 Note: Preemptible instances can be shut down by Google Cloud at any time. Make sure to enable checkpointing!
 
 ### 2. Start with CPU for Testing
+
 Test your config locally or on CPU first:
+
 ```bash
 ./scripts/vertex_ai_train.sh \
   --machine-type="n1-standard-4" \
@@ -199,11 +205,14 @@ Test your config locally or on CPU first:
 ```
 
 ### 3. Use Smaller GPUs for Development
+
 T4 GPUs are much cheaper than V100/A100:
+
 - Development: T4 ($0.35/hour)
 - Production: V100 ($2.48/hour) or A100 ($3.67/hour)
 
 ### 4. Monitor and Cancel Failed Jobs Quickly
+
 ```bash
 # Cancel a running job if it's not working
 gcloud ai custom-jobs cancel JOB_ID --region=us-central1
@@ -212,6 +221,7 @@ gcloud ai custom-jobs cancel JOB_ID --region=us-central1
 ## Common Issues
 
 ### Container Build Fails
+
 ```bash
 # Check Docker is running
 docker ps
@@ -224,6 +234,7 @@ docker build --no-cache -f docker/Dockerfile.vertex -t gcr.io/lerobot-480101/ler
 ```
 
 ### Job Fails Immediately
+
 ```bash
 # Check the logs
 gcloud ai custom-jobs stream-logs JOB_ID --region=us-central1
@@ -236,14 +247,18 @@ gcloud ai custom-jobs stream-logs JOB_ID --region=us-central1
 ```
 
 ### Out of Memory Errors
+
 Reduce batch size in your config:
+
 ```yaml
 training:
-  batch_size: 16  # Try 8, 16, or 32 depending on your model and GPU
+  batch_size: 16 # Try 8, 16, or 32 depending on your model and GPU
 ```
 
 ### Dataset Not Found
+
 Make sure your dataset is uploaded:
+
 ```bash
 gsutil ls gs://lerobot-datasets-480101/your-dataset/
 ```
@@ -259,6 +274,7 @@ gsutil ls gs://lerobot-datasets-480101/your-dataset/
 ## Support
 
 For issues:
+
 1. Check the [troubleshooting section](VERTEX_AI_TRAINING.md#troubleshooting) in the full guide
 2. Review Cloud Logging for detailed errors
 3. Ask in the LeRobot Discord or GitHub discussions
@@ -267,13 +283,13 @@ For issues:
 
 Approximate costs for training (us-central1 region):
 
-| Configuration | Cost per Hour | Typical Training Time | Total Cost |
-|--------------|---------------|----------------------|------------|
-| n1-standard-4 (CPU only) | $0.19 | 20-40 hours | $4-8 |
-| n1-standard-8 + T4 | $0.54 | 4-8 hours | $2-4 |
-| n1-standard-16 + V100 | $3.23 | 2-4 hours | $6-13 |
-| n1-standard-16 + A100 | $4.42 | 1-2 hours | $4-9 |
+| Configuration            | Cost per Hour | Typical Training Time | Total Cost |
+| ------------------------ | ------------- | --------------------- | ---------- |
+| n1-standard-4 (CPU only) | $0.19         | 20-40 hours           | $4-8       |
+| n1-standard-8 + T4       | $0.54         | 4-8 hours             | $2-4       |
+| n1-standard-16 + V100    | $3.23         | 2-4 hours             | $6-13      |
+| n1-standard-16 + A100    | $4.42         | 1-2 hours             | $4-9       |
 
-*Storage costs: ~$0.02/GB/month for datasets and models*
+_Storage costs: ~$0.02/GB/month for datasets and models_
 
 Use the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) for detailed estimates.
