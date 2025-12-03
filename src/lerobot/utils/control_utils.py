@@ -172,6 +172,7 @@ def init_keyboard_listener():
         listener.start()
         # Give the listener a moment to start and check if it's actually working
         import time as time_module
+
         time_module.sleep(0.1)
         if not listener.is_alive():
             logging.warning(
@@ -181,40 +182,39 @@ def init_keyboard_listener():
             )
             # Only show fallback instructions if we have a TTY (not in automated tests)
             import sys
+
             if sys.stdin.isatty():
                 logging.info(
-                    "\n" + "="*80 + "\n"
+                    "\n" + "=" * 80 + "\n"
                     "FALLBACK INPUT MODE ENABLED\n"
                     "Since keyboard shortcuts are not available, you can use these commands:\n"
                     "  - Press ENTER during recording to exit early and save the episode\n"
                     "  - Press 'q' + ENTER to quit recording\n"
                     "  - Press 'r' + ENTER to re-record the current episode\n"
-                    "\nNote: These commands will be checked continuously during recording.\n"
-                    + "="*80
+                    "\nNote: These commands will be checked continuously during recording.\n" + "=" * 80
                 )
                 events["use_fallback_input"] = True
             return None, events
         # Even if listener appears alive, enable fallback mode as a backup
         # This is especially important on macOS where listener can be "alive" but not receiving events
         import sys
+
         if sys.stdin.isatty():
             events["use_fallback_input"] = True
     except Exception as e:
-        logging.warning(
-            f"Failed to start keyboard listener: {e}. This is expected in headless environments."
-        )
+        logging.warning(f"Failed to start keyboard listener: {e}. This is expected in headless environments.")
         # Only show fallback instructions if we have a TTY (not in automated tests)
         import sys
+
         if sys.stdin.isatty():
             logging.info(
-                "\n" + "="*80 + "\n"
+                "\n" + "=" * 80 + "\n"
                 "FALLBACK INPUT MODE ENABLED\n"
                 "Since keyboard shortcuts are not available, you can use these commands:\n"
                 "  - Press ENTER during recording to exit early and save the episode\n"
                 "  - Press 'q' + ENTER to quit recording\n"
                 "  - Press 'r' + ENTER to re-record the current episode\n"
-                "\nNote: These commands will be checked continuously during recording.\n"
-                + "="*80
+                "\nNote: These commands will be checked continuously during recording.\n" + "=" * 80
             )
             events["use_fallback_input"] = True
         return None, events

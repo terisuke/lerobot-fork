@@ -193,12 +193,13 @@ class SO101Follower(Robot):
                 )
                 # Try to restart the read thread and retry once
                 try:
-                    if hasattr(cam, '_stop_read_thread'):
+                    if hasattr(cam, "_stop_read_thread"):
                         cam._stop_read_thread()
-                    if hasattr(cam, '_start_read_thread'):
+                    if hasattr(cam, "_start_read_thread"):
                         cam._start_read_thread()
                     # Wait a bit for the thread to start
                     import time as time_module
+
                     time_module.sleep(0.1)
                     obs_dict[cam_key] = cam.async_read(timeout_ms=500)  # Longer timeout for retry
                     logger.info(f"{self} camera {cam_key} recovered after restart.")

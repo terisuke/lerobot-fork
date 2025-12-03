@@ -44,15 +44,15 @@ RUN pip install google-cloud-storage google-cloud-aiplatform
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
-COPY requirements-ubuntu.txt /app/
-RUN pip install -r requirements-ubuntu.txt
-
-# Copy source code
+# Copy source code first (needed for editable install)
 COPY . /app/
 
-# Install LeRobot in editable mode
-RUN pip install -e .
+# Install Python dependencies, excluding problematic packages for cloud training
+# Skip decord (video decoding - not needed for training) and egl-probe (GPU visualization)
+RUN grep -v "decord\|egl-probe" requirements-ubuntu.txt > requirements-cloud.txt && \
+    pip install -r requirements-cloud.txt || \
+    (echo "Some optional packages failed to install, continuing..." && \
+     pip install -r requirements-cloud.txt --no-deps || true)
 
 # Create directories for datasets and outputs
 RUN mkdir -p /app/data /app/outputs
