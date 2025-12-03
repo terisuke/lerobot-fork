@@ -218,6 +218,7 @@ def main():
 
     # Load config from YAML file
     import yaml
+    from lerobot.configs.default import DatasetConfig
     
     logging.info(f"Loading config from: {config_path}")
     if not os.path.exists(config_path):
@@ -231,12 +232,21 @@ def main():
     
     logging.info(f"Loaded config keys: {list(config_dict.keys())}")
     
-    # Override dataset and output paths
-    if 'training' not in config_dict:
-        raise ValueError(f"Config must contain 'training' section. Got keys: {list(config_dict.keys())}")
+    # Override dataset repo_id and output_dir
+    if 'training' in config_dict:
+        training_config = config_dict.pop('training')
+        # Merge training config into top level
+        for key, value in training_config.items():
+            if key not in config_dict:
+                config_dict[key] = value
     
-    config_dict['training']['dataset_repo_id'] = dataset_path
-    config_dict['training']['output_dir'] = args.local_output_dir
+    # Override paths
+    config_dict['dataset_repo_id'] = dataset_path
+    config_dict['output_dir'] = args.local_output_dir
+    
+    # Create DatasetConfig
+    dataset_config = DatasetConfig(repo_id=dataset_path)
+    config_dict['dataset'] = dataset_config
     
     logging.info(f"Config after overrides: dataset={dataset_path}, output={args.local_output_dir}")
     
