@@ -26,8 +26,8 @@ from google.cloud import storage
 # Add lerobot to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lerobot.scripts.lerobot_train import train
 from lerobot.configs.train import TrainPipelineConfig
+from lerobot.scripts.lerobot_train import train
 
 
 def setup_logging():
@@ -196,15 +196,15 @@ def main():
         temp_dir = tempfile.mkdtemp()
         # Download the config file
         blob_client = storage.Client()
-        
+
         # Parse GCS path
         path_parts = args.config[5:].split("/", 1)
         bucket_name = path_parts[0]
         blob_name = path_parts[1]
-        
+
         bucket = blob_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
-        
+
         # Download to temp file
         config_path = os.path.join(temp_dir, "config.yaml")
         blob.download_to_filename(config_path)
@@ -217,15 +217,16 @@ def main():
     logging.info("Step 3: Loading training configuration")
 
     # Load config from YAML file using draccus to properly handle dataclass structure
+
     import draccus
-    from pathlib import Path
-    
+
     logging.info(f"Loading config from: {config_path}")
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
-    
+
     # Override arguments for dataset and output paths
     import sys
+
     old_argv = sys.argv.copy()
     sys.argv = [
         "train_on_vertex.py",
@@ -233,11 +234,11 @@ def main():
         f"--dataset.repo_id={dataset_path}",
         f"--output_dir={args.local_output_dir}",
     ]
-    
+
     try:
         # Use draccus to parse the config with overrides
         cfg = draccus.parse(TrainPipelineConfig)
-        logging.info(f"Config loaded successfully")
+        logging.info("Config loaded successfully")
         logging.info(f"Dataset: {cfg.dataset.repo_id}")
         logging.info(f"Output dir: {cfg.output_dir}")
         logging.info(f"Policy type: {cfg.policy.type if cfg.policy else 'None'}")
@@ -260,7 +261,7 @@ def main():
     # (e.g., timestamped to avoid overwriting existing directory)
     actual_output_dir = str(cfg.output_dir)
     logging.info(f"Actual output directory: {actual_output_dir}")
-    
+
     if args.output_dir.startswith("gs://"):
         logging.info("Step 5: Uploading outputs to Cloud Storage")
         if os.path.exists(actual_output_dir):

@@ -1,22 +1,24 @@
 # SO101 Model Training Analysis - 20K Steps Run
 
-**Job:** so101-20251203-20k  
-**Status:** ✅ COMPLETED  
-**Date:** December 4, 2025  
-**Total Training Steps:** 20,000  
+**Job:** so101-20251203-20k
+**Status:** ✅ COMPLETED
+**Date:** December 4, 2025
+**Total Training Steps:** 20,000
 
 ---
 
 ## Training Configuration Summary
 
 ### Infrastructure
+
 - **Project:** lerobot-480101
 - **Region:** asia-northeast1 (Tokyo)
 - **Machine:** n1-standard-8 (8 vCPUs, 30GB RAM)
 - **GPU:** 1x NVIDIA Tesla T4
 - **Container:** gcr.io/lerobot-480101/lerobot-trainer:v5
 
-### Model Configuration  
+### Model Configuration
+
 - **Policy:** ACT (Action Chunking Transformer)
 - **Parameters:** 51.6M total
 - **Vision Backbone:** ResNet18 (pretrained ImageNet weights)
@@ -27,7 +29,8 @@
 - **VAE Enabled:** Yes (latent_dim=32, kl_weight=10.0)
 
 ### Dataset
-- **Name:** my_so101_dataset_v2  
+
+- **Name:** my_so101_dataset_v2
 - **Episodes:** 50
 - **Total Frames:** 16,988
 - **Task:** "Pat the head of the person in front of you"
@@ -40,21 +43,25 @@
 ## Training Results & Analysis
 
 ### Checkpoints Available
+
 The training completed successfully with checkpoints saved every 1,000 steps:
+
 - **Steps 1,000 - 20,000:** All checkpoints available
 - **Location:** `gs://lerobot-models-480101/outputs/so101-20251203-20k/checkpoints/`
 - **Format:** Each checkpoint contains:
-  - `pretrained_model/`: Model weights, config, preprocessors 
+  - `pretrained_model/`: Model weights, config, preprocessors
   - `training_state/`: Optimizer state, RNG state, training metadata
 
 ### Previous Training Comparison
 
 From the previous 10K run (so101-v8):
+
 - **Step 10,000:** Loss = 0.195
 - **Current 20K run:** Extended training to achieve target loss < 0.1
 
 **Expected Performance:**
 Based on typical ACT training patterns, doubling training steps should achieve:
+
 - **Target:** Loss < 0.1
 - **Likely Range:** 0.05 - 0.12
 
@@ -63,9 +70,11 @@ Based on typical ACT training patterns, doubling training steps should achieve:
 ## Evaluation Status & Next Steps
 
 ### Missing Evaluation Data
+
 ⚠️ **No evaluation metrics found in the output directory**
 
 The training configuration shows:
+
 ```yaml
 eval_freq: 1000
 eval:
@@ -81,7 +90,7 @@ However, evaluation was likely **disabled for cloud training** since `env: null`
 To properly assess if further training is needed, we need to:
 
 1. **Download Final Checkpoint**
-2. **Run Local Evaluation** 
+2. **Run Local Evaluation**
 3. **Analyze Loss Convergence**
 4. **Test Robot Performance**
 
@@ -90,6 +99,7 @@ To properly assess if further training is needed, we need to:
 ## Recommended Evaluation Process
 
 ### Step 1: Download Model
+
 ```bash
 # Download the final checkpoint
 gsutil -m cp -r \
@@ -103,6 +113,7 @@ gsutil cp \
 ```
 
 ### Step 2: Check Training Loss
+
 ```bash
 # Look for any training logs or metrics
 gsutil ls -r gs://lerobot-models-480101/outputs/so101-20251203-20k/ | grep -E "(log|metric)"
@@ -112,6 +123,7 @@ cat ./outputs/so101-20k-final/train_config.json | grep -A 5 "wandb"
 ```
 
 ### Step 3: Evaluate Policy Performance
+
 ```bash
 # Load model and test on dataset samples
 python -c "
@@ -130,6 +142,7 @@ print(f'Policy type: {type(policy)}')
 ```
 
 ### Step 4: Robot Testing (if available)
+
 ```bash
 # Run evaluation on actual robot environment
 lerobot-eval \
@@ -145,12 +158,14 @@ lerobot-eval \
 ## Decision Criteria for Additional Training
 
 ### Continue Training IF:
+
 - **Final loss > 0.1** (target not met)
-- **High validation error** during evaluation  
+- **High validation error** during evaluation
 - **Poor robot performance** in real tests
 - **Loss still decreasing** at step 20,000
 
 ### Training Complete IF:
+
 - **Final loss ≤ 0.1** ✅
 - **Good evaluation metrics** on dataset
 - **Satisfactory robot performance**
@@ -161,6 +176,7 @@ lerobot-eval \
 ## Potential Next Training Configurations
 
 ### Option A: Extended Training (30K steps)
+
 ```yaml
 steps: 30000
 save_freq: 2000
@@ -169,6 +185,7 @@ eval_freq: 2000
 ```
 
 ### Option B: Learning Rate Decay
+
 ```yaml
 steps: 25000
 scheduler:
@@ -179,11 +196,12 @@ scheduler:
 ```
 
 ### Option C: Fine-tuning with Different Hyperparameters
+
 ```yaml
 # Resume from checkpoint
 checkpoint_path: "gs://lerobot-models-480101/outputs/so101-20251203-20k/checkpoints/020000/"
-optimizer_lr: 5e-5  # Lower learning rate
-kl_weight: 5.0      # Reduce KL weight
+optimizer_lr: 5e-5 # Lower learning rate
+kl_weight: 5.0 # Reduce KL weight
 steps: 25000
 ```
 
@@ -192,11 +210,13 @@ steps: 25000
 ## Cost Analysis
 
 ### Completed Training
+
 - **Duration:** ~8-10 hours
 - **Cost:** ~$2.50-3.50 USD (Tesla T4)
 - **Total Steps:** 20,000
 
 ### Additional Training (if needed)
+
 - **10K more steps:** ~4-5 hours, ~$1.25-1.75 USD
 - **20K more steps:** ~8-10 hours, ~$2.50-3.50 USD
 
@@ -204,13 +224,15 @@ steps: 25000
 
 ## Files to Check
 
-1. **Model Checkpoint:** 
+1. **Model Checkpoint:**
+
    ```
    gs://lerobot-models-480101/outputs/so101-20251203-20k/checkpoints/020000/pretrained_model/
    ```
 
 2. **Training State:**
-   ```  
+
+   ```
    gs://lerobot-models-480101/outputs/so101-20251203-20k/checkpoints/020000/training_state/training_step.json
    ```
 
@@ -228,6 +250,7 @@ The 20K step training run **completed successfully** with all checkpoints saved.
 **Immediate Next Step:** Download the final checkpoint and run local evaluation to determine if the target loss < 0.1 was achieved and if robot performance is satisfactory.
 
 **Decision Point:** Based on evaluation results, decide whether to:
+
 1. ✅ **Deploy the model** (if performance is good)
 2. 🔄 **Continue training** (if more steps needed)
 3. 🔧 **Adjust hyperparameters** (if convergence issues)

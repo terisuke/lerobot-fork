@@ -1,7 +1,7 @@
 # Vertex AI Training Success Summary
 
-**Date:** December 3, 2025  
-**Job:** so101-v8 (ID: 8168809131617026048)  
+**Date:** December 3, 2025
+**Job:** so101-v8 (ID: 8168809131617026048)
 **Status:** ✅ Running Successfully
 
 ## Overview
@@ -11,6 +11,7 @@ Successfully configured and launched a Vertex AI training job for the SO101 robo
 ## Job Configuration
 
 ### Infrastructure
+
 - **Project:** lerobot-480101
 - **Region:** asia-northeast1 (Tokyo)
 - **Machine Type:** n1-standard-8 (8 vCPUs, 30GB RAM)
@@ -18,6 +19,7 @@ Successfully configured and launched a Vertex AI training job for the SO101 robo
 - **Container:** gcr.io/lerobot-480101/lerobot-trainer:v5
 
 ### Dataset
+
 - **Name:** my_so101_dataset_v2
 - **Location:** gs://lerobot-datasets-480101/my_so101_dataset_v2
 - **Size:** 768MB, 12 files
@@ -26,6 +28,7 @@ Successfully configured and launched a Vertex AI training job for the SO101 robo
 - **Cameras:** front (1280x960) and side (640x480)
 
 ### Model Configuration
+
 - **Policy:** ACT (Action Chunking Transformer)
 - **Parameters:** 51.6M total
 - **Backbone:** ResNet18 (pretrained on ImageNet)
@@ -34,6 +37,7 @@ Successfully configured and launched a Vertex AI training job for the SO101 robo
 - **Vision Backbone:** ResNet18 with 44.7M parameters
 
 ### Training Hyperparameters
+
 ```yaml
 batch_size: 8
 steps: 10000
@@ -51,6 +55,7 @@ kl_weight: 10.0
 ## Training Progress
 
 ### Timeline
+
 - **Provisioning:** ~2 minutes (12:41:44 - 12:43:39 UTC)
 - **Dataset Download:** ~40 seconds (12 files)
 - **Model Initialization:** ~30 seconds
@@ -58,14 +63,16 @@ kl_weight: 10.0
 - **Expected Duration:** 2-3 hours for 10,000 steps
 
 ### Loss Convergence
-| Step | Loss  | Status |
-|------|-------|--------|
-| 10   | 26.7  | Initial |
-| 100  | ~3.0  | Converging |
-| 200  | ~1.8  | Stable |
-| 400  | ~1.5  | Good |
+
+| Step | Loss | Status     |
+| ---- | ---- | ---------- |
+| 10   | 26.7 | Initial    |
+| 100  | ~3.0 | Converging |
+| 200  | ~1.8 | Stable     |
+| 400  | ~1.5 | Good       |
 
 ### Resource Usage
+
 - **GPU Memory:** ~3068.9 MB
 - **Training FPS:** Stable
 - **Gradient Norm:** Normal range
@@ -73,24 +80,29 @@ kl_weight: 10.0
 ## Key Issues Resolved
 
 ### v1-v4: Initial Setup
+
 - ❌ Docker platform mismatch (ARM64 vs AMD64)
 - ❌ Config structure issues (nested `training:` key)
 - ❌ Missing dependencies (draccus)
 
 ### v5: Docker and Config Parser Fix
+
 - ✅ Fixed platform to AMD64 with `docker buildx`
 - ✅ Implemented proper config loading with `draccus.parse()`
 - ❌ Environment config type missing
 
 ### v6: Environment Config Fix
+
 - ✅ Set `env: null` to disable gym evaluation
 - ❌ WandB config had unsupported `tags` field
 
 ### v7: WandB Config Fix
+
 - ✅ Removed unsupported `tags` field
 - ❌ Policy trying to push to hub without repo_id
 
 ### v8: Final Success ✅
+
 - ✅ Added `policy.push_to_hub: false`
 - ✅ All validations passed
 - ✅ Training started with stable loss convergence
@@ -98,6 +110,7 @@ kl_weight: 10.0
 ## Final Working Configuration
 
 ### Key YAML Structure
+
 ```yaml
 dataset:
   repo_id: "Terisuke/my_so101_dataset_v2"
@@ -107,7 +120,7 @@ policy:
   push_to_hub: false
   # ... ACT-specific parameters
 
-env: null  # Disable gym evaluation for cloud training
+env: null # Disable gym evaluation for cloud training
 
 wandb:
   enable: false
@@ -118,6 +131,7 @@ seed: 1000
 ```
 
 ### Critical Configuration Points
+
 1. **Flat structure** - No nested `training:` key
 2. **Dataset** - Use `dataset.repo_id`, not `dataset_repo_id`
 3. **Policy** - Must include `type` and `push_to_hub: false`
@@ -128,15 +142,18 @@ seed: 1000
 ## Files Created/Modified
 
 ### New Files
+
 - `docs/VERTEX_AI_TROUBLESHOOTING.md` - Comprehensive troubleshooting guide
 - `TRAINING_SUCCESS_SUMMARY.md` - This file
 
 ### Updated Files
+
 - `README.md` - Added troubleshooting guide link
 - `configs/train_so101_vertex.yaml` - Final working configuration
 - `MONITOR_TRAINING.sh` - Updated with v8 job ID
 
 ### Existing Infrastructure Files
+
 - `docs/VERTEX_AI_TRAINING.md` - Complete setup guide
 - `docs/VERTEX_AI_QUICKSTART.md` - Step-by-step guide
 - `scripts/vertex_ai_train.sh` - Job submission script
@@ -146,17 +163,20 @@ seed: 1000
 ## Monitoring Commands
 
 ### Check Current Status
+
 ```bash
 ./MONITOR_TRAINING.sh
 ```
 
 ### View Real-time Logs
+
 ```bash
 gcloud ai custom-jobs stream-logs \
   projects/595166083070/locations/asia-northeast1/customJobs/8168809131617026048
 ```
 
 ### Download Trained Model (after completion)
+
 ```bash
 gsutil -m cp -r \
   gs://lerobot-models-480101/outputs/so101-20251203/ \
@@ -164,6 +184,7 @@ gsutil -m cp -r \
 ```
 
 ### Web Console
+
 https://console.cloud.google.com/vertex-ai/training/custom-jobs/asia-northeast1/8168809131617026048?project=lerobot-480101
 
 ## Next Steps

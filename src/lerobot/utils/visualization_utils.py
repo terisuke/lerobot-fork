@@ -62,14 +62,16 @@ def log_rerun_data(
         for k, v in observation.items():
             if v is None:
                 continue
-            
+
             # Handle camera images: convert keys like "front", "side" to "observation.images.front", "observation.images.side"
             # Check if this is a camera image (2D or 3D array that looks like an image)
-            is_image = isinstance(v, np.ndarray) and (v.ndim == 2 or (v.ndim == 3 and v.shape[-1] in (1, 3, 4)))
-            
+            is_image = isinstance(v, np.ndarray) and (
+                v.ndim == 2 or (v.ndim == 3 and v.shape[-1] in (1, 3, 4))
+            )
+
             # Common camera key names that should be converted to observation.images.*
             camera_keys = {"front", "side", "back", "top", "bottom", "left", "right"}
-            
+
             if is_image and k in camera_keys:
                 # Convert camera key to observation.images.* format
                 key = f"{OBS_IMAGES}.{k}"

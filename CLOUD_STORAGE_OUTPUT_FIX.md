@@ -1,7 +1,7 @@
 # Cloud Storage Output Upload Issue and Fix
 
-**Date:** 2025-12-03  
-**Issue:** Training outputs were not being uploaded to Cloud Storage  
+**Date:** 2025-12-03
+**Issue:** Training outputs were not being uploaded to Cloud Storage
 **Status:** ✅ Fixed in v6-fixed-upload container
 
 ---
@@ -26,8 +26,9 @@ The issue was in `scripts/train_on_vertex.py` Step 5 (Upload outputs to GCS).
 ### The Problem
 
 1. **TrainPipelineConfig auto-renames output directory:**
-   
+
    In `src/lerobot/configs/train.py` lines 115-125:
+
    ```python
    if not self.resume and isinstance(self.output_dir, Path) and self.output_dir.is_dir():
        # If output directory exists and not resuming, automatically append timestamp
@@ -43,8 +44,9 @@ The issue was in `scripts/train_on_vertex.py` Step 5 (Upload outputs to GCS).
    ```
 
 2. **Upload script used wrong directory:**
-   
+
    In `scripts/train_on_vertex.py` (original code):
+
    ```python
    # Step 5: Upload outputs to GCS
    if args.output_dir.startswith("gs://"):
@@ -180,11 +182,13 @@ After each training job:
 ## Cost Impact
 
 **v8 Training (Lost):**
+
 - Duration: ~4h56m on Tesla T4
 - Cost: ~$1.50 USD
 - Result: Model lost, must re-train
 
 **v9-20k-fixed (In Progress):**
+
 - Duration: Expected ~8-10 hours
 - Cost: ~$2.50-3.00 USD
 - Result: Will include proper output upload
@@ -196,6 +200,7 @@ After each training job:
 ## Status Update
 
 **Current Active Job:**
+
 - **Job ID:** 4646572010548232192
 - **Job Name:** so101-v9-20k-fixed
 - **Container:** v6-fixed-upload (includes fix)
@@ -205,6 +210,6 @@ After each training job:
 
 ---
 
-**Created:** 2025-12-03  
-**Fixed In:** gcr.io/lerobot-480101/lerobot-trainer:v6-fixed-upload  
+**Created:** 2025-12-03
+**Fixed In:** gcr.io/lerobot-480101/lerobot-trainer:v6-fixed-upload
 **Status:** ✅ Resolved

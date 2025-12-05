@@ -1,8 +1,8 @@
 # Training v8 Results Summary
 
-**Job ID:** 8168809131617026048  
-**Job Name:** so101-v8  
-**Status:** ✅ SUCCEEDED  
+**Job ID:** 8168809131617026048
+**Job Name:** so101-v8
+**Status:** ✅ SUCCEEDED
 **Completion Time:** 2025-12-03 16:38:05 UTC
 
 ---
@@ -24,19 +24,20 @@
 
 ### Final Metrics (Step 10,000)
 
-| Metric | Value |
-|--------|-------|
-| **Final Loss** | **0.195** |
-| Gradient Norm | 4.511 |
-| Learning Rate | 1.0e-04 |
-| Samples Processed | 80,000 |
-| Epochs Completed | 235 |
-| Update Time | 1.369s/step |
-| Data Load Time | 0.013s/step |
+| Metric            | Value       |
+| ----------------- | ----------- |
+| **Final Loss**    | **0.195**   |
+| Gradient Norm     | 4.511       |
+| Learning Rate     | 1.0e-04     |
+| Samples Processed | 80,000      |
+| Epochs Completed  | 235         |
+| Update Time       | 1.369s/step |
+| Data Load Time    | 0.013s/step |
 
 ### Loss Progression
 
 Based on earlier observations:
+
 - **Step 10:** ~26.7 (initial)
 - **Step 100:** ~3.0 (rapid convergence)
 - **Step 200:** ~1.8 (stabilizing)
@@ -91,9 +92,9 @@ Based on earlier observations:
 Increase training steps to 20,000 to see if loss continues to decrease:
 
 ```yaml
-steps: 20000  # Double the training duration
-save_freq: 1000  # Save checkpoints more frequently
-eval_freq: 1000  # Evaluate more often
+steps: 20000 # Double the training duration
+save_freq: 1000 # Save checkpoints more frequently
+eval_freq: 1000 # Evaluate more often
 ```
 
 **Expected Outcome:** Loss may decrease to 0.1-0.15 range
@@ -128,7 +129,7 @@ Resume from v8 checkpoint and continue training:
 ```yaml
 resume: true
 checkpoint_path: "gs://lerobot-models-480101/outputs/so101-20251203/checkpoint-10000/"
-steps: 20000  # Continue for 10K more steps
+steps: 20000 # Continue for 10K more steps
 ```
 
 **Note:** Would need to verify checkpoint was saved correctly
@@ -180,7 +181,7 @@ gsutil cp configs/train_so101_vertex_20k.yaml \
   --container-image gcr.io/lerobot-480101/lerobot-trainer:v5
 ```
 
-**Expected Duration:** ~8-10 hours  
+**Expected Duration:** ~8-10 hours
 **Expected Cost:** ~$2.50-3.00 USD
 
 ---
@@ -188,6 +189,7 @@ gsutil cp configs/train_so101_vertex_20k.yaml \
 ## Comparison with ACT Paper
 
 Typical ACT training:
+
 - **Dataset Size:** 50-200 episodes (similar ✅)
 - **Training Steps:** 50K-100K steps (we used 10K)
 - **Batch Size:** 8-16 (we used 8 ✅)
@@ -206,6 +208,6 @@ Typical ACT training:
 
 ---
 
-**Created:** 2025-12-03  
-**Author:** Training Pipeline  
+**Created:** 2025-12-03
+**Author:** Training Pipeline
 **Status:** Ready for extended training run

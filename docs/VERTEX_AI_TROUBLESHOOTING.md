@@ -3,6 +3,7 @@
 This document records the issues encountered and solutions applied during the setup and execution of Vertex AI training jobs for LeRobot models.
 
 ## Table of Contents
+
 - [Configuration Issues](#configuration-issues)
 - [Docker Container Issues](#docker-container-issues)
 - [Training Script Issues](#training-script-issues)
@@ -15,6 +16,7 @@ This document records the issues encountered and solutions applied during the se
 ### Issue 1: Nested Training Configuration Structure
 
 **Error:**
+
 ```
 TypeError: TrainPipelineConfig.__init__() got an unexpected keyword argument 'lr_scheduler'
 ```
@@ -24,11 +26,13 @@ The initial YAML configuration used a nested structure with a `training:` top-le
 
 **Solution:**
 `TrainPipelineConfig` expects a flat structure with specific field names. The correct structure is:
+
 - `dataset: DatasetConfig` (not `dataset_repo_id`)
 - `scheduler: LRSchedulerConfig` (not `lr_scheduler`)
 - All training parameters at the top level (not nested under `training:`)
 
 **Example:**
+
 ```yaml
 # ❌ Wrong
 training:
@@ -48,6 +52,7 @@ scheduler:
 ### Issue 2: Environment Configuration Type
 
 **Error:**
+
 ```
 draccus.utils.DecodingError: `env`: Expected a dict with a 'type' key for <class 'lerobot.envs.configs.EnvConfig'>
 ```
@@ -57,6 +62,7 @@ draccus.utils.DecodingError: `env`: Expected a dict with a 'type' key for <class
 
 **Solution:**
 Either:
+
 1. Set `env: null` to disable gym-based evaluation during training (recommended for cloud training)
 2. Provide a valid environment config with a `type` field:
 
@@ -76,6 +82,7 @@ env:
 ### Issue 3: WandB Configuration Fields
 
 **Error:**
+
 ```
 draccus.utils.DecodingError: 'wandb': The fields 'tags' are not valid for WandBConfig
 ```
@@ -102,6 +109,7 @@ wandb:
 ```
 
 **Valid WandBConfig fields:**
+
 - `enable: bool`
 - `disable_artifact: bool`
 - `project: str`
@@ -115,6 +123,7 @@ wandb:
 ### Issue 4: Policy Hub Push Configuration
 
 **Error:**
+
 ```
 ValueError: 'policy.repo_id' argument missing. Please specify it to push the model to the hub.
 ```
@@ -139,6 +148,7 @@ policy:
 ### Issue 1: Platform Mismatch
 
 **Error:**
+
 ```
 WARNING: The requested image's platform (linux/arm64) does not match the detected host platform (linux/amd64)
 ```
@@ -163,6 +173,7 @@ docker buildx build \
 ### Issue 2: Optional Dependencies
 
 **Error:**
+
 ```
 ERROR: Could not find a version that satisfies the requirement decord
 ERROR: Could not find a version that satisfies the requirement egl-probe
@@ -184,6 +195,7 @@ RUN pip install egl-probe || echo "egl-probe skipped (optional)"
 ### Issue 3: Missing draccus Dependency
 
 **Error:**
+
 ```
 ModuleNotFoundError: No module named 'draccus'
 ```
@@ -230,6 +242,7 @@ finally:
 ```
 
 This approach:
+
 - Properly handles nested dataclass structures
 - Validates all fields according to the dataclass definitions
 - Supports type conversions and default values
@@ -412,6 +425,7 @@ gcloud ai custom-jobs stream-logs \
 From job `so101-v8` (ID: 8168809131617026048):
 
 **Configuration:**
+
 - Policy: ACT (51.6M parameters)
 - Dataset: 16,988 frames, 50 episodes
 - Batch size: 8
@@ -419,15 +433,18 @@ From job `so101-v8` (ID: 8168809131617026048):
 - GPU: NVIDIA Tesla T4
 
 **Training Progress:**
+
 - Initial loss: ~26.7 (step 10)
 - Loss after 100 steps: ~3.0
 - Loss after 200 steps: ~1.8
 - Loss after 400 steps: ~1.5
 
 **Memory Usage:**
+
 - ~3068.9 MB GPU memory
 
 **Timeline:**
+
 - Job provisioning: 2 minutes
 - Dataset download: 40 seconds (12 files, ~768MB)
 - Model initialization: 30 seconds
@@ -458,22 +475,27 @@ Before submitting a Vertex AI training job:
 ## Version History
 
 ### v1-v4: Initial Attempts
+
 - Platform mismatch issues
 - Config structure problems
 - Dependency resolution issues
 
 ### v5: Docker Fix
+
 - Fixed platform to AMD64
 - Resolved draccus dependency
 - Fixed config loading with draccus.parse()
 
 ### v6: Environment Config Fix
+
 - Set `env: null` to disable gym evaluation
 
 ### v7: WandB Config Fix
+
 - Removed unsupported `tags` field
 
 ### v8: Success ✅
+
 - Added `policy.push_to_hub: false`
 - Training started successfully with stable loss convergence
 
