@@ -1,21 +1,23 @@
-# Training configuration for SO101 robot on Vertex AI
+# Training configuration for SO101 robot on Vertex AI (Extended - 20K steps)
 # Dataset: my_so101_dataset_v2
 # Task: Pat the head of the person in front of you
+# Previous run (v8): Final loss 0.195 at 10K steps
+# Goal: Achieve loss < 0.1
 
 # Dataset configuration
 dataset:
   repo_id: "Terisuke/my_so101_dataset_v2"
 
 # Output directory (will be overridden by command line)
-output_dir: "outputs/so101_training"
+output_dir: "outputs/so101_training_20k"
 
-# Training hyperparameters
+# Training hyperparameters - Extended training
 batch_size: 8
-steps: 10000
+steps: 20000  # Increased from 10000
 save_checkpoint: true
-save_freq: 500
+save_freq: 1000  # Save every 1000 steps
 log_freq: 10
-eval_freq: 500
+eval_freq: 1000  # Evaluate every 1000 steps
 num_workers: 4
 resume: false
 
@@ -50,7 +52,7 @@ wandb:
   enable: false
   project: "lerobot-so101-vertex"
   entity: null
-  notes: "Training SO101 robot to pat head using ACT policy on Vertex AI"
+  notes: "Extended training (20K steps) for SO101 robot to achieve loss < 0.1"
 
 # Use policy training preset (includes optimizer and scheduler)
 use_policy_training_preset: true

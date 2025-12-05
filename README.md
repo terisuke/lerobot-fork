@@ -139,6 +139,11 @@ This repository includes support for training models on Google Cloud Vertex AI. 
 
 See the [Vertex AI Training Guide](docs/VERTEX_AI_TRAINING.md) for complete setup instructions.
 
+**Documentation:**
+- [Setup Guide](docs/VERTEX_AI_TRAINING.md) - Complete infrastructure setup
+- [Quick Start](docs/VERTEX_AI_QUICKSTART.md) - Step-by-step training guide
+- [Troubleshooting](docs/VERTEX_AI_TROUBLESHOOTING.md) - Common issues and solutions
+
 **Quick Start:**
 
 ```bash

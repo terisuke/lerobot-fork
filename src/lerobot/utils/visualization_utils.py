@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 import rerun as rr
 
-from .constants import OBS_PREFIX, OBS_STR
+from .constants import OBS_IMAGES, OBS_PREFIX, OBS_STR
 
 
 def init_rerun(session_name: str = "lerobot_control_loop") -> None:
@@ -62,7 +62,21 @@ def log_rerun_data(
         for k, v in observation.items():
             if v is None:
                 continue
-            key = k if str(k).startswith(OBS_PREFIX) else f"{OBS_STR}.{k}"
+            
+            # Handle camera images: convert keys like "front", "side" to "observation.images.front", "observation.images.side"
+            # Check if this is a camera image (2D or 3D array that looks like an image)
+            is_image = isinstance(v, np.ndarray) and (v.ndim == 2 or (v.ndim == 3 and v.shape[-1] in (1, 3, 4)))
+            
+            # Common camera key names that should be converted to observation.images.*
+            camera_keys = {"front", "side", "back", "top", "bottom", "left", "right"}
+            
+            if is_image and k in camera_keys:
+                # Convert camera key to observation.images.* format
+                key = f"{OBS_IMAGES}.{k}"
+            elif str(k).startswith(OBS_PREFIX):
+                key = k
+            else:
+                key = f"{OBS_STR}.{k}"
 
             if _is_scalar(v):
                 rr.log(key, rr.Scalars(float(v)))

@@ -154,3 +154,5 @@ gcloud alpha services quota list \
 - [Vertex AI クォータ](https://cloud.google.com/vertex-ai/docs/general/quotas)
 - [GPU リージョン別の利用可能性](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones)
 - [クォータの増加リクエスト](https://cloud.google.com/docs/quota#request_increase)
+
+

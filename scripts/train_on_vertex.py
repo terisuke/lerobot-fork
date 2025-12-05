@@ -216,42 +216,33 @@ def main():
     # Step 3: Load training configuration
     logging.info("Step 3: Loading training configuration")
 
-    # Load config from YAML file
-    import yaml
-    from lerobot.configs.default import DatasetConfig
+    # Load config from YAML file using draccus to properly handle dataclass structure
+    import draccus
+    from pathlib import Path
     
     logging.info(f"Loading config from: {config_path}")
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
     
-    with open(config_path, 'r') as f:
-        config_dict = yaml.safe_load(f)
+    # Override arguments for dataset and output paths
+    import sys
+    old_argv = sys.argv.copy()
+    sys.argv = [
+        "train_on_vertex.py",
+        f"--config_path={config_path}",
+        f"--dataset.repo_id={dataset_path}",
+        f"--output_dir={args.local_output_dir}",
+    ]
     
-    if config_dict is None:
-        raise ValueError(f"Config file is empty or invalid: {config_path}")
-    
-    logging.info(f"Loaded config keys: {list(config_dict.keys())}")
-    
-    # Override dataset repo_id and output_dir
-    if 'training' in config_dict:
-        training_config = config_dict.pop('training')
-        # Merge training config into top level
-        for key, value in training_config.items():
-            if key not in config_dict:
-                config_dict[key] = value
-    
-    # Override paths
-    config_dict['dataset_repo_id'] = dataset_path
-    config_dict['output_dir'] = args.local_output_dir
-    
-    # Create DatasetConfig
-    dataset_config = DatasetConfig(repo_id=dataset_path)
-    config_dict['dataset'] = dataset_config
-    
-    logging.info(f"Config after overrides: dataset={dataset_path}, output={args.local_output_dir}")
-    
-    # Create config object
-    cfg = TrainPipelineConfig(**config_dict)
+    try:
+        # Use draccus to parse the config with overrides
+        cfg = draccus.parse(TrainPipelineConfig)
+        logging.info(f"Config loaded successfully")
+        logging.info(f"Dataset: {cfg.dataset.repo_id}")
+        logging.info(f"Output dir: {cfg.output_dir}")
+        logging.info(f"Policy type: {cfg.policy.type if cfg.policy else 'None'}")
+    finally:
+        sys.argv = old_argv
 
     # Step 4: Run training
     logging.info("Step 4: Starting training")
@@ -265,11 +256,19 @@ def main():
         raise
 
     # Step 5: Upload outputs to GCS
+    # Note: cfg.output_dir may have been modified by TrainPipelineConfig.validate()
+    # (e.g., timestamped to avoid overwriting existing directory)
+    actual_output_dir = str(cfg.output_dir)
+    logging.info(f"Actual output directory: {actual_output_dir}")
+    
     if args.output_dir.startswith("gs://"):
         logging.info("Step 5: Uploading outputs to Cloud Storage")
-        upload_to_gcs(args.local_output_dir, args.output_dir)
+        if os.path.exists(actual_output_dir):
+            upload_to_gcs(actual_output_dir, args.output_dir)
+        else:
+            logging.warning(f"Output directory {actual_output_dir} does not exist. Nothing to upload.")
     else:
-        logging.info(f"Outputs saved locally at {args.local_output_dir}")
+        logging.info(f"Outputs saved locally at {actual_output_dir}")
 
     logging.info("=" * 60)
     logging.info("Vertex AI Training Job Completed Successfully")
