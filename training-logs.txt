@@ -1,1 +1,0 @@
-Using endpoint [https://asia-northeast1-aiplatform.googleapis.com/]
